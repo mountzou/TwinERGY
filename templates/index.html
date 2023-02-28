@@ -1,10 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title1</title>
-</head>
-<body>
-Hallo
-</body>
-</html>
+{% extends "base.html" %}
+
+<!-- Add the title for the specific page -->
+{% block title %}Dashboard{% endblock title %}
+
+<!-- Import any extra .css files for the specific page -->
+{% block html_css %}{% endblock html_css %}
+
+<!-- Set the breadcrumb levels for the specific page -->
+{% set breadcrumb_level_one = 'Dashboard' %}
+{% set breadcrumb_level_two = '' %}
+
+<!-- Import any extra .js files for the specific page -->
+{% block js_scripts %}
+<script src="static/js/dashboard-comfort.js" data-env="{{ env_indoor }}" data-env-list="{{ env_indoor_list }}"></script>
+<script src="static/js/dashboard-well-being.js" data-air="{{ air_indoor }}" data-air-list="{{ air_indoor_list }}"></script>
+<script src="static/js/dashboard-energy-consumption.js"></script>
+<script src="static/js/dashboard-energy-production.js"></script>
+{% endblock js_scripts %}
+
+{% block content %}
+<div class="pt-32pt">
+    <div class="container page__container d-flex flex-column flex-md-row align-items-center text-center text-sm-left">
+
+    </div>
+    <div class="container page__container">
+        <div class="page-section">
+
+            <div class="row mb-lg-8pt">
+
+            </div>
+            <div class="row mb-lg-8pt">
+
+            </div>
+            <div class="row mb-lg-8pt">
+
+            </div>
+            <div class="row mb-lg-8pt">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
