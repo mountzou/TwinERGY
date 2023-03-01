@@ -12,11 +12,12 @@
 
 <!-- Import any extra .js files for the specific page -->
 {% block js_scripts %}
-<script data-env="{{ env_indoor }}" data-env-list="{{ env_indoor_list }}" src="static/js/dashboard-comfort.js"></script>
-<script data-air="{{ air_indoor }}" data-air-list="{{ air_indoor_list }}"
-        src="static/js/dashboard-well-being.js"></script>
-<script src="static/js/dashboard-energy-consumption.js"></script>
-<script src="static/js/dashboard-energy-production.js"></script>
+<script>
+    var daily_temp = {{ d_temp | tojson }};
+    var daily_hum = {{ d_hum | tojson }};
+    var daily_time = {{ d_time | tojson }};
+</script>
+<script src="static/js/dashboard-comfort.js"></script>
 {% endblock js_scripts %}
 
 {% block content %}
