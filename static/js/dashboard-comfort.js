@@ -1,3 +1,12 @@
+function convertToPercentage(value) {
+  var percentage = (1 - Math.abs(value) / 3) * 100;
+  return percentage.toFixed(2);
+}
+
+var graphTargetAirTemperature = $("#daily-temperature");
+var graphTargetHumidity = $("#daily-humidity");
+var graphTargetThermalComfort = $("#latest-thermal-comfort");
+
 var indoorTemperature = {
     labels: daily_time,
     datasets: [{
@@ -23,9 +32,6 @@ var indoorHumidity = {
         fill: false
     }]
 };
-
-var graphTargetAirTemperature = $("#daily-temperature");
-var graphTargetHumidity = $("#daily-humidity");
 
 var graphTemperature = new Chart(graphTargetAirTemperature, {
     type: 'line',
@@ -58,18 +64,7 @@ var graphTemperature = new Chart(graphTargetAirTemperature, {
             onClick: function(e) {
                 e.stopPropagation();
             }
-        },
-        tooltips: {
-            enabled: false,
-            callbacks: {
-                title: function(tooltipItems, data) {
-                    return 'Time: ' + tooltipItems[0].xLabel;
-                },
-                label: function(tooltipItems, data) {
-                    return tooltipItems.yLabel + ' °C';
-                },
-            }
-        },
+        }
     }
 });
 
@@ -104,17 +99,30 @@ var graphHumidity = new Chart(graphTargetHumidity, {
             onClick: function(e) {
                 e.stopPropagation();
             }
-        },
-        tooltips: {
-            enabled: false,
-            callbacks: {
-                title: function(tooltipItems, data) {
-                    return 'Time: ' + tooltipItems[0].xLabel;
-                },
-                label: function(tooltipItems, data) {
-                    return tooltipItems.yLabel + ' %';
-                },
+        }
+    }
+});
+
+var thermalComfort = {
+    labels: ["Comfort", "Discomfort"],
+    datasets: [{
+        label: "Thermal Comfort",
+        data: [convertToPercentage(latest_pmv), 100-convertToPercentage(latest_pmv)],
+        backgroundColor: [
+            "#ffba4d",
+            "#EEEEEE",
+        ]
+    }]
+};
+
+var barGraph = new Chart(graphTargetThermalComfort, {
+    type: 'doughnut',
+    data: thermalComfort,
+    options: {
+        elements: {
+            arc: {
+                roundedCornersFor: 0
             }
-        },
+        }
     }
 });

@@ -22,9 +22,9 @@
     </div>
 
     <div class="card card-sm">
-        <div class="card-body" style="padding: 1.18rem;">
+        <div class="card-body" style="padding: 0.85rem;">
             <div class="row">
-                <div class="col-6">
+                <div class="col-5">
                     <div class="chart" style="height: 192px;">
                         <div class="chartjs-size-monitor">
                             <div class="chartjs-size-monitor-expand">
@@ -35,22 +35,22 @@
                             </div>
                         </div>
                         <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                            <h2 class="m-0"></h2>
-                            <strong style="font-size:10px;">THERMAL COMFORT</strong>
+                            <h2 class="m-0">{{l_pmv}}</h2>
+                            <strong style="font-size:8px;">THERMAL COMFORT</strong>
                         </div>
                         <canvas class="chart-canvas position-relative z-1 chartjs-render-monitor"
                                 data-chart-legend="#attendanceDoughnutChartLegend" data-chart-line-background-color="primary;accent;gray.700;gray"
                                 height="524"
-                                id="dashboard-thermal-comfort" style="display: block; height: 242px; width: 323px;" width="646">
+                                id="latest-thermal-comfort" style="display: block; height: 242px; width: 323px;" width="646">
                         </canvas>
                     </div>
                 </div>
                 <div class="col-6 mt-4">
                     <div class="nav border-0">
-                        <div class="row no-gutters flex" style="padding-bottom:10px;">
+                        <div class="row no-gutters flex" style="padding-top:10px; padding-bottom:10px;">
                             <div class="col-auto">
                                 <div class="d-flex align-items-center">
-                                    <div class="h2 mb-0 mr-3" style="font-size:17px;">clo</div>
+                                    <div class="h2 mb-0 mr-3" style="font-size:17px;">0.80 clo</div>
                                     <div class="flex">
                                         <p class="card-title">Clothing Insulation</p>
                                     </div>
@@ -74,14 +74,24 @@
                 </div>
             </div>
         </div>
-
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <div>
+                        <div class="d-flex align-items-center">
+                            <i class="material-icons text-primary mr-4pt"></i>
+                            <div class="text-70"
+                                 style="font-family:Josefin Sans; font-size:14px;">
+                                Updated on {{ l_update }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
     </div>
 
 </div>
 <div class="col-lg-8">
 
     <div class="page-separator">
-        <div class="page-separator__text">Indoor Environmental Analysis</div>
+        <div class="page-separator__text">Daily Indoor Environmental Analysis</div>
     </div>
 
     <div class="row">
@@ -115,7 +125,7 @@
                             <i class="material-icons text-primary mr-4pt"></i>
                             <div class="text-70"
                                  style="font-family:Josefin Sans; font-size:14px;">
-                                Updated on
+                                Updated on {{ l_update }}
                             </div>
                         </div>
                     </div>
@@ -152,7 +162,7 @@
                             <i class="material-icons text-primary mr-4pt"></i>
                             <div class="text-70"
                                  style="font-family:Josefin Sans; font-size:14px;">
-                                Last 24-h indoor relative humidity
+                                Updated on {{ l_update }}
                             </div>
                         </div>
                     </div>

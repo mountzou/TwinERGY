@@ -64,7 +64,7 @@ def get_pmv_value(tr, tdb, rh, met, clo, vr, wme=0):
     hl6 = f_cl * hc * (tcl - tdb)
 
     ts = 0.303 * math.exp(-0.036 * m) + 0.028
-    pmv = ts * (mw - hl1 - hl2 - hl3 - hl4 - hl5 - hl6)
+    pmv = round(ts * (mw - hl1 - hl2 - hl3 - hl4 - hl5 - hl6),2)
 
     return pmv
 

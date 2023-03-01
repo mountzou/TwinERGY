@@ -5,6 +5,8 @@ from determineMetabolic import dailyMetabolic
 
 from determineThermalComfort import get_pmv_status, get_pmv_value
 
+import datetime
+
 app = Flask(__name__)
 
 # Credentials to connect with mySQL DB of CDT UPAT
@@ -43,7 +45,9 @@ def rout():
 
     daily_temp, daily_hum, daily_time = [t[0] for t in daily_environmental], [t[1] for t in daily_environmental], [t[2] for t in daily_environmental]
 
-    return render_template("index.html", avg_temp=avg_temperature, avg_hum=avg_humidity, l_temp=latest_temperature, l_hum=latest_humidity, l_met=sessions_met[-1], l_pmv=latest_pmv, d_temp=daily_temp, d_hum=daily_hum, d_time=daily_time, l_pmv_status=latest_pmv_status)
+    latest_update = datetime.datetime.fromtimestamp(daily_time[-1]).strftime("%Y-%m-%d %H:%M:%S")
+
+    return render_template("index.html", avg_temp=avg_temperature, avg_hum=avg_humidity, l_temp=latest_temperature, l_hum=latest_humidity, l_met=sessions_met[-1], l_pmv=latest_pmv, d_temp=daily_temp, d_hum=daily_hum, d_time=daily_time, l_pmv_status=latest_pmv_status, l_update=latest_update)
 
 
 if __name__ == "__main__":
