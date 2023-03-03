@@ -1,0 +1,151 @@
+{% extends "base-thermal-comfort.html" %}
+
+<!-- Add the title for the specific page -->
+{% block title %}Thermal Comfort{% endblock title %}
+
+<!-- Import any extra .css files for the specific page -->
+{% block html_css %}{% endblock html_css %}
+
+<!-- Set the breadcrumb levels for the specific page -->
+{% set breadcrumb_level_one = 'Thermal Comfort & Well-being' %}
+{% set breadcrumb_level_two = 'Thermal Comfort' %}
+
+{% block content %}
+<div class="pt-32pt">
+    <div class="container page__container d-flex flex-column flex-md-row align-items-center text-center text-sm-left">
+        {% include 'breadcrumb.html' %}
+    </div>
+    <div class="container page__container">
+        <div class="page-section">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card ">
+                        <div class="card-header pb-4 border-0 d-flex">
+                            <div class="flex">
+                                <div class="h2 mb-0" id="latest-indoor-temperature">{{l_temp}} °C</div>
+                                <p class="card-title">Indoor Air Temperature</p>
+                            </div>
+                            <i class="material-icons text-50">device_thermostat</i>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
+                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;">{{ avg_temp }}
+                                    °C</h3>
+                                <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY
+                                    MEAN
+                                    AIR TEMPERATURE</small>
+                            </div>
+                            <div class="text-50 mb-16pt">
+                                <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
+                                        height="500"
+                                        id="thermal-comfort-indoor-temperature"
+                                        style="display: block; height: 300px; width: 254px;" width="508">
+                                </canvas>
+                            </div>
+                        </div>
+
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <i class="material-icons text-primary mr-4pt"></i>
+                                    <div class="text-70"
+                                         style="font-family:Josefin Sans; font-size:14px;">
+                                        Updated on {{ l_update }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card ">
+                        <div class="card-header pb-4 border-0 d-flex">
+                            <div class="flex">
+                                <div class="h2 mb-0" id="latest-indoor-humidity">{{ l_hum }} %</div>
+                                <p class="card-title">Relative Humidity</p>
+                            </div>
+                            <i class="material-icons text-50">opacity</i>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
+                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;">{{ avg_hum }}
+                                    %</h3>
+                                <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY
+                                    MEAN
+                                    RELATIVE HUMIDITY</small>
+                            </div>
+                            <div class="text-50 mb-16pt">
+                                <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
+                                        height="500"
+                                        id="thermal-comfort-indoor-humidity"
+                                        style="display: block; height: 300px; width: 254px;" width="508">
+                                </canvas>
+                            </div>
+                        </div>
+
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <i class="material-icons text-primary mr-4pt"></i>
+                                    <div class="text-70"
+                                         style="font-family:Josefin Sans; font-size:14px;">
+                                        Updated on {{ l_update }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card ">
+                        <div class="card-header pb-4 border-0 d-flex">
+                            <div class="flex">
+                                <div class="h2 mb-0" id="latest-metabolic-rate">{{l_met}} met</div>
+                                <p class="card-title">Metabolic Rate</p>
+                            </div>
+                            <i class="material-icons text-50"><span
+                                    class="material-symbols-outlined">directions_run</span></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
+                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;">{{ avg_temp }}
+                                    met</h3>
+                                <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY
+                                    MEAN
+                                    METABOLIC RATE</small>
+                            </div>
+                            <div class="text-50 mb-16pt">
+                                <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
+                                        height="500"
+                                        id="thermal-comfort-metabolic-rate"
+                                        style="display: block; height: 300px; width: 254px;" width="508">
+                                </canvas>
+                            </div>
+                        </div>
+
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <i class="material-icons text-primary mr-4pt"></i>
+                                    <div class="text-70"
+                                         style="font-family:Josefin Sans; font-size:14px;">
+                                        Updated on {{ l_update }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock content %}

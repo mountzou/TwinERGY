@@ -12,24 +12,24 @@ var indoorTemperature = {
     datasets: [{
         label: "Air Temperature",
         type: "line",
-        borderColor: "#7fdd62",
-        backgroundColor: "#7fdd62",
+        borderColor: "rgb(255, 186, 77)",
+        backgroundColor: "rgb(255, 186, 77, .1)",
         borderWidth: 3,
         data: daily_temp,
-        fill: false
+        fill: true
     }]
 };
 
 var indoorHumidity = {
     labels: daily_time,
     datasets: [{
-        label: "Air Temperature",
+        label: "Relative Humidity",
         type: "line",
-        borderColor: "#7fdd62",
-        backgroundColor: "#7fdd62",
+        borderColor: "rgb(255, 186, 77)",
+        backgroundColor: "rgb(255, 186, 77, .1)",
         borderWidth: 3,
         data: daily_hum,
-        fill: false
+        fill: true
     }]
 };
 
