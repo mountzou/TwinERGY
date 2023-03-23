@@ -158,7 +158,7 @@ def thermal_comfort():
 @app.route('/login')
 def login():
 
-    auth_url = keycloak_openid.auth_url(redirect_uri="http://"+urlparse(request.base_url).netloc+"/callback", scope="openid", state="af0ifjsldkj")
+    auth_url = keycloak_openid.auth_url(redirect_uri="https://"+urlparse(request.base_url).netloc+"/callback", scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
