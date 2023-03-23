@@ -32,7 +32,7 @@ app.secret_key = 'secret'
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static']
+    allowed_routes = ['login', 'callback', 'api_tc', 'cdmp', 'static']
 
     # Redirect non-authenticated user to the 'login' rout
     if request.endpoint not in allowed_routes and 'username' not in session:
