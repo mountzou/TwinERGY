@@ -163,7 +163,7 @@ def callback():
     access_token = keycloak_openid.token(
         grant_type='authorization_code',
         code=code_token,
-        redirect_uri="http://127.0.0.1:5000/callback")
+        redirect_uri=request.base_url)
 
     session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
 
