@@ -50,12 +50,12 @@ def rout():
 
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
     cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-    userinfo['deviceId'],))
+        userinfo['deviceId'],))
     daily_env = cur.fetchall()
 
     # Execute SQL query to get the values of metabolic rate during the last 24 hours
     cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-    userinfo['deviceId'],))
+        userinfo['deviceId'],))
     daily_met = cur.fetchall()
 
     # Check if tuples are empty, in case of an empty tuple assign a single value of -1
@@ -157,8 +157,7 @@ def thermal_comfort():
 
 @app.route('/login')
 def login():
-
-    auth_url = keycloak_openid.auth_url(redirect_uri="https://"+urlparse(request.base_url).netloc+"/callback", scope="openid", state="af0ifjsldkj")
+    auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -205,16 +204,17 @@ def cdmp():
     latest_pmv_status = get_pmv_status(latest_pmv)
 
     response = {'userID': 2,
-                 'airTemperature': get_air_temperature(latest_temperature),
-                 'relativeHumidity': latest_humidity,
-                 'globeTemperature': 0.935 * get_air_temperature(latest_temperature) + 1.709,
-                 'metabolicRate': sessions_met[-1],
-                 'clothingInsulation': 0.8,
-                 'airVelocity': 0,
-                 'thermalComfort': latest_pmv,
-                 'thermalStatus': latest_pmv_status,
-                 'timeUnix': sessions_met_time[-1]}
-    return jsonify(response)
+                'airTemperature': get_air_temperature(latest_temperature),
+                'relativeHumidity': latest_humidity,
+                'globeTemperature': 0.935 * get_air_temperature(latest_temperature) + 1.709,
+                'metabolicRate': sessions_met[-1],
+                'clothingInsulation': 0.8,
+                'airVelocity': 0,
+                'thermalComfort': latest_pmv,
+                'thermalStatus': latest_pmv_status,
+                'timeUnix': sessions_met_time[-1]}
+    return json.dumps(response)
+
 
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
