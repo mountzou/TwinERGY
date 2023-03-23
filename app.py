@@ -8,6 +8,7 @@ from determineThermalComfort import get_pmv_status, get_pmv_value
 from determineAirTemperature import get_air_temperature
 
 from datetime import datetime
+from urllib.parse import urlparse
 import json
 import requests
 
@@ -20,8 +21,6 @@ app.config['MYSQL_PASSWORD'] = 'w*}S2x1pKMM='
 app.config['MYSQL_DB'] = 'consume5_twinERGY'
 
 mysql = MySQL(app)
-
-
 
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
     client_id='cdt-twinergy',
@@ -50,26 +49,30 @@ def rout():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
-    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (userinfo['deviceId'],))
+    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    userinfo['deviceId'],))
     daily_env = cur.fetchall()
 
     # Execute SQL query to get the values of metabolic rate during the last 24 hours
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (userinfo['deviceId'],))
+    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    userinfo['deviceId'],))
     daily_met = cur.fetchall()
 
     # Check if tuples are empty, in case of an empty tuple assign a single value of -1
     daily_env = daily_env if daily_env else []
     daily_met = daily_met if daily_met else []
 
-    all_tem, all_hum, all_time = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in daily_env], [row[2] for row in daily_env]
+    all_tem, all_hum, all_time = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in daily_env], [
+        row[2] for row in daily_env]
 
     all_times = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in all_time]
 
     # Determine the average air temperature and the average relative humidity
-    m_tem, m_hum = round(sum(all_tem)/len(all_tem), 2), round(sum(all_hum)/len(all_hum), 2)
+    m_tem, m_hum = round(sum(all_tem) / len(all_tem), 2), round(sum(all_hum) / len(all_hum), 2)
 
     # Determine the latest air temperature and the latest relative humidity
-    l_tem, l_hum, l_time = get_air_temperature(daily_env[-1][0]), daily_env[-1][1], datetime.utcfromtimestamp(daily_env[-1][2]).strftime('%Y-%m-%d %H:%M:%S')
+    l_tem, l_hum, l_time = get_air_temperature(daily_env[-1][0]), daily_env[-1][1], datetime.utcfromtimestamp(
+        daily_env[-1][2]).strftime('%Y-%m-%d %H:%M:%S')
 
     # Determine the latest metabolic rate
     l_met = dailyMetabolic(daily_met)[0]
@@ -99,7 +102,11 @@ def rout():
     #     "d_tem": d_tem, "d_hum": d_tem, "l_time": l_time, "m_time": m_time
     # }
 
-    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), username=userinfo['preferred_username'])
+    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
+    userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
+        'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
+        'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), username=userinfo[
+        'preferred_username'])
 
 
 @app.route("/thermal_comfort/")
@@ -151,7 +158,7 @@ def thermal_comfort():
 @app.route('/login')
 def login():
 
-    auth_url = keycloak_openid.auth_url(redirect_uri="http://127.0.0.1:5000/callback", scope="openid", state="af0ifjsldkj")
+    auth_url = keycloak_openid.auth_url(redirect_uri="http://"+urlparse(request.base_url).netloc+"/callback", scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -159,6 +166,8 @@ def login():
 @app.route('/callback')
 def callback():
     code_token = request.args.get('code')
+
+    base_url = request.base_url
 
     access_token = keycloak_openid.token(
         grant_type='authorization_code',
@@ -174,7 +183,6 @@ def callback():
 
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-
     # Create a userInfo object with information related to the authenticated user's session
     userinfo = session.get('userinfo', None)
 
