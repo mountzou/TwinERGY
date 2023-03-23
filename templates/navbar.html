@@ -18,29 +18,29 @@
 
                     <span class="avatar avatar-sm-basic-navbar mr-12pt">
                         <span class="avatar-title rounded navbar-avatar">
-                            <i class="material-icons">device_thermostat</i>
+                          <i class="material-icons">house</i>
                         </span>
                     </span>
 
                     <small class="flex d-flex flex-column">
-                        <strong class="navbar-text-100">Thermal Comfort</strong>
-                        <span class="navbar-text-50">{{l_pmv_status}}</span>
+                        <strong class="navbar-text-100">Dwelling ID</strong>
+                        <span class="navbar-text-50">{{dId}}, {{pId}}</span>
                     </small>
-
                 </span>
 
                 <span class="d-none d-md-flex align-items-center mr-32pt">
 
                     <span class="avatar avatar-sm-basic-navbar mr-12pt">
                         <span class="avatar-title rounded navbar-avatar">
-                          <i class="material-icons">air</i>
+                            <i class="material-icons">watch</i>
                         </span>
                     </span>
 
                     <small class="flex d-flex flex-column">
-                        <strong class="navbar-text-100">Well-being Status</strong>
-                        <span class="navbar-text-50">Excellent</span>
+                        <strong class="navbar-text-100">Wearable ID</strong>
+                        <span class="navbar-text-50">{{ wId }}</span>
                     </small>
+
                 </span>
 
                 <ul class="nav navbar-nav d-none d-sm-flex flex justify-content-start ml-8pt">
@@ -71,11 +71,12 @@
 
                                 <div class="dropdown-menu dropdown-menu-right">
                                     <div class="dropdown-header tab-content">
-                                        <strong>Account</strong>
+                                        <strong>Welcome, {{username}}</strong>
+                                        <i class="material-icons font-size-16pt text-warning">verified</i>
                                     </div>
                                     <a class="dropdown-item card-body tab-content" href="/">
                                         <i class="material-icons font-size-16pt text-warning">security</i>Security </a>
-                                    <a class="dropdown-item card-body tab-content" href="/helpdesk/">
+                                    <a class="dropdown-item card-body tab-content" href="/">
                                         <i class="material-icons font-size-16pt text-warning">email</i>Helpdesk </a>
                                     <a class="dropdown-item card-body tab-content" href="/logout/">
                                         <i class="material-icons font-size-16pt text-warning">logout</i>Logout </a>

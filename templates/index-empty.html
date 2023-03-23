@@ -12,13 +12,6 @@
 
 <!-- Import any extra .js files for the specific page -->
 {% block js_scripts %}
-<script>
-    var all_tem = {{ all_tem | tojson }};
-    var all_hum = {{ all_hum | tojson }};
-    var all_times = {{ all_times | tojson }};
-    var l_pmv = {{ l_pmv | tojson }};
-</script>
-<script src="static/js/dashboard-comfort.js"></script>
 {% endblock js_scripts %}
 
 {% block content %}
@@ -26,20 +19,11 @@
     <div class="container page__container d-flex flex-column flex-md-row align-items-center text-center text-sm-left">
         {% include 'breadcrumb.html' %}
     </div>
-    <div class="container page__container">
-        <div class="page-section">
-            {% include 'dashboard-alert.html' %}
-            <div class="row mb-lg-8pt">
-                {% include 'dashboard-thermal.html' %}
-            </div>
-            <div class="row mb-lg-8pt">
 
-            </div>
-            <div class="row mb-lg-8pt">
-
-            </div>
-        </div>
+    <div class="page-section">
+        {% include 'dashboard-thermal-empty.html' %}
     </div>
+
 </div>
 
 {% endblock content %}

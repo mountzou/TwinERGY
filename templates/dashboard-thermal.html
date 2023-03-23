@@ -11,7 +11,7 @@
                         <div class="h2 mb-0 mr-3"><i
                                 class="material-icons text-primary mr-4pt">sentiment_satisfied</i></div>
                         <div class="flex">
-                            <h2 class="h2 mb-0 ml11">{{l_pmv_status}}
+                            <h2 class="h2 mb-0 ml11">{{ d_pmv }}
                             </h2>
                         </div>
                     </div>
@@ -35,7 +35,7 @@
                             </div>
                         </div>
                         <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                            <h2 class="m-0">{{l_pmv}}</h2>
+                            <h2 class="m-0">{{ l_pmv }}</h2>
                             <strong style="font-size:8px;">THERMAL COMFORT</strong>
                         </div>
                         <canvas class="chart-canvas position-relative z-1 chartjs-render-monitor"
@@ -80,7 +80,7 @@
                     <i class="material-icons text-primary mr-4pt"></i>
                     <div class="text-70"
                          style="font-family:Josefin Sans; font-size:14px;">
-                        Updated on {{ l_update }}
+                        Updated on {{ l_time }}
                     </div>
                 </div>
             </div>
@@ -99,14 +99,14 @@
             <div class="card ">
                 <div class="card-header pb-0 border-0 d-flex">
                     <div class="flex">
-                        <div class="h2 mb-0" id="latest-indoor-temperature">{{l_temp}} °C</div>
+                        <div class="h2 mb-0" id="latest-indoor-temperature">{{l_tem}} °C</div>
                         <p class="card-title">Indoor Air Temperature</p>
                     </div>
                     <i class="material-icons text-50">device_thermostat</i>
                 </div>
                 <div class="card-body">
                     <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                        <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;">{{ avg_temp }} °C</h3>
+                        <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;">{{ m_tem }} °C</h3>
                         <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY MEAN
                             AIR TEMPERATURE</small>
                     </div>
@@ -124,7 +124,7 @@
                             <i class="material-icons text-primary mr-4pt"></i>
                             <div class="text-70"
                                  style="font-family:Josefin Sans; font-size:14px;">
-                                Updated on {{ l_update }}
+                                Updated on {{ l_time }}
                             </div>
                         </div>
                     </div>
@@ -144,7 +144,7 @@
                 </div>
                 <div class="card-body">
                     <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                        <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;">{{avg_hum}} %</h3>
+                        <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;">{{ m_hum }} %</h3>
                         <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY MEAN
                             RELATIVE HUMIDITY</small>
                     </div>
@@ -161,7 +161,7 @@
                             <i class="material-icons text-primary mr-4pt"></i>
                             <div class="text-70"
                                  style="font-family:Josefin Sans; font-size:14px;">
-                                Updated on {{ l_update }}
+                                Updated on {{ l_time }}
                             </div>
                         </div>
                     </div>
