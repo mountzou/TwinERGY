@@ -206,7 +206,6 @@ def api_tc():
     latest_pmv_status = get_pmv_status(latest_pmv)
 
     response = {'userID': 2,
-                'wearableID': userinfo['deviceId'],
                 'airTemperature': get_air_temperature(latest_temperature),
                 'relativeHumidity': latest_humidity,
                 'globeTemperature': 0.935 * get_air_temperature(latest_temperature) + 1.709,
