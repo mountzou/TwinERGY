@@ -205,7 +205,7 @@ def api_tc():
     #
     # latest_pmv_status = get_pmv_status(latest_pmv)
 
-    response = {'userID': 3}
+    response = {'userID': '3'}
 
     return jsonify(response)
 
