@@ -160,8 +160,10 @@ def thermal_comfort():
 
 @app.route('/login')
 def login():
-    print("https://" + urlparse(request.base_url).netloc + "/callback")
-    auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+    if urlparse(request.base_url).netloc == 'http://127.0.0.1:5000':
+        auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+    else:
+        auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
