@@ -160,7 +160,7 @@ def thermal_comfort():
 
 @app.route('/login')
 def login():
-    if urlparse(request.base_url).netloc == 'http://127.0.0.1:5000':
+    if urlparse(request.base_url).netloc == '127.0.0.1:5000':
         auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
     else:
         auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
@@ -209,7 +209,7 @@ def cdmp():
 
     latest_pmv_status = get_pmv_status(latest_pmv)
 
-    response = {'userID': 2,
+    response = {'userID': '2',
                 'airTemperature': get_air_temperature(latest_temperature),
                 'relativeHumidity': latest_humidity,
                 'globeTemperature': 0.935 * get_air_temperature(latest_temperature) + 1.709,
@@ -237,11 +237,11 @@ def api_tc():
     sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
 
     # Create a list of dictionaries using a list comprehension
-    data_list = [{'temperature': item[0], 'globe_temperature': item[0]*0.935, 'humidity': item[1], 'wearable_id': item[2], 'gateway_id': item[3],
+    data_list = [{'air_temperature': item[0], 'globe_temperature': item[0]*0.935, 'relative_humidity': item[1], 'wearable_id': item[2], 'gateway_id': item[3],
                   'session_met': sessions_met[-1], 'clothing_insulation':0.8, 'air_velocity':0.1,
                   'thermal_comfort':get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1),
                   'thermal_comfort_desc':get_pmv_status(get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1)),
-                  'timestamp': item[4], 'user_id': 2, 'dwelling_id': 'ATH-1'
+                  'timestamp': item[4], 'user_id': '2', 'dwelling_id': 'ATH-1'
                   } for item in latest_env]
 
     # Create a JSON schema from the list of dictionaries
