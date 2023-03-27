@@ -237,11 +237,11 @@ def api_tc():
     sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
 
     # Create a list of dictionaries using a list comprehension
-    data_list = [{'temperature': item[0], 'humidity': item[1], 'wearable_id': item[2], 'gateway_id': item[3],
+    data_list = [{'temperature': item[0], 'globe_temperature': item[0]*0.935, 'humidity': item[1], 'wearable_id': item[2], 'gateway_id': item[3],
                   'session_met': sessions_met[-1], 'clothing_insulation':0.8, 'air_velocity':0.1,
                   'thermal_comfort':get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1),
                   'thermal_comfort_desc':get_pmv_status(get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1)),
-                  'timestamp': item[4], 'user_id': 2
+                  'timestamp': item[4], 'user_id': 2, 'dwelling_id': 'ATH-1'
                   } for item in latest_env]
 
     # Create a JSON schema from the list of dictionaries
