@@ -224,7 +224,6 @@ def cdmp():
 
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
