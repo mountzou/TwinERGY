@@ -34,8 +34,6 @@ def require_login():
     # Define the allowed routes of a non-authenticated user
     allowed_routes = ['login', 'callback', 'static', 'api_tc']
 
-    print(request.endpoint)
-
     if request.endpoint == 'api_tc':
         return None
 
@@ -229,27 +227,29 @@ def api_tc():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, user_id FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
+    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -10 MINUTE));''')
     latest_env = cur.fetchall()
 
-    print(latest_env)
-
     # Execute SQL query to get the daily physiological parameter of metabolic rate
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -5 MINUTE));''')
+    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -10 MINUTE));''')
     daily_metabolic = cur.fetchall()
 
     sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
-    sessions_met_time = dailyMetabolicTime(daily_metabolic)
 
-    print(sessions_met)
+    # sessions_met_time = dailyMetabolicTime(daily_metabolic)
 
-    # # Determine the latest thermal comfort value
-    # latest_pmv = get_pmv_value(latest_temperature, 0.935 * latest_temperature + 1.709, latest_humidity, sessions_met[-1], 0.8, 0.1)
-    #
-    # latest_pmv_status = get_pmv_status(latest_pmv)
+    # Create a list of dictionaries using a list comprehension
+    data_list = [{'temperature': item[0], 'humidity': item[1], 'wearable_id': item[2], 'gateway_id': item[3],
+                  'session_met': sessions_met[-1], 'clothing_insulation':0.8, 'air_velocity':0.1,
+                  'thermal_comfort':get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1),
+                  'thermal_comfort_desc':get_pmv_status(get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1))} for item in latest_env]
 
-    response = {}
-    return jsonify(response)
+    # Create a JSON schema from the list of dictionaries
+    json_schema = {'data': data_list}
+
+    print(json_schema)
+
+    return jsonify(json_schema)
 
 
 if __name__ == "__main__":
