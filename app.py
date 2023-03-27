@@ -32,7 +32,12 @@ app.secret_key = 'secret'
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'api_tc', 'cdmp', 'static']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc']
+
+    print(request.endpoint)
+
+    if request.endpoint == 'api_tc':
+        return None
 
     # Redirect non-authenticated user to the 'login' rout
     if request.endpoint not in allowed_routes and 'username' not in session:
@@ -157,7 +162,8 @@ def thermal_comfort():
 
 @app.route('/login')
 def login():
-    auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+    print("https://" + urlparse(request.base_url).netloc + "/callback")
+    auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -223,34 +229,26 @@ def api_tc():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity FROM user_thermal_comfort ORDER BY tc_timestamp DESC LIMIT 1;''')
-    (latest_temperature, latest_humidity) = cur.fetchone()
+    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, user_id FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
+    latest_env = cur.fetchall()
+
+    print(latest_env)
 
     # Execute SQL query to get the daily physiological parameter of metabolic rate
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
+    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -5 MINUTE));''')
     daily_metabolic = cur.fetchall()
 
     sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
     sessions_met_time = dailyMetabolicTime(daily_metabolic)
 
-    # Determine the latest thermal comfort value
-    latest_pmv = get_pmv_value(latest_temperature, 0.935 * latest_temperature + 1.709, latest_humidity,
-        sessions_met[-1], 0.8, 0.1)
+    print(sessions_met)
 
-    latest_pmv_status = get_pmv_status(latest_pmv)
+    # # Determine the latest thermal comfort value
+    # latest_pmv = get_pmv_value(latest_temperature, 0.935 * latest_temperature + 1.709, latest_humidity, sessions_met[-1], 0.8, 0.1)
+    #
+    # latest_pmv_status = get_pmv_status(latest_pmv)
 
-    response = {'userID': 2,
-                'wearableId': userinfo['deviceId'],
-                'gatewayId': userinfo['gatewayId'],
-                'airTemperature': get_air_temperature(latest_temperature),
-                'relativeHumidity': latest_humidity,
-                'globeTemperature': 0.935 * get_air_temperature(latest_temperature) + 1.709,
-                'metabolicRate': sessions_met[-1],
-                'clothingInsulation': 0.8,
-                'airVelocity': 0,
-                'thermalComfort': latest_pmv,
-                'thermalStatus': latest_pmv_status,
-                'timeUnix': sessions_met_time[-1]}
+    response = {}
     return jsonify(response)
 
 
