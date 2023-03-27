@@ -224,7 +224,6 @@ def cdmp():
 
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-    userinfo = session.get('userinfo', None)
 
     cur = mysql.connection.cursor()
 
@@ -238,8 +237,6 @@ def api_tc():
 
     sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
 
-    # sessions_met_time = dailyMetabolicTime(daily_metabolic)
-
     # Create a list of dictionaries using a list comprehension
     data_list = [{'temperature': item[0], 'humidity': item[1], 'wearable_id': item[2], 'gateway_id': item[3],
                   'session_met': sessions_met[-1], 'clothing_insulation':0.8, 'air_velocity':0.1,
@@ -248,8 +245,6 @@ def api_tc():
 
     # Create a JSON schema from the list of dictionaries
     json_schema = {'data': data_list}
-
-    print(json_schema)
 
     return jsonify(json_schema)
 
