@@ -241,7 +241,7 @@ def api_tc():
                   'session_met': sessions_met[-1], 'clothing_insulation':0.8, 'air_velocity':0.1,
                   'thermal_comfort':get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1),
                   'thermal_comfort_desc':get_pmv_status(get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1)),
-                  'timestamp': item[4]
+                  'timestamp': item[4], 'user_id': 2
                   } for item in latest_env]
 
     # Create a JSON schema from the list of dictionaries
