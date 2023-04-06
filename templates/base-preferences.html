@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>{% block title %}{% endblock title %} | Consumer Digital Twin</title>
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/app.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/twinergy.css')}}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    {% block html_css %}{% endblock html_css %}
+
+    <!-- jQuery -->
+    <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
+
+    <!-- Range Slider -->
+    <script src="{{url_for('static', filename='vendor/ion.rangeSlider.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/ion-rangeslider.js')}}"></script>
+
+    <!-- Bootstrap -->
+    <script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
+    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
+
+    <!-- Perfect Scrollbar -->
+    <script src="{{url_for('static', filename='vendor/perfect-scrollbar.min.js')}}"></script>
+
+    <!-- App JS -->
+    <script src="{{url_for('static', filename='js/app.js')}}"></script>
+
+    <!-- Chart JS -->
+    <script src="../static/vendor/Chart.min.js"></script>
+
+</head>
+<body class="layout-sticky-subnav layout-default">
+
+<div class="mdk-header-layout js-mdk-header-layout">
+    <div class="mdk-header-layout__content page-content ">
+        {% include 'navbar.html' %}
+
+        {% block content %}
+
+        {% endblock content %}
+    </div>
+</div>
+
+{% include 'footer.html' %}
+
+</body>
+</html>

@@ -29,6 +29,32 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
 app.secret_key = 'secret'
 
 
+def prefences_importance_method():
+    cur = mysql.connection.cursor()
+
+    cur.execute('''SELECT * FROM user_pref_thermal WHERE user_id='2' ORDER BY user_pref_time DESC''')
+    preference_thermal_comfort = cur.fetchone()
+
+    cur.execute('''SELECT * FROM user_flex_loads WHERE user_id='2' ORDER BY user_pref_time DESC''')
+    preference_flex_loads = cur.fetchone()
+
+    return [preference_thermal_comfort[1] + 3, preference_thermal_comfort[2] + 3, preference_flex_loads[1],
+            preference_flex_loads[4], preference_flex_loads[7], preference_flex_loads[10], preference_flex_loads[2],
+            preference_flex_loads[3], preference_flex_loads[5], preference_flex_loads[6], preference_flex_loads[8],
+            preference_flex_loads[9], preference_flex_loads[11], preference_flex_loads[12], preference_flex_loads[14],
+            preference_flex_loads[15], preference_flex_loads[13]]
+
+
+def prefences_simos_importance_method():
+    cur = mysql.connection.cursor()
+
+    cur.execute('''SELECT * FROM load_weight_simos WHERE user_id='2' ORDER BY weight_timestamp DESC''')
+    preference_flex_loads = cur.fetchone()
+
+    return [preference_flex_loads[1], preference_flex_loads[2], preference_flex_loads[3], preference_flex_loads[4],
+            preference_flex_loads[5]]
+
+
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
@@ -156,9 +182,11 @@ def thermal_comfort():
     daily_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in daily_time]
     sessions_met_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in sessions_met_time]
 
-    return render_template("thermal-comfort.html", avg_met=avg_met, l_temp=latest_temperature, l_hum=latest_humidity, l_met=sessions_met[
+    return render_template("thermal-comfort.html", avg_met=avg_met, l_temp=latest_temperature, l_hum=latest_humidity, l_met=
+    sessions_met[
         -1], avg_temp=avg_temperature, avg_hum=avg_humidity, d_temp=daily_temp, d_hum=daily_hum, d_time=daily_time, d_met=sessions_met, d_met_time=sessions_met_time, l_update=
-    daily_time[-1], dId=userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
+    daily_time[-1], dId=userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
+        'pilotId'].capitalize(), usernameId=session['username'])
 
 
 @app.route('/login')
@@ -187,6 +215,74 @@ def callback():
     session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
 
     return redirect('/')
+
+
+@app.route("/preferences/", methods=["GET", "POST"])
+def preferences():
+    cur = mysql.connection.cursor()
+
+    if request.method == "POST":
+        unix_timestamp = (int(datetime.datetime.timestamp(datetime.datetime.now())))
+
+        importnace_thermal_comfort = request.form.get("preference_thermal_comfort").split(';')
+
+        thermal_dict = {-3: "Cold", -2: "Cool", -1: "Slightly Cool", 0: "Neutral",
+                        1: "Slightly Warm", 2: "Warm", 3: "Hot"}
+
+        importance_dict = {1: "Not Important", 2: "Slightly Important", 3: "Important", 4: "Fairly Important",
+                           5: "Very Important"}
+
+        thermal_tolerance_list = [k for k, v in thermal_dict.items() if v in importnace_thermal_comfort]
+
+        importnace_ev_range = request.form.get("preference_range_electric_vehicle").split(';')
+        importnace_dw_range = request.form.get("preference_range_dish_washer").split(';')
+        importnace_wm_range = request.form.get("preference_range_washing_machine").split(';')
+        importnace_ht_range = request.form.get("preference_range_drier").split(';')
+        importnace_wh_range = request.form.get("preference_range_water_heater").split(';')
+
+        ev_start, ev_end = int(importnace_ev_range[0].split(":")[0]), int(importnace_ev_range[1].split(":")[0])
+        dw_start, dw_end = int(importnace_dw_range[0].split(":")[0]), int(importnace_dw_range[1].split(":")[0])
+        wm_start, wm_end = int(importnace_wm_range[0].split(":")[0]), int(importnace_wm_range[1].split(":")[0])
+        ht_start, ht_end = int(importnace_ht_range[0].split(":")[0]), int(importnace_ht_range[1].split(":")[0])
+        wh_start, wh_end = int(importnace_wh_range[0].split(":")[0]), int(importnace_wh_range[1].split(":")[0])
+
+        importance_ev = list(importance_dict.keys())[
+                            list(importance_dict.values()).index(request.form.get("preference_electric_vehicle"))] - 1
+        importance_dw = list(importance_dict.keys())[
+                            list(importance_dict.values()).index(request.form.get("preference_dish_washer"))] - 1
+        importance_wm = list(importance_dict.keys())[
+                            list(importance_dict.values()).index(request.form.get("preference_washing_machine"))] - 1
+        importance_ht = list(importance_dict.keys())[
+                            list(importance_dict.values()).index(request.form.get("preference_tumble"))] - 1
+        importance_wh = list(importance_dict.keys())[
+                            list(importance_dict.values()).index(request.form.get("preference_water_heater"))] - 1
+
+        cur.execute('''INSERT INTO user_pref_thermal VALUES (2, "%s", "%s" , %s, '') ''', (
+            thermal_tolerance_list[0], thermal_tolerance_list[1], unix_timestamp))
+
+        cur.execute('''INSERT INTO user_flex_loads VALUES (2, "%s", "%s" , "%s", "%s", "%s", "%s", "%s", "%s" , "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s" ) ''', (
+            importance_ev, ev_start, ev_end, importance_ht, ht_start, ht_end, importance_wm, wm_start, wm_end,
+            importance_dw, dw_start, dw_end, importance_wh, wh_start, wh_end, unix_timestamp
+        ))
+
+        preferences_loads = {"Electric Vehicle": importance_ev + 1, "Dish Washer": importance_dw + 1,
+                             "Washing Machine": importance_wm + 1, "Tumble Drier": importance_ht + 1,
+                             "Water Heater": importance_wh + 1}
+
+        weights = determineWeights(preferences_loads)
+
+        cur.execute('''INSERT INTO load_weight_simos VALUES (2, "%s", "%s", "%s", "%s", "%s", "%s") ''', (
+            float(weights['Electric Vehicle'][0]), float(weights['Tumble Drier'][0]),
+            float(weights['Washing Machine'][0]), float(weights['Dish Washer'][0]), float(weights['Water Heater'][0]),
+            unix_timestamp
+        ))
+
+        mysql.connection.commit()
+
+    preferences_importance, preferences_simos = prefences_importance_method(), prefences_simos_importance_method()
+
+    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, dId=userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
+        'pilotId'].capitalize(), usernameId=session['username'])
 
 
 @app.route('/cdmp', methods=['GET'])
@@ -240,10 +336,12 @@ def api_tc():
     sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
 
     # Create a list of dictionaries using a list comprehension
-    data_list = [{'air_temperature': item[0], 'globe_temperature': item[0]*0.935, 'relative_humidity': item[1], 'wearable_id': item[2], 'gateway_id': item[3],
-                  'session_met': sessions_met[-1], 'clothing_insulation':0.8, 'air_velocity':0.1,
-                  'thermal_comfort':get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1),
-                  'thermal_comfort_desc':get_pmv_status(get_pmv_value(item[0], 0.935*item[0], item[1], sessions_met[-1], 0.8, 0.1)),
+    data_list = [{'air_temperature': item[0], 'globe_temperature': item[0] * 0.935, 'relative_humidity': item[1],
+                  'wearable_id': item[2], 'gateway_id': item[3],
+                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1,
+                  'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1),
+                  'thermal_comfort_desc': get_pmv_status(get_pmv_value(
+                      item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)),
                   'timestamp': item[4], 'user_id': '2', 'dwelling_id': 'ATH-1'
                   } for item in latest_env]
 
