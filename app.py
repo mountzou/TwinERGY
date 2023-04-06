@@ -105,11 +105,12 @@ def rout():
     #     "d_tem": d_tem, "d_hum": d_tem, "l_time": l_time, "m_time": m_time
     # }
 
+    print(session['username'])
+
     return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
-    userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
+    userinfo['dwellingId'], wId=userinfo['deviceId'], usernameId=session['username'], pId=userinfo[
         'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
-        'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), username=userinfo[
-        'preferred_username'])
+        'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
 
 
 @app.route("/thermal_comfort/")
