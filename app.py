@@ -29,6 +29,23 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
 app.secret_key = 'secret'
 
 
+def categorize_value(value):
+    if 0 <= value <= 150:
+        return "Good"
+    elif 151 <= value <= 230:
+        return "Moderate"
+    elif 231 <= value <= 300:
+        return "Unhealthy for Sensitive Groups"
+    elif 301 <= value <= 400:
+        return "Unhealthy"
+    elif 401 <= value <= 450:
+        return "Very Unhealthy"
+    elif 451 <= value <= 500:
+        return "Hazardous"
+    else:
+        return "Invalid input value"
+
+
 def prefences_importance_method():
     cur = mysql.connection.cursor()
 
@@ -91,8 +108,9 @@ def rout():
     daily_env = daily_env if daily_env else []
     daily_met = daily_met if daily_met else []
 
-    all_tem, all_hum, all_time, all_wb = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in daily_env], [
-        row[2] for row in daily_env], [row[3] for row in daily_env]
+    all_tem, all_hum, all_time, all_wb = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in
+                                                                                              daily_env], [
+                                             row[2] for row in daily_env], [row[3] for row in daily_env]
 
     all_times = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in all_time]
 
@@ -109,6 +127,8 @@ def rout():
     # Determine the latest PMV value and the corresponding status
     l_pmv = get_pmv_value(l_tem, 0.935 * l_tem + 1.709, l_hum, l_met, 0.8, 0.1)
     d_pmv = get_pmv_status(l_pmv)
+
+    l_wb = categorize_value(all_wb[-1])
 
     # Detect the sessions of metabolic rate during the last 24 hours
     # try:
@@ -131,7 +151,7 @@ def rout():
     #     "d_tem": d_tem, "d_hum": d_tem, "l_time": l_time, "m_time": m_time
     # }
 
-    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
+    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=l_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
     userinfo['dwellingId'], wId=userinfo['deviceId'], usernameId=session['username'], pId=userinfo[
         'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
         'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
@@ -283,7 +303,8 @@ def preferences():
 
     preferences_importance, preferences_simos = prefences_importance_method(), prefences_simos_importance_method()
 
-    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, dId=userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
+    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, dId=
+    userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
         'pilotId'].capitalize(), usernameId=session['username'])
 
 
