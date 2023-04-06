@@ -15,6 +15,7 @@
 <script>
     var all_tem = {{ all_tem | tojson }};
     var all_hum = {{ all_hum | tojson }};
+    var all_wb = {{ all_wb | tojson }};
     var all_times = {{ all_times | tojson }};
     var l_pmv = {{ l_pmv | tojson }};
 </script>
@@ -33,7 +34,7 @@
                 {% include 'dashboard-thermal.html' %}
             </div>
             <div class="row mb-lg-8pt">
-
+                {% include 'dashboard-well-being.html' %}
             </div>
             <div class="row mb-lg-8pt">
 

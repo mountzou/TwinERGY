@@ -5,6 +5,7 @@ function convertToPercentage(value) {
 
 var graphTargetAirTemperature = $("#daily-temperature");
 var graphTargetHumidity = $("#daily-humidity");
+var graphTargetWB = $("#daily-VOC");
 var graphTargetThermalComfort = $("#latest-thermal-comfort");
 
 var indoorTemperature = {
@@ -122,6 +123,54 @@ var barGraph = new Chart(graphTargetThermalComfort, {
         elements: {
             arc: {
                 roundedCornersFor: 0
+            }
+        }
+    }
+});
+
+var indoorWB = {
+    labels: all_times,
+    datasets: [{
+        label: "VOC Index",
+        type: "line",
+        borderColor: "rgb(255, 186, 77)",
+        backgroundColor: "rgb(255, 186, 77, .1)",
+        borderWidth: 3,
+        data: all_wb,
+        fill: true
+    }]
+};
+
+var graphWB = new Chart(graphTargetWB, {
+    type: 'line',
+    data: indoorWB,
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    padding: 12,
+                    fontFamily: "Josefin Sans",
+                    beginAtZero: false,
+                    autoSkip: true,
+                    maxTicksLimit: 5,
+                    callback: function(value, index, values) {
+                        return value + "";
+                    },
+                }
+            }],
+            xAxes: [{
+                gridLines: {
+                    display: false,
+                    drawOnChartArea: true
+                },
+                ticks: {
+                    display: false,
+                }
+            }],
+        },
+        legend: {
+            onClick: function(e) {
+                e.stopPropagation();
             }
         }
     }

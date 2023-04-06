@@ -78,7 +78,7 @@ def rout():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
-    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
         userinfo['deviceId'],))
     daily_env = cur.fetchall()
 
@@ -91,8 +91,8 @@ def rout():
     daily_env = daily_env if daily_env else []
     daily_met = daily_met if daily_met else []
 
-    all_tem, all_hum, all_time = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in daily_env], [
-        row[2] for row in daily_env]
+    all_tem, all_hum, all_time, all_wb = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in daily_env], [
+        row[2] for row in daily_env], [row[3] for row in daily_env]
 
     all_times = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in all_time]
 
@@ -131,7 +131,7 @@ def rout():
     #     "d_tem": d_tem, "d_hum": d_tem, "l_time": l_time, "m_time": m_time
     # }
 
-    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
+    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
     userinfo['dwellingId'], wId=userinfo['deviceId'], usernameId=session['username'], pId=userinfo[
         'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
         'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
