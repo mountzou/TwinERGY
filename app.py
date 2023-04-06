@@ -219,6 +219,8 @@ def callback():
 
 @app.route("/preferences/", methods=["GET", "POST"])
 def preferences():
+    userinfo = session.get('userinfo', None)
+
     cur = mysql.connection.cursor()
 
     if request.method == "POST":
