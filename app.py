@@ -128,7 +128,7 @@ def rout():
     l_pmv = get_pmv_value(l_tem, 0.935 * l_tem + 1.709, l_hum, l_met, 0.8, 0.1)
     d_pmv = get_pmv_status(l_pmv)
 
-    l_wb = categorize_value(all_wb[-1])
+    d_wb = categorize_value(all_wb[-1])
 
     # Detect the sessions of metabolic rate during the last 24 hours
     # try:
@@ -151,7 +151,7 @@ def rout():
     #     "d_tem": d_tem, "d_hum": d_tem, "l_time": l_time, "m_time": m_time
     # }
 
-    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=l_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
+    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=all_wb[-1], d_wb=d_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
     userinfo['dwellingId'], wId=userinfo['deviceId'], usernameId=session['username'], pId=userinfo[
         'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
         'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
