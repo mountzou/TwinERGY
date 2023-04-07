@@ -185,7 +185,7 @@ def thermal_comfort():
     sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
     sessions_met_time = dailyMetabolicTime(daily_metabolic)
 
-    avg_met = sum(sessions_met) / len(sessions_met)
+    avg_met = round(sum(sessions_met) / len(sessions_met), 2)
 
     daily_temp = [get_air_temperature(t[0]) for t in daily_environmental]
     daily_hum = [t[1] for t in daily_environmental]
