@@ -11,7 +11,6 @@ from datetime import datetime
 from urllib.parse import urlparse
 import json
 import requests
-
 app = Flask(__name__)
 
 # Credentials to connect with mySQL TwinERGY UPAT database
