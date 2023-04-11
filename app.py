@@ -151,7 +151,9 @@ def rout():
     #     "d_tem": d_tem, "d_hum": d_tem, "l_time": l_time, "m_time": m_time
     # }
 
-    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=all_wb[-1], d_wb=d_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
+    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=
+    all_wb[
+        -1], d_wb=d_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
     userinfo['dwellingId'], wId=userinfo['deviceId'], usernameId=session['username'], pId=userinfo[
         'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
         'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
@@ -202,6 +204,8 @@ def thermal_comfort():
     daily_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in daily_time]
     sessions_met_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in sessions_met_time]
 
+    print(sessions_met)
+
     return render_template("thermal-comfort.html", avg_met=avg_met, l_temp=latest_temperature, l_hum=latest_humidity, l_met=
     sessions_met[
         -1], avg_temp=avg_temperature, avg_hum=avg_humidity, d_temp=daily_temp, d_hum=daily_hum, d_time=daily_time, d_met=sessions_met, d_met_time=sessions_met_time, l_update=
@@ -233,6 +237,8 @@ def callback():
     session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
 
     session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
+
+    session['access_token'] = access_token
 
     return redirect('/')
 
@@ -372,6 +378,13 @@ def api_tc():
     json_schema = {'data': data_list}
 
     return jsonify(json_schema)
+
+
+@app.route('/logout')
+def logout():
+    access_token = session.get('access_token', None)
+    keycloak_openid.logout(access_token['refresh_token'])
+    return redirect('/login')
 
 
 if __name__ == "__main__":

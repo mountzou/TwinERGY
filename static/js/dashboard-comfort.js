@@ -154,7 +154,7 @@ var graphWB = new Chart(graphTargetWB, {
                     autoSkip: true,
                     maxTicksLimit: 5,
                     callback: function(value, index, values) {
-                        return value + "";
+                        return value + " voc.";
                     },
                 }
             }],
@@ -172,6 +172,13 @@ var graphWB = new Chart(graphTargetWB, {
             onClick: function(e) {
                 e.stopPropagation();
             }
-        }
+        },
+                tooltips: {
+            callbacks: {
+                label: function(tooltipItems, data) {
+                    return data.datasets[tooltipItems.datasetIndex].label +': ' + tooltipItems.yLabel;
+                }
+            }
+            }
     }
 });
