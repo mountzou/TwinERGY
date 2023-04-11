@@ -383,6 +383,7 @@ def api_tc():
 def logout():
     access_token = session.get('access_token', None)
     keycloak_openid.logout(access_token['refresh_token'])
+    session.pop('access_token', None)
     return redirect('/login')
 
 
