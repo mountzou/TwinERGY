@@ -6,11 +6,14 @@ from keycloak import KeycloakOpenID
 from determineMetabolic import dailyMetabolic, dailyMetabolicTime
 from determineThermalComfort import get_pmv_status, get_pmv_value
 from determineAirTemperature import get_air_temperature
+from determineWellBeing import get_well_being_description
 
 from datetime import datetime
 from urllib.parse import urlparse
+
 import json
 import requests
+
 app = Flask(__name__)
 
 # Credentials to connect with mySQL TwinERGY UPAT database
@@ -26,23 +29,6 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
     realm_name='TwinERGY',
     client_secret_key="secret")
 app.secret_key = 'secret'
-
-
-def categorize_value(value):
-    if 0 <= value <= 150:
-        return "Good"
-    elif 151 <= value <= 230:
-        return "Moderate"
-    elif 231 <= value <= 300:
-        return "Unhealthy for Sensitive Groups"
-    elif 301 <= value <= 400:
-        return "Unhealthy"
-    elif 401 <= value <= 450:
-        return "Very Unhealthy"
-    elif 451 <= value <= 500:
-        return "Hazardous"
-    else:
-        return "Invalid input value"
 
 
 def prefences_importance_method():
@@ -76,6 +62,7 @@ def require_login():
     # Define the allowed routes of a non-authenticated user
     allowed_routes = ['login', 'callback', 'static', 'api_tc']
 
+    # Return None when the CDMP mechanism tries to access the API endpoint
     if request.endpoint == 'api_tc':
         return None
 
@@ -114,7 +101,7 @@ def rout():
     all_times = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in all_time]
 
     # Determine the average air temperature and the average relative humidity
-    m_tem, m_hum = round(sum(all_tem) / len(all_tem), 2), round(sum(all_hum) / len(all_hum), 2)
+    m_tem, m_hum, m_wb = round(sum(all_tem) / len(all_tem), 2), round(sum(all_hum) / len(all_hum), 2), round(sum(all_wb) / len(all_wb), 2)
 
     # Determine the latest air temperature and the latest relative humidity
     l_tem, l_hum, l_time = get_air_temperature(daily_env[-1][0]), daily_env[-1][1], datetime.utcfromtimestamp(
@@ -127,7 +114,7 @@ def rout():
     l_pmv = get_pmv_value(l_tem, 0.935 * l_tem + 1.709, l_hum, l_met, 0.8, 0.1)
     d_pmv = get_pmv_status(l_pmv)
 
-    d_wb = categorize_value(all_wb[-1])
+    d_wb = get_well_being_description(all_wb[-1])
 
     # Detect the sessions of metabolic rate during the last 24 hours
     # try:
@@ -152,7 +139,7 @@ def rout():
 
     return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=
     all_wb[
-        -1], d_wb=d_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
+        -1], d_wb=d_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, m_wb=m_wb, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
     userinfo['dwellingId'], wId=userinfo['deviceId'], usernameId=session['username'], pId=userinfo[
         'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
         'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
@@ -383,7 +370,7 @@ def api_tc():
 def logout():
     access_token = session.get('access_token', None)
     keycloak_openid.logout(access_token['refresh_token'])
-    session.pop('access_token', None)
+    session.clear()
     return redirect('/login')
 
 
