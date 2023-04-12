@@ -27,9 +27,7 @@ app.config['MYSQL_DB'] = 'consume5_twinERGY'
 load_dotenv()
 
 my_var = os.environ.get('MY_VAR')
-
 print(my_var)
-
 print('ok')
 
 mysql = MySQL(app)
