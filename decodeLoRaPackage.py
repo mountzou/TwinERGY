@@ -23,6 +23,4 @@ def decodeMACPayload(payload):
 
     air_temperature = integer_part_tem + (decimal_part_tem / 100)
 
-    print(air_temperature)
-
-    return 0
+    return [air_temperature, relative_humidity, voc_index]
