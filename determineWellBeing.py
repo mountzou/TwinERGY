@@ -14,3 +14,14 @@ def get_well_being_description(value):
         return "Hazardous"
     else:
         return "Invalid input value"
+
+
+# Implement a function that fills null values in a row with the last non-null value, to protect from transmission errors
+def protect_voc_null_values(all_wb):
+    last_non_null = None
+    for i in range(len(all_wb)):
+        if all_wb[i] == 0 and last_non_null is not None:
+            all_wb[i] = last_non_null
+        elif all_wb[i] != 0:
+            last_non_null = all_wb[i]
+    return all_wb

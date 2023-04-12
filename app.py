@@ -6,13 +6,15 @@ from keycloak import KeycloakOpenID
 from determineMetabolic import dailyMetabolic, dailyMetabolicTime
 from determineThermalComfort import get_pmv_status, get_pmv_value
 from determineAirTemperature import get_air_temperature
-from determineWellBeing import get_well_being_description
+from determineWellBeing import get_well_being_description, protect_voc_null_values
 
 from datetime import datetime
 from urllib.parse import urlparse
 
 import json
 import requests
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
@@ -21,6 +23,14 @@ app.config['MYSQL_HOST'] = 'eu15.tmd.cloud'
 app.config['MYSQL_USER'] = 'consume5_twinERGY'
 app.config['MYSQL_PASSWORD'] = 'w*}S2x1pKMM='
 app.config['MYSQL_DB'] = 'consume5_twinERGY'
+
+load_dotenv()
+
+my_var = os.environ.get('MY_VAR')
+
+print(my_var)
+
+print('ok')
 
 mysql = MySQL(app)
 
@@ -97,6 +107,9 @@ def rout():
     all_tem, all_hum, all_time, all_wb = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in
                                                                                               daily_env], [
                                              row[2] for row in daily_env], [row[3] for row in daily_env]
+
+    # In case of null values the VOC index, replace them with the previous non-null
+    all_wb = protect_voc_null_values(all_wb)
 
     all_times = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in all_time]
 
@@ -179,18 +192,17 @@ def thermal_comfort():
     daily_hum = [t[1] for t in daily_environmental]
     daily_time = [t[2] for t in daily_environmental]
 
-    for ts, te, met in zip(sessions_met_time, sessions_met_time[1:], sessions_met[:-1]):
-        cur.execute('''SELECT AVG(tc_temperature) AS avg_temperature, AVG(tc_humidity) AS avg_humidity FROM user_thermal_comfort WHERE tc_timestamp BETWEEN %s AND %s;''', (
-            ts, te))
-        tc_parameters = cur.fetchall()
-
-        pmv = get_pmv_value(get_air_temperature(tc_parameters[0][0]), 0.935 * get_air_temperature(
-            tc_parameters[0][0]) + 1.709, tc_parameters[0][1], met, 0.8, 0.1)
+    # for ts, te, met in zip(sessions_met_time, sessions_met_time[1:], sessions_met[:-1]):
+    #     print(ts)
+    #     cur.execute('''SELECT AVG(tc_temperature) AS avg_temperature, AVG(tc_humidity) AS avg_humidity FROM user_thermal_comfort WHERE tc_timestamp BETWEEN %s AND %s;''', (
+    #         ts, te))
+    #     tc_parameters = cur.fetchall()
+    #
+    #     pmv = get_pmv_value(get_air_temperature(tc_parameters[0][0]), 0.935 * get_air_temperature(
+    #         tc_parameters[0][0]) + 1.709, tc_parameters[0][1], met, 0.8, 0.1)
 
     daily_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in daily_time]
     sessions_met_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in sessions_met_time]
-
-    print(sessions_met)
 
     return render_template("thermal-comfort.html", avg_met=avg_met, l_temp=latest_temperature, l_hum=latest_humidity, l_met=
     sessions_met[
@@ -353,7 +365,8 @@ def api_tc():
     # Create a list of dictionaries using a list comprehension
     data_list = [{'air_temperature': item[0], 'globe_temperature': item[0] * 0.935, 'relative_humidity': item[1],
                   'wearable_id': item[2], 'gateway_id': item[3],
-                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1, 'voc_index': item[5],
+                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1,
+                  'voc_index': item[5],
                   'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1),
                   'thermal_comfort_desc': get_pmv_status(get_pmv_value(
                       item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)),

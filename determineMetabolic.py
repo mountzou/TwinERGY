@@ -13,7 +13,7 @@ def dailyMetabolic(latest_metabolic):
     for session in sessions:
         start_ts, start_obs = session[0][1], session[0][0]
         end_ts, end_obs = session[-1][1], session[-1][0]
-        if end_ts - start_ts>0:
+        if end_ts - start_ts > 0:
             sessions_met.append(round((end_obs * 1000) / (25 * (end_ts - start_ts)), 2))
         else:
             sessions_met.append(0.9)
