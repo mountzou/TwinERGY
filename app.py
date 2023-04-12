@@ -387,7 +387,7 @@ def handle_ttn_webhook():
     print(data)
 
     device_id = data['end_device_ids']['dev_eui']
-    gateway_id = data['uplink_message']['rx_metadata']['gateway_ids']['gateway_id']
+    gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
     test = 'AAADcDIAAAAAAAAAAAAAAAAAAAAPAAAAAAAAaQAAKwAAJgADAAQAAgEDAAAAAAAAmQAAAAAAAAAAAAAA1AAALgAUCqoSTQ=='
 
