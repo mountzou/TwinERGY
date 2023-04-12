@@ -341,7 +341,7 @@ def api_tc():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -10 MINUTE));''')
+    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -10 MINUTE));''')
     latest_env = cur.fetchall()
 
     # Execute SQL query to get the daily physiological parameter of metabolic rate
@@ -353,7 +353,7 @@ def api_tc():
     # Create a list of dictionaries using a list comprehension
     data_list = [{'air_temperature': item[0], 'globe_temperature': item[0] * 0.935, 'relative_humidity': item[1],
                   'wearable_id': item[2], 'gateway_id': item[3],
-                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1,
+                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1, 'voc_index': item[5],
                   'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1),
                   'thermal_comfort_desc': get_pmv_status(get_pmv_value(
                       item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)),
