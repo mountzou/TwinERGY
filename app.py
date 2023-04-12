@@ -384,15 +384,11 @@ def api_tc():
 def handle_ttn_webhook():
     data = request.get_json()
 
-    print(data)
-
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
-    test = 'AAADcDIAAAAAAAAAAAAAAAAAAAAPAAAAAAAAaQAAKwAAJgADAAQAAgEDAAAAAAAAmQAAAAAAAAAAAAAA1AAALgAUCqoSTQ=='
-
     # decodedPayload = decodeMACPayload(data['uplink_message']['frm_payload'])
-    re = decodeMACPayload(test)
+    re = decodeMACPayload(data["uplink_message"]["frm_payload"])
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = re[0], re[1], re[2], 32, re[3]
 
     # Connect to the database
@@ -400,6 +396,7 @@ def handle_ttn_webhook():
 
     # # Execute SQL INSERT statement
     sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+
     cur.execute(sql)
 
     mysql.connection.commit()

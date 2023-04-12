@@ -1,9 +1,9 @@
 import base64
 import time
-from datetime import datetime, timedelta
 
 
 def decodeMACPayload(payload):
+
     # Value of MAC Payload in hex format
     mac_payload = base64.b64decode(payload).hex()
 
