@@ -71,8 +71,7 @@ def require_login():
     if request.endpoint == 'api_tc':
         return None
 
-    # Return None when the CDMP mechanism tries to access the API endpoint
-    if request.endpoint == 'ttn-webhook':
+    if request.path == '/ttn-webhook':
         return None
 
     # Redirect non-authenticated user to the 'login' rout
@@ -198,8 +197,6 @@ def thermal_comfort():
 
     daily_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in daily_time]
     sessions_met_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in sessions_met_time]
-
-    print(sessions_met)
 
     return render_template("thermal-comfort.html", avg_met=avg_met, l_temp=latest_temperature, l_hum=latest_humidity, l_met=
     sessions_met[
