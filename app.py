@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 
 from keycloak import KeycloakOpenID
 
+from decodeLoRaPackage import decodeMACPayload
 from determineMetabolic import dailyMetabolic, dailyMetabolicTime
 from determineThermalComfort import get_pmv_status, get_pmv_value
 from determineAirTemperature import get_air_temperature
@@ -102,6 +103,11 @@ def rout():
     # Check if tuples are empty, in case of an empty tuple assign a single value of -1
     daily_env = daily_env if daily_env else []
     daily_met = daily_met if daily_met else []
+
+    cur.execute('''SELECT * FROM user_thermal_comfort ORDER BY tc_timestamp DESC LIMIT 5;''')
+    daily_test = cur.fetchall()
+
+    print(daily_test)
 
     all_tem, all_hum, all_time, all_wb = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in
                                                                                               daily_env], [
@@ -378,27 +384,27 @@ def api_tc():
 def handle_ttn_webhook():
     data = request.get_json()
 
-    # Extract the required values from the JSON object
-    device_id = 'eui-0080e11505109e73'
-    gateway_id = 'gr-ac1f09fffe0609a8'
-    tc_temperature = 21
-    tc_humidity = 55
-    tc_metabolic = 22
-    tc_timestamp = random.randint(1781316800, 1881316800)
-    wb_index = 5
+    device_id = data['end_device_ids']['dev_eui']
+    gateway_id = data['uplink_message']['rx_metadata']['gateway_ids']['gateway_id']
+
+    test = 'AAADcDIAAAAAAAAAAAAAAAAAAAAPAAAAAAAAaQAAKwAAJgADAAQAAgEDAAAAAAAAmQAAAAAAAAAAAAAA1AAALgAUCqoSTQ=='
+
+    # decodedPayload = decodeMACPayload(data['uplink_message']['frm_payload'])
+    decodeMACPayload(test)
+    # tc_temperature =
 
     # Connect to the database
-    cur = mysql.connection.cursor()
+    # cur = mysql.connection.cursor()
 
-    # Execute SQL INSERT statement
-    sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
-    cur.execute(sql)
-
-    # Commit the transaction
-    mysql.connection.commit()
-
-    # Close the cursor
-    cur.close()
+    # # Execute SQL INSERT statement
+    # sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+    # cur.execute(sql)
+    #
+    # # Commit the transaction
+    # mysql.connection.commit()
+    #
+    # # Close the cursor
+    # cur.close()
     return jsonify({'status': 'success'}), 200
 
 
