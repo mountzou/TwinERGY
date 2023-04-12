@@ -384,12 +384,13 @@ def handle_ttn_webhook():
     tc_humidity = 55
     tc_metabolic = 22
     tc_timestamp = 2198218921
+    wb_index = 0
 
     # Connect to the database
     cur = mysql.connection.cursor()
 
     # Execute SQL INSERT statement
-    sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, wearable_id, gateway_id) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}')"
+    sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}', , '{wb_index}')"
     cur.execute(sql)
 
     # Commit the transaction
