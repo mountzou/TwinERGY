@@ -29,10 +29,6 @@ app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 
 mysql = MySQL(app)
 
-print(os.environ.get('MYSQL_HOST'))
-
-print("edw")
-
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
     client_id='cdt-twinergy',
     realm_name='TwinERGY',
@@ -362,7 +358,8 @@ def api_tc():
     # Create a list of dictionaries using a list comprehension
     data_list = [{'air_temperature': item[0], 'globe_temperature': item[0] * 0.935, 'relative_humidity': item[1],
                   'wearable_id': item[2], 'gateway_id': item[3],
-                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1, 'voc_index': item[5],
+                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1,
+                  'voc_index': item[5],
                   'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1),
                   'thermal_comfort_desc': get_pmv_status(get_pmv_value(
                       item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)),
@@ -373,6 +370,13 @@ def api_tc():
     json_schema = {'data': data_list}
 
     return jsonify(json_schema)
+
+
+@app.route('/ttn-webhook', methods=['POST'])
+def handle_ttn_webhook():
+    data = request.get_json()
+    print(data)
+    return jsonify({'status': 'success'}), 200
 
 
 @app.route('/logout')
