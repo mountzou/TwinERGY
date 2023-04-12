@@ -29,6 +29,10 @@ app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 
 mysql = MySQL(app)
 
+print(os.environ.get('MYSQL_HOST'))
+
+print("edw")
+
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
     client_id='cdt-twinergy',
     realm_name='TwinERGY',

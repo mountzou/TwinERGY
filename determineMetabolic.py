@@ -17,7 +17,7 @@ def dailyMetabolic(latest_metabolic):
             sessions_met.append(round((end_obs * 1000) / (25 * (end_ts - start_ts)), 2))
         else:
             sessions_met.append(0.9)
-        print(f"Session from {start_ts} ({start_obs}) to {end_ts} ({end_obs})")
+        # print(f"Session from {start_ts} ({start_obs}) to {end_ts} ({end_obs})")
 
     # Replace met with the min and max acceptable values in case of less or higher than the corresponding boundary ones
     sessions_met = [0.9 if x < 0.9 else 2.0 if x > 2.0 else x for x in sessions_met]
