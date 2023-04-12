@@ -65,7 +65,7 @@ def prefences_simos_importance_method():
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static', 'api_tc']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'ttn-webhook']
 
     # Return None when the CDMP mechanism tries to access the API endpoint
     if request.endpoint == 'api_tc':
