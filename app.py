@@ -14,13 +14,18 @@ from urllib.parse import urlparse
 import json
 import requests
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 app = Flask(__name__)
 
 # Credentials to connect with mySQL TwinERGY UPAT database
-app.config['MYSQL_HOST'] = 'eu15.tmd.cloud'
-app.config['MYSQL_USER'] = 'consume5_twinERGY'
-app.config['MYSQL_PASSWORD'] = 'w*}S2x1pKMM='
-app.config['MYSQL_DB'] = 'consume5_twinERGY'
+app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
+app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 
 mysql = MySQL(app)
 
