@@ -14,15 +14,24 @@ from urllib.parse import urlparse
 import json
 import requests
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 app = Flask(__name__)
 
 # Credentials to connect with mySQL TwinERGY UPAT database
-app.config['MYSQL_HOST'] = 'eu15.tmd.cloud'
-app.config['MYSQL_USER'] = 'consume5_twinERGY'
-app.config['MYSQL_PASSWORD'] = 'w*}S2x1pKMM='
-app.config['MYSQL_DB'] = 'consume5_twinERGY'
+app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
+app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 
 mysql = MySQL(app)
+
+print(os.environ.get('MYSQL_HOST'))
+
+print("edw")
 
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
     client_id='cdt-twinergy',
@@ -341,7 +350,7 @@ def api_tc():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -10 MINUTE));''')
+    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
     latest_env = cur.fetchall()
 
     # Execute SQL query to get the daily physiological parameter of metabolic rate
