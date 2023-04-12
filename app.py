@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 
 import json
 import requests
-import random
 
 import os
 from dotenv import load_dotenv
@@ -88,11 +87,6 @@ def rout():
 
     # Create a cursor object to interact with the TwinERGY UPAT database
     cur = mysql.connection.cursor()
-
-    cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_humidity = 55;''')
-    daily_env1 = cur.fetchall()
-
-    print(daily_env1)
 
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
     cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
@@ -382,27 +376,7 @@ def api_tc():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
-
-    # Extract the required values from the JSON object
-    device_id = 'eui-0080e11505109e73'
-    gateway_id = 'gr-ac1f09fffe0609a8'
-    tc_temperature = 21
-    tc_humidity = 55
-    tc_metabolic = 22
-    tc_timestamp = random.randint(1000000000, 9999999999)
-
-    cur = mysql.connection.cursor()
-
-    # Execute SQL INSERT statement
-    sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, device_id, gateway_id) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}')"
-    cur.execute(sql)
-
-    # Commit the transaction
-    mysql.connection.commit()
-
-    # Close the cursor
-    cur.close()
-
+    print(data['end_device_ids']['device_id'])
     return jsonify({'status': 'success'}), 200
 
 
