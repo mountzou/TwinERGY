@@ -71,6 +71,10 @@ def require_login():
     if request.endpoint == 'api_tc':
         return None
 
+    # Return None when the CDMP mechanism tries to access the API endpoint
+    if request.endpoint == 'ttn-webhook':
+        return None
+
     # Redirect non-authenticated user to the 'login' rout
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect(url_for('login'))
