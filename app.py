@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 import json
 import requests
+import random
 
 import os
 from dotenv import load_dotenv
@@ -376,7 +377,26 @@ def api_tc():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
-    print(data)
+
+    # Extract the required values from the JSON object
+    device_id = 'eui-0080e11505109e73'
+    gateway_id = 'gr-ac1f09fffe0609a8'
+    tc_temperature = 21
+    tc_humidity = 55
+    tc_metabolic = 22
+    tc_timestamp = random.randint(1000000000, 9999999999)
+
+    try:
+        with mysql.connection.cursor() as cursor:
+            # Execute SQL INSERT statement
+            sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, device_id, gateway_id) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}')"
+            cursor.execute(sql)
+        # Commit the transaction
+        mysql.connection.commit()
+    finally:
+        # Close the connection
+        mysql.connection.close()
+
     return jsonify({'status': 'success'}), 200
 
 
