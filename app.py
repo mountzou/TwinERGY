@@ -393,7 +393,7 @@ def handle_ttn_webhook():
 
     # decodedPayload = decodeMACPayload(data['uplink_message']['frm_payload'])
     re = decodeMACPayload(test)
-    tc_temperature, tc_humidity, wb_index, tc_metabolic = re[0], re[1], re[2], 32
+    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = re[0], re[1], re[2], 32, re[3]
 
     # Connect to the database
     cur = mysql.connection.cursor()

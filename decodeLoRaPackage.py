@@ -23,4 +23,10 @@ def decodeMACPayload(payload):
 
     air_temperature = integer_part_tem + (decimal_part_tem / 100)
 
-    return [air_temperature, relative_humidity, voc_index]
+    # Value of current timestamp in UNIX format
+    unix_timestamp = int(time.time())
+
+    # Value of current timestamp in "%d/%m/%Y %H:%M:%S" format
+    timestamp = (datetime.now() + timedelta(hours=3)).strftime("%d/%m/%Y %H:%M:%S")
+
+    return [air_temperature, relative_humidity, voc_index, timestamp]
