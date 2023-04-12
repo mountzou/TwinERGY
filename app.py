@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 import json
 import requests
+import random
 
 import os
 from dotenv import load_dotenv
@@ -383,7 +384,7 @@ def handle_ttn_webhook():
     tc_temperature = 21
     tc_humidity = 55
     tc_metabolic = 22
-    tc_timestamp = 2198218921
+    tc_timestamp = random.randint(1781316800, 1881316800)
     wb_index = 5
 
     # Connect to the database
