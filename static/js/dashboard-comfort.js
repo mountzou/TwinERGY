@@ -105,6 +105,9 @@ function updateDashboard() {
 
         let latestTemperature = temperature[temperature.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
+        let latestTime = time[time.length - 1];
+
+        console.log(latestTime)
 
         // Update the latest temperature and humidity
         document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature+' °C';
@@ -124,6 +127,14 @@ function updateDashboard() {
         // Update the mean  temperature and humidity
         document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
         document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
+
+        // Select all elements with the class "example-class"
+        let time_elements = document.getElementsByClassName("l-updated");
+
+        // Update the innerHTML of all elements with the "example-class" class
+        for (let i = 0; i < time_elements.length; i++) {
+            time_elements[i].innerHTML = 'Latest update at '+latestTime;
+        }
 
         var graphTargetAirTemperature = $("#daily-temperature");
         var graphTargetHumidity = $("#daily-humidity");
