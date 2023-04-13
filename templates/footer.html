@@ -4,7 +4,12 @@
             <img alt="TwinERGY Grant Agreement" class="brand-icon"
                  src="{{ url_for('static', filename='images/licence.png') }}" width="100%"/>
         </p>
-        <p class="text-50 small">Copyright 2021 - 2023 © All rights reserved. Designed & Developed by Applied Electronics Lab,
-            Electrical & Computer Engineering, University of Patras.</p>
+        <p class="text-50 small">&copy; Copyright 2021 - <span id="currentYear"></span>. Designed & Developed by Applied Electronics Lab,
+            Dept. of Electrical & Computer Engineering, University of Patras.</p>
     </div>
 </div>
+
+<!-- Add dynamically the current year to the copyright section of the footer. -->
+<script>
+   document.getElementById("currentYear").innerHTML = new Date().getFullYear();
+</script>
