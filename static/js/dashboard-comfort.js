@@ -3,6 +3,11 @@ function convertToPercentage(value) {
   return percentage.toFixed(2);
 }
 
+function unixToHumanReadable(unixTimestamp) {
+    let date = new Date(unixTimestamp * 1000);
+    return date.toLocaleString();
+}
+
 // A function that matches the VOC index to a literal description
 function getWellBeingDescription(value) {
   if (0 <= value && value <= 150) {
@@ -30,50 +35,7 @@ categories.forEach((category) => {
 });
 
 // Target the html chart items for air temperature, relative humidity, VOC and thermal comfort, respectively
-var graphTargetAirTemperature = $("#daily-temperature");
-var graphTargetHumidity = $("#daily-humidity");
-var graphTargetWB = $("#daily-VOC");
 var graphTargetWBAgg = $("#daily-VOC-agg");
-var graphTargetThermalComfort = $("#latest-thermal-comfort");
-
-var indoorTemperature = {
-    labels: all_times,
-    datasets: [{
-        label: "Air Temperature",
-        type: "line",
-        borderColor: "rgb(255, 186, 77)",
-        backgroundColor: "rgb(255, 186, 77, .1)",
-        borderWidth: 3,
-        data: all_tem,
-        fill: true
-    }]
-};
-
-var indoorHumidity = {
-    labels: all_times,
-    datasets: [{
-        label: "Relative Humidity",
-        type: "line",
-        borderColor: "rgb(255, 186, 77)",
-        backgroundColor: "rgb(255, 186, 77, .1)",
-        borderWidth: 3,
-        data: all_hum,
-        fill: true
-    }]
-};
-
-var indoorWB = {
-    labels: all_times,
-    datasets: [{
-        label: "VOC Index",
-        type: "line",
-        borderColor: "rgb(255, 186, 77)",
-        backgroundColor: "rgb(255, 186, 77, .1)",
-        borderWidth: 3,
-        data: all_wb,
-        fill: true
-    }]
-};
 
 var indoorWBAgg = {
     labels: Object.keys(categoryCounts),
@@ -89,142 +51,6 @@ var indoorWBAgg = {
         data: Object.values(categoryCounts),
     }]
 };
-
-var graphTemperature = new Chart(graphTargetAirTemperature, {
-    type: 'line',
-    data: indoorTemperature,
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    padding: 12,
-                    fontFamily: "Josefin Sans",
-                    beginAtZero: false,
-                    autoSkip: true,
-                    maxTicksLimit: 5,
-                    callback: function(value, index, values) {
-                        return value + " °C";
-                    },
-                }
-            }],
-            xAxes: [{
-                gridLines: {
-                    display: false,
-                    drawOnChartArea: true
-                },
-                ticks: {
-                    display: false,
-                }
-            }],
-        },
-        legend: {
-            onClick: function(e) {
-                e.stopPropagation();
-            }
-        }
-    }
-});
-
-var graphHumidity = new Chart(graphTargetHumidity, {
-    type: 'line',
-    data: indoorHumidity,
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    padding: 12,
-                    fontFamily: "Josefin Sans",
-                    beginAtZero: false,
-                    autoSkip: true,
-                    maxTicksLimit: 5,
-                    callback: function(value, index, values) {
-                        return value + " %";
-                    },
-                }
-            }],
-            xAxes: [{
-                gridLines: {
-                    display: false,
-                    drawOnChartArea: true
-                },
-                ticks: {
-                    display: false,
-                }
-            }],
-        },
-        legend: {
-            onClick: function(e) {
-                e.stopPropagation();
-            }
-        }
-    }
-});
-
-var thermalComfort = {
-    labels: ["Comfort", "Discomfort"],
-    datasets: [{
-        label: "Thermal Comfort",
-        data: [convertToPercentage(l_pmv), 100-convertToPercentage(l_pmv)],
-        backgroundColor: [
-            "#ffba4d",
-            "#EEEEEE",
-        ]
-    }]
-};
-
-var barGraph = new Chart(graphTargetThermalComfort, {
-    type: 'doughnut',
-    data: thermalComfort,
-    options: {
-        elements: {
-            arc: {
-                roundedCornersFor: 0
-            }
-        }
-    }
-});
-
-var graphWB = new Chart(graphTargetWB, {
-    type: 'line',
-    data: indoorWB,
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    padding: 12,
-                    fontFamily: "Josefin Sans",
-                    beginAtZero: false,
-                    autoSkip: true,
-                    maxTicksLimit: 5,
-                    callback: function(value, index, values) {
-                        return value + " voc.";
-                    },
-                }
-            }],
-            xAxes: [{
-                gridLines: {
-                    display: false,
-                    drawOnChartArea: true
-                },
-                ticks: {
-                    display: false,
-                }
-            }],
-        },
-        legend: {
-            onClick: function(e) {
-                e.stopPropagation();
-            }
-        },
-        tooltips: {
-            callbacks: {
-                label: function(tooltipItems, data) {
-                    return data.datasets[tooltipItems.datasetIndex].label +': ' + tooltipItems.yLabel;
-                }
-            }
-        }
-    }
-});
 
 var graphWBAgg = new Chart(graphTargetWBAgg, {
   type: 'bar',
@@ -268,3 +94,202 @@ var graphWBAgg = new Chart(graphTargetWBAgg, {
         }
     }
 });
+
+function updateDashboard() {
+    $.getJSON('/as_test', function (data) {
+        let temperature = data.map(x => x[0]);
+        let humidity = data.map(x => x[1]);
+        let voc_index = data.map(x => x[3]);
+        let time = data.map(x => unixToHumanReadable(x[2]));
+
+        console.log(data);
+
+        var graphTargetAirTemperature = $("#daily-temperature");
+        var graphTargetHumidity = $("#daily-humidity");
+        var graphTargetWB = $("#daily-VOC");
+        var graphTargetThermalComfort = $("#latest-thermal-comfort");
+
+        var indoorTemperature = {
+            labels: time,
+            datasets: [{
+                label: "Air Temperature",
+                type: "line",
+                borderColor: "rgb(255, 186, 77)",
+                backgroundColor: "rgb(255, 186, 77, .1)",
+                borderWidth: 3,
+                data: temperature,
+                fill: true
+            }]
+        };
+
+        var indoorHumidity = {
+            labels: time,
+            datasets: [{
+                label: "Relative Humidity",
+                type: "line",
+                borderColor: "rgb(255, 186, 77)",
+                backgroundColor: "rgb(255, 186, 77, .1)",
+                borderWidth: 3,
+                data: humidity,
+                fill: true
+            }]
+        };
+
+        var indoorWB = {
+            labels: time,
+            datasets: [{
+                label: "VOC Index",
+                type: "line",
+                borderColor: "rgb(255, 186, 77)",
+                backgroundColor: "rgb(255, 186, 77, .1)",
+                borderWidth: 3,
+                data: voc_index,
+                fill: true
+            }]
+        };
+
+        var thermalComfort = {
+            labels: ["Comfort", "Discomfort"],
+            datasets: [{
+                label: "Thermal Comfort",
+                data: [convertToPercentage(l_pmv), 100-convertToPercentage(l_pmv)],
+                backgroundColor: [
+                    "#ffba4d",
+                    "#EEEEEE",
+                ]
+            }]
+        };
+
+        var graphTemperature = new Chart(graphTargetAirTemperature, {
+            type: 'line',
+            data: indoorTemperature,
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            padding: 12,
+                            fontFamily: "Josefin Sans",
+                            beginAtZero: false,
+                            autoSkip: true,
+                            maxTicksLimit: 5,
+                            callback: function(value, index, values) {
+                                return value + " °C";
+                            },
+                        }
+                    }],
+                    xAxes: [{
+                        gridLines: {
+                            display: false,
+                            drawOnChartArea: true
+                        },
+                        ticks: {
+                            display: false,
+                        }
+                    }],
+                },
+                legend: {
+                    onClick: function(e) {
+                        e.stopPropagation();
+                    }
+                }
+            }
+        });
+
+        var graphHumidity = new Chart(graphTargetHumidity, {
+            type: 'line',
+            data: indoorHumidity,
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            padding: 12,
+                            fontFamily: "Josefin Sans",
+                            beginAtZero: false,
+                            autoSkip: true,
+                            maxTicksLimit: 5,
+                            callback: function(value, index, values) {
+                                return value + " %";
+                            },
+                        }
+                    }],
+                    xAxes: [{
+                        gridLines: {
+                            display: false,
+                            drawOnChartArea: true
+                        },
+                        ticks: {
+                            display: false,
+                        }
+                    }],
+                },
+                legend: {
+                    onClick: function(e) {
+                        e.stopPropagation();
+                    }
+                }
+            }
+        });
+
+        var barGraph = new Chart(graphTargetThermalComfort, {
+            type: 'doughnut',
+            data: thermalComfort,
+            options: {
+                elements: {
+                    arc: {
+                        roundedCornersFor: 0
+                    }
+                }
+            }
+        });
+
+        var graphWB = new Chart(graphTargetWB, {
+            type: 'line',
+            data: indoorWB,
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            padding: 12,
+                            fontFamily: "Josefin Sans",
+                            beginAtZero: false,
+                            autoSkip: true,
+                            maxTicksLimit: 5,
+                            callback: function(value, index, values) {
+                                return value + " voc.";
+                            },
+                        }
+                    }],
+                    xAxes: [{
+                        gridLines: {
+                            display: false,
+                            drawOnChartArea: true
+                        },
+                        ticks: {
+                            display: false,
+                        }
+                    }],
+                },
+                legend: {
+                    onClick: function(e) {
+                        e.stopPropagation();
+                    }
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItems, data) {
+                            return data.datasets[tooltipItems.datasetIndex].label +': ' + tooltipItems.yLabel;
+                        }
+                    }
+                }
+            }
+        });
+
+    });
+}
+
+updateDashboard();
+
+setInterval(updateDashboard, 8000);

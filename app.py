@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 
 import json
 import requests
-import random
 
 import os
 from dotenv import load_dotenv
@@ -29,6 +28,7 @@ app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 
+# Initialization of MySQL object for the DB hosted on Heroku
 mysql = MySQL(app)
 
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
@@ -69,11 +69,8 @@ def require_login():
     # Define the allowed routes of a non-authenticated user
     allowed_routes = ['login', 'callback', 'static', 'api_tc', 'ttn-webhook']
 
-    # Return None when the CDMP mechanism tries to access the API endpoint
-    if request.endpoint == 'api_tc':
-        return None
-
-    if request.path == '/ttn-webhook':
+    # Define the relative paths that bypass the authentication mechanism
+    if request.path == '/api_tc' or request.path == '/ttn-webhook':
         return None
 
     # Redirect non-authenticated user to the 'login' rout
@@ -81,6 +78,7 @@ def require_login():
         return redirect(url_for('login'))
 
 
+# The route for the dashboard page of the Consumer Digital Twin
 @app.route("/")
 @app.route("/index/")
 def rout():
@@ -104,11 +102,6 @@ def rout():
     daily_env = daily_env if daily_env else []
     daily_met = daily_met if daily_met else []
 
-    cur.execute('''SELECT * FROM user_thermal_comfort ORDER BY tc_timestamp DESC LIMIT 5;''')
-    daily_test = cur.fetchall()
-
-    print(daily_test)
-
     all_tem, all_hum, all_time, all_wb = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in
                                                                                               daily_env], [
                                              row[2] for row in daily_env], [row[3] for row in daily_env]
@@ -130,27 +123,6 @@ def rout():
     d_pmv = get_pmv_status(l_pmv)
 
     d_wb = get_well_being_description(all_wb[-1])
-
-    # Detect the sessions of metabolic rate during the last 24 hours
-    # try:
-    #     sessions_met = dailyMetabolic(latest_metabolic)
-    # except IndexError:
-    #     print('Empty metabolic rate')
-
-    # Determine the daily, the latest and the average environmental parameters
-    # try:
-    #     daily_temp, daily_hum, daily_time = [get_air_temperature(t[0]) for t in daily_environmental], [t[1] for t in daily_environmental], [t[2] for t in daily_environmental]
-    #     latest_temperature, avg_temperature = get_air_temperature(latest_temperature), get_air_temperature(avg_temperature)
-    #     latest_pmv = get_pmv_value(latest_temperature, 0.935 * latest_temperature + 1.709, latest_humidity, sessions_met[-1], 0.8, 0.1)
-    #     latest_pmv_status = get_pmv_status(latest_pmv)
-    #     latest_update = datetime.datetime.fromtimestamp(daily_time[-1]).strftime("%Y-%m-%d %H:%M:%S")
-    # except IndexError:
-    #     print('Empty environmental parameters')
-
-    # data = {
-    #     "l_tem": l_tem, "l_hum": l_tem, "m_tem": m_tem, "m_hum": m_tem,
-    #     "d_tem": d_tem, "d_hum": d_tem, "l_time": l_time, "m_time": m_time
-    # }
 
     return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=
     all_wb[
@@ -226,8 +198,6 @@ def login():
 def callback():
     code_token = request.args.get('code')
 
-    base_url = request.base_url
-
     access_token = keycloak_openid.token(
         grant_type='authorization_code',
         code=code_token,
@@ -249,7 +219,7 @@ def preferences():
     cur = mysql.connection.cursor()
 
     if request.method == "POST":
-        unix_timestamp = (int(datetime.datetime.timestamp(datetime.datetime.now())))
+        unix_timestamp = (int(datetime.timestamp(datetime.now())))
 
         importnace_thermal_comfort = request.form.get("preference_thermal_comfort").split(';')
 
@@ -380,6 +350,17 @@ def api_tc():
     return jsonify(json_schema)
 
 
+@app.route('/api_preferences', methods=['GET'])
+def api_preferences():
+    cur = mysql.connection.cursor()
+
+    # Execute SQL query to get the latest environmental parameters of temperature and humidity
+    cur.execute('''SELECT * FROM load_weight_simos WHERE weight_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
+    load_weights = cur.fetchall()
+
+    return jsonify(0)
+
+
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
@@ -412,6 +393,19 @@ def logout():
     keycloak_openid.logout(access_token['refresh_token'])
     session.clear()
     return redirect('/login')
+
+
+@app.route('/as_test')
+def as_test():
+    userinfo = session.get('userinfo', None)
+
+    cur = mysql.connection.cursor()
+    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+        userinfo['deviceId'],))
+    data = cur.fetchall()
+
+    # get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)
+    return jsonify(data)
 
 
 if __name__ == "__main__":
