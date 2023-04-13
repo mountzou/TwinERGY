@@ -22,10 +22,13 @@ def decodeMACPayload(payload):
                                                                                       2:])
     relative_humidity = integer_humidity + (decimal_humidity / 100)
 
+    # Value of total energy expenditure in kCal
+    decimal_energy_exp = int(mac_payload[34:42], 16) * 0.1
+
     # Get the value of VOC index from the payload
     voc_index = int(mac_payload[-16:-12], 16)
 
     # Get the value of current timestamp in UNIX format
     unix_timestamp = int(time.time())
 
-    return [air_temperature, relative_humidity, voc_index, unix_timestamp]
+    return [air_temperature, relative_humidity, voc_index, unix_timestamp, decimal_energy_exp]
