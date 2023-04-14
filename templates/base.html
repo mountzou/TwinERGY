@@ -13,47 +13,44 @@
     <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+    <!-- Import additional .css files in the header section -->
     {% block html_css %}{% endblock html_css %}
 
+    <!-- Import additional .js files in the header section -->
     {% block js_script_header %}{% endblock js_script_header %}
+
 </head>
 <body class="layout-sticky-subnav layout-default">
 
-<div class="mdk-header-layout js-mdk-header-layout">
-    <div class="mdk-header-layout__content page-content ">
-        {% include 'navbar.html' %}
-
-        {% block content %}
-
-        {% endblock content %}
+    <div class="mdk-header-layout js-mdk-header-layout">
+        <div class="mdk-header-layout__content page-content ">
+            {% include 'navbar.html' %}
+            {% block content %}{% endblock content %}
+        </div>
     </div>
-</div>
 
 {% include 'footer.html' %}
 
-<!-- jQuery -->
-<script src="static/vendor/jquery.min.js"></script>
+<!-- Import jQuery library -->
+<script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
 
-<!-- Bootstrap -->
-<script src="static/vendor/popper.min.js"></script>
-<script src="static/vendor/bootstrap.min.js"></script>
+<!-- Import Bootstrap library -->
+<script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
+<script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
-<!-- Perfect Scrollbar -->
-<script src="static/vendor/perfect-scrollbar.min.js"></script>
+<!-- Import DOM Factory library -->
+<script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
 
-<!-- DOM Factory -->
-<script src="static/vendor/dom-factory.js"></script>
+<!-- Import main application .js file -->
+<script src="{{url_for('static', filename='js/app.js')}}"></script>
 
-<!-- App JS -->
-<script src="static/js/app.js"></script>
-
-<!-- Global Settings -->
-<script src="static/js/settings.js"></script>
+<!-- Import .js file with global settings -->
+<script src="{{url_for('static', filename='js/settings.js')}}"></script>
 
 <!-- Chart JS -->
-<script src="static/vendor/Chart.min.js"></script>
-<script src="static/js/chartjs.js"></script>
-<script src="static/js/chartjs-rounded-bar.js"></script>
+<script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
+<script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
 
 {% block js_scripts %}{% endblock js_scripts %}
 

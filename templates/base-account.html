@@ -13,9 +13,12 @@
     <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+    <!-- Import additional .css files in the header section -->
     {% block html_css %}{% endblock html_css %}
 
+    <!-- Import additional .js files in the header section -->
     {% block js_script_header %}{% endblock js_script_header %}
+
 </head>
 <body class="layout-sticky-subnav layout-default">
 

@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html dir="ltr" lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
 
-    <title>{% block title %}{% endblock title %} | Consumer Digital Twin</title>
+    <title> {% block title %}{% endblock title %} | Consumer Digital Twin </title>
 
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon">
 
-    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/app.css')}}">
-    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/twinergy.css')}}">
+    <link href="{{url_for('static', filename='css/app.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Import additional .css files in the header section -->
     {% block html_css %}{% endblock html_css %}
+
+    <!-- Import additional .js files in the header section -->
+    {% block js_script_header %}{% endblock js_script_header %}
 
 </head>
 <body class="layout-sticky-subnav layout-default">
