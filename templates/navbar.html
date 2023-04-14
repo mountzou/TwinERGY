@@ -24,7 +24,7 @@
 
                     <small class="flex d-flex flex-column">
                         <strong class="navbar-text-100">Dwelling ID</strong>
-                        <span class="navbar-text-50">{{dId}}, {{pId}}</span>
+                        <span class="navbar-text-50" id="building-id"></span>
                     </small>
                 </span>
 
@@ -38,7 +38,7 @@
 
                     <small class="flex d-flex flex-column">
                         <strong class="navbar-text-100">Wearable ID</strong>
-                        <span class="navbar-text-50">{{ wId }}</span>
+                        <span class="navbar-text-50" id="wearable-id"></span>
                     </small>
 
                 </span>
@@ -71,9 +71,11 @@
 
                                 <div class="dropdown-menu dropdown-menu-right">
                                     <div class="dropdown-header tab-content">
-                                        <strong>Welcome, {{usernameId}}</strong>
+                                        <strong id="username-id"></strong>
                                         <i class="material-icons font-size-16pt text-warning">verified</i>
                                     </div>
+                                    <a class="dropdown-item card-body tab-content" href="/account">
+                                        <i class="material-icons font-size-16pt text-warning">person</i>Account </a>
                                     <a class="dropdown-item card-body tab-content" href="/">
                                         <i class="material-icons font-size-16pt text-warning">security</i>Security </a>
                                     <a class="dropdown-item card-body tab-content" href="/">

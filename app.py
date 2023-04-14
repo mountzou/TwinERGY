@@ -31,37 +31,12 @@ app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 # Initialization of MySQL object for the DB hosted on Heroku
 mysql = MySQL(app)
 
+# Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
     client_id='cdt-twinergy',
     realm_name='TwinERGY',
     client_secret_key="secret")
 app.secret_key = 'secret'
-
-
-def prefences_importance_method():
-    cur = mysql.connection.cursor()
-
-    cur.execute('''SELECT * FROM user_pref_thermal WHERE user_id='2' ORDER BY user_pref_time DESC''')
-    preference_thermal_comfort = cur.fetchone()
-
-    cur.execute('''SELECT * FROM user_flex_loads WHERE user_id='2' ORDER BY user_pref_time DESC''')
-    preference_flex_loads = cur.fetchone()
-
-    return [preference_thermal_comfort[1] + 3, preference_thermal_comfort[2] + 3, preference_flex_loads[1],
-            preference_flex_loads[4], preference_flex_loads[7], preference_flex_loads[10], preference_flex_loads[2],
-            preference_flex_loads[3], preference_flex_loads[5], preference_flex_loads[6], preference_flex_loads[8],
-            preference_flex_loads[9], preference_flex_loads[11], preference_flex_loads[12], preference_flex_loads[14],
-            preference_flex_loads[15], preference_flex_loads[13]]
-
-
-def prefences_simos_importance_method():
-    cur = mysql.connection.cursor()
-
-    cur.execute('''SELECT * FROM load_weight_simos WHERE user_id='2' ORDER BY weight_timestamp DESC''')
-    preference_flex_loads = cur.fetchone()
-
-    return [preference_flex_loads[1], preference_flex_loads[2], preference_flex_loads[3], preference_flex_loads[4],
-            preference_flex_loads[5]]
 
 
 @app.before_request
@@ -108,9 +83,6 @@ def rout():
 
     all_times = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in all_time]
 
-    # Determine the average air temperature and the average relative humidity
-    m_tem, m_hum, m_wb = round(sum(all_tem) / len(all_tem), 2), round(sum(all_hum) / len(all_hum), 2), round(sum(all_wb) / len(all_wb), 2)
-
     # Determine the latest air temperature and the latest relative humidity
     l_tem, l_hum, l_time = get_air_temperature(daily_env[-1][0]), daily_env[-1][1], datetime.utcfromtimestamp(
         daily_env[-1][2]).strftime('%Y-%m-%d %H:%M:%S')
@@ -122,19 +94,13 @@ def rout():
     l_pmv = get_pmv_value(l_tem, 0.935 * l_tem + 1.709, l_hum, l_met, 0.8, 0.1)
     d_pmv = get_pmv_status(l_pmv)
 
-    d_wb = get_well_being_description(all_wb[-1])
-
     return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=
-    all_wb[
-        -1], d_wb=d_wb, all_times=all_times, m_tem=m_tem, m_hum=m_hum, m_wb=m_wb, l_met=l_met, l_tem=l_tem, l_hum=l_hum, l_time=l_time, l_pmv=l_pmv, d_pmv=d_pmv, dId=
-    userinfo['dwellingId'], wId=userinfo['deviceId'], usernameId=session['username'], pId=userinfo[
-        'pilotId'].capitalize()) if len(daily_env) > 0 else render_template("index-empty.html", dId=userinfo[
-        'dwellingId'], wId=userinfo['deviceId'], pId=userinfo['pilotId'].capitalize(), usernameId=session['username'])
+    all_wb[-1], all_times=all_times, l_met=l_met, l_pmv=l_pmv, d_pmv=d_pmv, usernameId=session[
+        'username']) if len(daily_env) > 0 else render_template("index-empty.html", usernameId=session['username'])
 
 
 @app.route("/thermal_comfort/")
 def thermal_comfort():
-    userinfo = session.get('userinfo', None)
 
     cur = mysql.connection.cursor()
 
@@ -180,8 +146,7 @@ def thermal_comfort():
     return render_template("thermal-comfort.html", avg_met=avg_met, l_temp=latest_temperature, l_hum=latest_humidity, l_met=
     sessions_met[
         -1], avg_temp=avg_temperature, avg_hum=avg_humidity, d_temp=daily_temp, d_hum=daily_hum, d_time=daily_time, d_met=sessions_met, d_met_time=sessions_met_time, l_update=
-    daily_time[-1], dId=userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
-        'pilotId'].capitalize(), usernameId=session['username'])
+    daily_time[-1], usernameId=session['username'])
 
 
 @app.route('/login')
@@ -214,6 +179,7 @@ def callback():
 
 @app.route("/preferences/", methods=["GET", "POST"])
 def preferences():
+    from determinePreferences import get_importance_ranges, get_load_weights
     userinfo = session.get('userinfo', None)
 
     cur = mysql.connection.cursor()
@@ -276,11 +242,9 @@ def preferences():
 
         mysql.connection.commit()
 
-    preferences_importance, preferences_simos = prefences_importance_method(), prefences_simos_importance_method()
+    preferences_importance, preferences_simos = get_importance_ranges(), get_load_weights()
 
-    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, dId=
-    userinfo['dwellingId'], wId=userinfo['deviceId'], pId=userinfo[
-        'pilotId'].capitalize(), usernameId=session['username'])
+    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, usernameId=session['username'])
 
 
 @app.route('/cdmp', methods=['GET'])
@@ -307,9 +271,9 @@ def cdmp():
     latest_pmv_status = get_pmv_status(latest_pmv)
 
     response = {'userID': '2',
-                'airTemperature': get_air_temperature(latest_temperature),
+                'airTemperature': latest_temperature,
                 'relativeHumidity': latest_humidity,
-                'globeTemperature': 0.935 * get_air_temperature(latest_temperature) + 1.709,
+                'globeTemperature': 0.935 * latest_temperature + 1.709,
                 'metabolicRate': sessions_met[-1],
                 'clothingInsulation': 0.8,
                 'airVelocity': 0,
@@ -321,6 +285,8 @@ def cdmp():
 
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
+    userinfo = session.get('userinfo', None)
+
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
@@ -370,12 +336,13 @@ def handle_ttn_webhook():
 
     # decodedPayload = decodeMACPayload(data['uplink_message']['frm_payload'])
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
-    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], re[3]
+    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
+                                                                        re[3]
 
     # Connect to the database
     cur = mysql.connection.cursor()
 
-    # # Execute SQL INSERT statement
+    # Execute SQL INSERT statement
     sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     cur.execute(sql)
@@ -395,6 +362,11 @@ def logout():
     return redirect('/login')
 
 
+@app.route('/account')
+def account():
+    return render_template('account.html')
+
+
 @app.route('/as_test')
 def as_test():
     userinfo = session.get('userinfo', None)
@@ -406,6 +378,12 @@ def as_test():
 
     # get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)
     return jsonify(data)
+
+
+@app.route('/session', methods=['GET'])
+def current_session():
+    # Return a json object that includes the session data
+    return jsonify(dict(session))
 
 
 if __name__ == "__main__":

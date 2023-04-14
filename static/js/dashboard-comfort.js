@@ -35,67 +35,6 @@ categories.forEach((category) => {
   categoryCounts[category] = (categoryCounts[category] || 0) + 1;
 });
 
-// Target the html chart items for air temperature, relative humidity, VOC and thermal comfort, respectively
-//var graphTargetWBAgg = $("#daily-VOC-agg");
-
-//var indoorWBAgg = {
-//    labels: Object.keys(categoryCounts),
-//    datasets: [{
-//        label: "Daily VOC Aggregated",
-//        type: "bar",
-//        borderColor: "rgb(255, 186, 77, .4)",
-//        backgroundColor: "rgb(255, 186, 77, .5)",
-//        barPercentage: 0.5,
-//        barThickness: 10,
-//        maxBarThickness: 15,
-//        minBarLength: 9,
-//        data: Object.values(categoryCounts),
-//    }]
-//};
-
-//var graphWBAgg = new Chart(graphTargetWBAgg, {
-//  type: 'bar',
-//  data: indoorWBAgg,
-//  options: {
-//        scales: {
-//            yAxes: [{
-//                type: 'logarithmic',
-//                ticks: {
-//                    padding: 12,
-//                    fontFamily: "Josefin Sans",
-//                    beginAtZero: false,
-//                    autoSkip: true,
-//                    maxTicksLimit: 4,
-//                    callback: function(value, index, values) {
-//                        return value + " times";
-//                    },
-//                }
-//            }],
-//            xAxes: [{
-//                gridLines: {
-//                    display: false,
-//                    drawOnChartArea: true
-//                },
-//                ticks: {
-//                    display: true,
-//                },
-//            }],
-//        },
-//        legend: {
-//            onClick: function(e) {
-//                e.stopPropagation();
-//            }
-//        },
-//        tooltips: {
-//            callbacks: {
-//                label: function(tooltipItems, data) {
-//                    return data.datasets[tooltipItems.datasetIndex].label +': ' + tooltipItems.yLabel;
-//                }
-//            }
-//        }
-//    }
-//});
-
 function updateDashboard() {
     $.getJSON('/as_test', function (data) {
         let temperature = data.map(x => x[0]);
@@ -105,16 +44,22 @@ function updateDashboard() {
 
         let latestTemperature = temperature[temperature.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
+        let latestVocIndex = voc_index[voc_index.length - 1];
+        let latestVocDesc = getWellBeingDescription(voc_index[voc_index.length - 1]);
         let latestTime = time[time.length - 1];
-
-        console.log(latestTime)
 
         // Update the latest temperature and humidity
         document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature+' °C';
         document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity+' %';
+        document.getElementById("latest-voc-index").innerHTML = latestVocIndex+' voc. index';
+        document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
 
         let sum_tem = data.reduce((accumulator, currentValue) => {
             return accumulator + currentValue[0];
+        }, 0);
+
+        let sum_voc = data.reduce((accumulator, currentValue) => {
+            return accumulator + currentValue[3];
         }, 0);
 
         let sum_hum = data.reduce((accumulator, currentValue) => {
@@ -123,10 +68,12 @@ function updateDashboard() {
 
         let mean_temp = parseFloat((sum_tem / data.length).toFixed(2));
         let mean_hum = parseFloat((sum_hum / data.length).toFixed(2));
+        let mean_voc = parseFloat((sum_voc / data.length).toFixed(2));
 
         // Update the mean  temperature and humidity
         document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
         document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
+        document.getElementById("daily-mean-vocs").innerHTML = mean_voc+' voc.';
 
         // Select all elements with the class "example-class"
         let time_elements = document.getElementsByClassName("l-updated");

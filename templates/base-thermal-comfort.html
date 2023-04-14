@@ -56,6 +56,9 @@
 <script src="../static/js/chartjs.js"></script>
 <script src="../static/js/chartjs-rounded-bar.js"></script>
 
+<!-- Import a .js script to retrieve session variables -->
+<script src="{{url_for('static', filename='js/session.js')}}"></script>
+
 <script>
     var daily_temp = {{ d_temp | tojson }};
     var daily_hum = {{ d_hum | tojson }};
