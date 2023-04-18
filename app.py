@@ -346,6 +346,8 @@ def handle_ttn_webhook():
     cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (userinfo['deviceId'],))
     previous_metabolic = cur.fetchall()
 
+    print(previous_metabolic)
+
     p_metabolic, p_time = previous_metabolic[0], previous_metabolic[1]
 
     tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
