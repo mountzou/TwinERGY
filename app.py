@@ -354,10 +354,6 @@ def handle_ttn_webhook():
     # Calculate the met for the 2nd, 3rd, etc..
     else:
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
-        if tc_met < 1:
-            tc_met = 1
-        if tc_met > 2:
-            tc_met = 2
 
     # Execute SQL INSERT statement
     sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
