@@ -331,6 +331,8 @@ def api_preferences():
 def handle_ttn_webhook():
     data = request.get_json()
 
+    userinfo = session.get('userinfo', None)
+
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
@@ -341,8 +343,15 @@ def handle_ttn_webhook():
     # Connect to the database
     cur = mysql.connection.cursor()
 
+    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (userinfo['deviceId'],))
+    previous_metabolic = cur.fetchall()
+
+    p_metabolic, p_time = previous_metabolic[0], previous_metabolic[1]
+
+    tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
+
     # Execute SQL INSERT statement
-    sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+    sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     cur.execute(sql)
 
