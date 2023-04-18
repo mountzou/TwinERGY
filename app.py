@@ -349,6 +349,7 @@ def handle_ttn_webhook():
     return jsonify({'status': 'success'}), 200
 
 
+# A route that implements an page with information related to the current user's session
 @app.route('/account')
 def account():
     return render_template('account.html')

@@ -25,4 +25,8 @@ console.log(sessionData);
     document.getElementById("account-fullname").innerHTML = sessionData['userinfo']['name'];
     document.getElementById("account-email").innerHTML = sessionData['userinfo']['email'];
     document.getElementById("account-username").innerHTML = sessionData['userinfo']['preferred_username'];
+    document.getElementById("account-device").innerHTML = sessionData['userinfo']['deviceId'];
+    document.getElementById("account-gateway").innerHTML = sessionData['userinfo']['gatewayId'];
+    document.getElementById("account-dwelling").innerHTML = sessionData['userinfo']['dwellingId'];
+    document.getElementById("account-pilot").innerHTML = sessionData['userinfo']['pilotId'].charAt(0).toUpperCase() + sessionData['userinfo']['pilotId'].slice(1);
 });

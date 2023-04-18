@@ -21,7 +21,7 @@ function getSessionData() {
 }
 
 getSessionData().then((sessionData) => {
-    document.getElementById("building-id").innerHTML = sessionData['userinfo']['dwellingId']+ ', ' +sessionData['userinfo']['pilotId'];
+    document.getElementById("building-id").innerHTML = sessionData['userinfo']['dwellingId'] + ', '  + sessionData['userinfo']['pilotId'].charAt(0).toUpperCase() + sessionData['userinfo']['pilotId'].slice(1);
     document.getElementById("wearable-id").innerHTML = sessionData['userinfo']['deviceId'];
-    document.getElementById("username-id").innerHTML = 'Welcome, '+sessionData['userinfo']['preferred_username'];
+    document.getElementById("username-id").innerHTML = 'Welcome, ' + sessionData['userinfo']['preferred_username'];
 });
