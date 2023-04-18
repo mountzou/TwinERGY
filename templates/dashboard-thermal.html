@@ -11,7 +11,7 @@
                         <div class="h2 mb-0 mr-3"><i
                                 class="material-icons text-primary mr-4pt">sentiment_satisfied</i></div>
                         <div class="flex">
-                            <h2 class="h2 mb-0 ml11">{{ d_pmv }}
+                            <h2 class="h2 mb-0 ml11" id="latest-PMV-desc">
                             </h2>
                         </div>
                     </div>
@@ -35,7 +35,7 @@
                             </div>
                         </div>
                         <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                            <h2 class="m-0">{{ l_pmv }}</h2>
+                            <h2 class="m-0" id="latest-PMV"></h2>
                             <strong style="font-size:8px;">THERMAL COMFORT</strong>
                         </div>
                         <canvas class="chart-canvas position-relative z-1 chartjs-render-monitor"
@@ -61,7 +61,7 @@
                              style="border-top: 1px solid #dfe2e6; padding-top:10px; padding-bottom:10px;">
                             <div class="col-auto">
                                 <div class="d-flex align-items-center">
-                                    <div class="h2 mb-0 mr-3" style="font-size:17px;">{{l_met}} met</div>
+                                    <div class="h2 mb-0 mr-3" style="font-size:17px;" id="latest-met"></div>
                                     <div class="flex">
                                         <p class="card-title">Metabolic Rate</p>
                                         <p class="card-subtitle text-50">

@@ -348,8 +348,10 @@ def handle_ttn_webhook():
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
 
+    # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
     if (tc_metabolic - p_metabolic) < 0:
         tc_met = 1
+    # Calculate the met for the 2nd, 3rd, etc..
     else:
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
 
@@ -383,11 +385,23 @@ def as_test():
     userinfo = session.get('userinfo', None)
 
     cur = mysql.connection.cursor()
-    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
         userinfo['deviceId'],))
     data = cur.fetchall()
 
-    # get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)
+    modified_data = []
+    for row in data:
+
+        tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
+
+        pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1)
+
+        modified_row = row + (pmv,)
+
+        modified_data.append(modified_row)
+
+    data = tuple(modified_data)
+
     return jsonify(data)
 
 

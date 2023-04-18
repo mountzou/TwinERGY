@@ -28,6 +28,31 @@ function getWellBeingDescription(value) {
   }
 }
 
+// A function that matches the PMV index to a literal description
+function get_pmv_status(pmv) {
+  const status_dict = new Map([
+    [[-2.5, -1.5], 'Cool'],
+    [[-1.5, -0.5], 'Slightly Cool'],
+    [[-0.5, 0.5], 'Neutral'],
+    [[0.5, 1.5], 'Slightly Warm'],
+    [[1.5, 2.5], 'Warm']
+  ]);
+
+  for (const [prange, status] of status_dict.entries()) {
+    if (prange[0] <= pmv && pmv < prange[1]) {
+      return status;
+    }
+  }
+
+  if (pmv < -2.5) {
+    return 'Cold';
+  } else if (pmv > 2.5) {
+    return 'Hot';
+  } else {
+    return '-';
+  }
+}
+
 const categories = all_wb.map(getWellBeingDescription);
 const categoryCounts = {};
 
@@ -41,18 +66,25 @@ function updateDashboard() {
         let humidity = data.map(x => x[1]);
         let voc_index = data.map(x => x[3]);
         let time = data.map(x => unixToHumanReadable(x[2]));
+        let met = data.map(x => x[4]);
+        let pmv = data.map(x => x[5]);
 
         let latestTemperature = temperature[temperature.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
         let latestVocIndex = voc_index[voc_index.length - 1];
         let latestVocDesc = getWellBeingDescription(voc_index[voc_index.length - 1]);
         let latestTime = time[time.length - 1];
+        let latestMet = met[met.length - 1]
+        let latestPMV = pmv[pmv.length - 1]
 
         // Update the latest temperature and humidity
-        document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature+' °C';
-        document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity+' %';
-        document.getElementById("latest-voc-index").innerHTML = latestVocIndex+' voc. index';
+        document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
+        document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
+        document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
+        document.getElementById("latest-met").innerHTML = latestMet + ' met';
+        document.getElementById("latest-PMV").innerHTML = latestPMV;
+        document.getElementById("latest-PMV-desc").innerHTML = get_pmv_status(latestPMV);
 
         let sum_tem = data.reduce((accumulator, currentValue) => {
             return accumulator + currentValue[0];
@@ -131,7 +163,7 @@ function updateDashboard() {
             labels: ["Comfort", "Discomfort"],
             datasets: [{
                 label: "Thermal Comfort",
-                data: [convertToPercentage(l_pmv), 100-convertToPercentage(l_pmv)],
+                data: [convertToPercentage(latestPMV), 100-convertToPercentage(latestPMV)],
                 backgroundColor: [
                     "#ffba4d",
                     "#EEEEEE",
