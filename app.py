@@ -343,6 +343,8 @@ def handle_ttn_webhook():
     # Connect to the database
     cur = mysql.connection.cursor()
 
+    print(userinfo['deviceId'])
+
     cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (userinfo['deviceId'],))
     previous_metabolic = cur.fetchall()
 
