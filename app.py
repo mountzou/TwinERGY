@@ -356,9 +356,9 @@ def handle_ttn_webhook():
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
 
     # Execute SQL INSERT statement
-    sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
-    cur.execute(sql)
+    cur.execute(insert_sql)
 
     mysql.connection.commit()
 
