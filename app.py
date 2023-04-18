@@ -68,34 +68,7 @@ def rout():
         userinfo['deviceId'],))
     daily_env = cur.fetchall()
 
-    # Execute SQL query to get the values of metabolic rate during the last 24 hours
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-        userinfo['deviceId'],))
-    daily_met = cur.fetchall()
-
-    # Check if tuples are empty, in case of an empty tuple assign a single value of -1
-    daily_env = daily_env if daily_env else []
-    daily_met = daily_met if daily_met else []
-
-    all_tem, all_hum, all_time, all_wb = [get_air_temperature(row[0]) for row in daily_env], [row[1] for row in
-                                                                                              daily_env], [
-                                             row[2] for row in daily_env], [row[3] for row in daily_env]
-
-    all_times = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in all_time]
-
-    # Determine the latest air temperature and the latest relative humidity
-    l_tem, l_hum, l_time = get_air_temperature(daily_env[-1][0]), daily_env[-1][1], datetime.utcfromtimestamp(
-        daily_env[-1][2]).strftime('%Y-%m-%d %H:%M:%S')
-
-    # Determine the latest metabolic rate
-    l_met = dailyMetabolic(daily_met)[0]
-
-    # Determine the latest PMV value and the corresponding status
-    l_pmv = get_pmv_value(l_tem, 0.935 * l_tem + 1.709, l_hum, l_met, 0.8, 0.1)
-    d_pmv = get_pmv_status(l_pmv)
-
-    return render_template("index.html", daily_env=daily_env, all_tem=all_tem, all_hum=all_hum, all_wb=all_wb, l_wb=
-    all_wb[-1], all_times=all_times, l_met=l_met, l_pmv=l_pmv, d_pmv=d_pmv, usernameId=session[
+    return render_template("index.html", usernameId=session[
         'username']) if len(daily_env) > 0 else render_template("index-empty.html", usernameId=session['username'])
 
 
@@ -343,7 +316,7 @@ def handle_ttn_webhook():
     cur = mysql.connection.cursor()
 
     cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (
-    device_id,))
+        device_id,))
     previous_metabolic = cur.fetchall()
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
@@ -354,7 +327,7 @@ def handle_ttn_webhook():
     # Calculate the met for the 2nd, 3rd, etc..
     else:
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
-        if tc_met<1: tc_met = 1
+        if tc_met < 1: tc_met = 1
 
     # Execute SQL INSERT statement
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
@@ -381,8 +354,8 @@ def account():
     return render_template('account.html')
 
 
-@app.route('/as_test')
-def as_test():
+@app.route('/get_data_thermal_comfort')
+def get_data_thermal_comfort():
     userinfo = session.get('userinfo', None)
 
     cur = mysql.connection.cursor()
@@ -392,7 +365,6 @@ def as_test():
 
     modified_data = []
     for row in data:
-
         tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
 
         pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1)

@@ -1,4 +1,5 @@
-function convertToPercentage(value) {
+// A function that convert the PMV index to percentage for the donut chart of dashboard
+function convertPMVToPercentage(value) {
   var percentage = (1 - Math.abs(value) / 3) * 100;
   return percentage.toFixed(2);
 }
@@ -53,15 +54,8 @@ function get_pmv_status(pmv) {
   }
 }
 
-const categories = all_wb.map(getWellBeingDescription);
-const categoryCounts = {};
-
-categories.forEach((category) => {
-  categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-});
-
 function updateDashboard() {
-    $.getJSON('/as_test', function (data) {
+    $.getJSON('/get_data_thermal_comfort', function (data) {
         let temperature = data.map(x => x[0]);
         let humidity = data.map(x => x[1]);
         let voc_index = data.map(x => x[3]);
@@ -82,7 +76,7 @@ function updateDashboard() {
         document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
         document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
-        document.getElementById("latest-met").innerHTML = latestMet + ' met';
+        document.getElementById("latest-met").innerHTML = latestMet.toFixed(2) + ' met';
         document.getElementById("latest-PMV").innerHTML = latestPMV;
         document.getElementById("latest-PMV-desc").innerHTML = get_pmv_status(latestPMV);
 
@@ -107,10 +101,10 @@ function updateDashboard() {
         document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
         document.getElementById("daily-mean-vocs").innerHTML = mean_voc+' voc.';
 
-        // Select all elements with the class "example-class"
+        // Select all elements with the class "l-updated"
         let time_elements = document.getElementsByClassName("l-updated");
 
-        // Update the innerHTML of all elements with the "example-class" class
+        // Update the innerHTML of all elements with the "l-updated" class
         for (let i = 0; i < time_elements.length; i++) {
             time_elements[i].innerHTML = 'Latest update at '+latestTime;
         }
@@ -163,7 +157,7 @@ function updateDashboard() {
             labels: ["Comfort", "Discomfort"],
             datasets: [{
                 label: "Thermal Comfort",
-                data: [convertToPercentage(latestPMV), 100-convertToPercentage(latestPMV)],
+                data: [convertPMVToPercentage(latestPMV), 100-convertPMVToPercentage(latestPMV)],
                 backgroundColor: [
                     "#ffba4d",
                     "#EEEEEE",
