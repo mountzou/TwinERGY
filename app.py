@@ -53,6 +53,43 @@ def require_login():
         return redirect(url_for('login'))
 
 
+# A route that implements the user authentication process
+@app.route('/login')
+def login():
+    if urlparse(request.base_url).netloc == '127.0.0.1:5000':
+        auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+    else:
+        auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+
+    return redirect(auth_url)
+
+
+# A function that implements the access token generation for an authenticated user
+@app.route('/callback')
+def callback():
+    code_token = request.args.get('code')
+
+    access_token = keycloak_openid.token(
+        grant_type='authorization_code',
+        code=code_token,
+        redirect_uri=request.base_url)
+
+    session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
+    session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
+    session['access_token'] = access_token
+
+    return redirect('/')
+
+
+# A route that implements the logout mechanism
+@app.route('/logout')
+def logout():
+    access_token = session.get('access_token', None)
+    keycloak_openid.logout(access_token['refresh_token'])
+    session.clear()
+    return redirect('/login')
+
+
 # The route for the dashboard page of the Consumer Digital Twin
 @app.route("/")
 @app.route("/index/")
@@ -64,12 +101,11 @@ def rout():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
-    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
         userinfo['deviceId'],))
     daily_env = cur.fetchall()
 
-    return render_template("index.html", usernameId=session[
-        'username']) if len(daily_env) > 0 else render_template("index-empty.html", usernameId=session['username'])
+    return render_template("index.html") if len(daily_env) > 0 else render_template("index-empty.html")
 
 
 @app.route("/thermal_comfort/")
@@ -119,34 +155,6 @@ def thermal_comfort():
     sessions_met[
         -1], avg_temp=avg_temperature, avg_hum=avg_humidity, d_temp=daily_temp, d_hum=daily_hum, d_time=daily_time, d_met=sessions_met, d_met_time=sessions_met_time, l_update=
     daily_time[-1], usernameId=session['username'])
-
-
-@app.route('/login')
-def login():
-    if urlparse(request.base_url).netloc == '127.0.0.1:5000':
-        auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
-    else:
-        auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
-
-    return redirect(auth_url)
-
-
-@app.route('/callback')
-def callback():
-    code_token = request.args.get('code')
-
-    access_token = keycloak_openid.token(
-        grant_type='authorization_code',
-        code=code_token,
-        redirect_uri=request.base_url)
-
-    session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
-
-    session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
-
-    session['access_token'] = access_token
-
-    return redirect('/')
 
 
 @app.route("/preferences/", methods=["GET", "POST"])
@@ -341,19 +349,12 @@ def handle_ttn_webhook():
     return jsonify({'status': 'success'}), 200
 
 
-@app.route('/logout')
-def logout():
-    access_token = session.get('access_token', None)
-    keycloak_openid.logout(access_token['refresh_token'])
-    session.clear()
-    return redirect('/login')
-
-
 @app.route('/account')
 def account():
     return render_template('account.html')
 
 
+# A route that implements an asynchronous call to retrieve data related to the thermal comfort
 @app.route('/get_data_thermal_comfort')
 def get_data_thermal_comfort():
     userinfo = session.get('userinfo', None)
@@ -361,19 +362,16 @@ def get_data_thermal_comfort():
     cur = mysql.connection.cursor()
     cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
         userinfo['deviceId'],))
-    data = cur.fetchall()
+    thermal_comfort_data = cur.fetchall()
 
-    modified_data = []
-    for row in data:
+    all_thermal_comfort_data = []
+
+    for row in thermal_comfort_data:
         tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
+        pmv = row + (get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1),)
+        all_thermal_comfort_data.append(pmv)
 
-        pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1)
-
-        modified_row = row + (pmv,)
-
-        modified_data.append(modified_row)
-
-    data = tuple(modified_data)
+    data = tuple(all_thermal_comfort_data)
 
     return jsonify(data)
 
