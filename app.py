@@ -101,7 +101,6 @@ def rout():
 
 @app.route("/thermal_comfort/")
 def thermal_comfort():
-
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the average environmental parameters of temperature and humidity that recorded during the last 24-hours
@@ -244,7 +243,8 @@ def preferences():
 
     preferences_importance, preferences_simos = get_importance_ranges(), get_load_weights()
 
-    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, usernameId=session['username'])
+    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, usernameId=
+    session['username'])
 
 
 @app.route('/cdmp', methods=['GET'])
@@ -336,17 +336,22 @@ def handle_ttn_webhook():
 
     # decodedPayload = decodeMACPayload(data['uplink_message']['frm_payload'])
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
-    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], re[3]
+    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
+                                                                        re[3]
 
     # Connect to the database
     cur = mysql.connection.cursor()
 
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (device_id,))
+    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (
+    device_id,))
     previous_metabolic = cur.fetchall()
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
 
-    tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
+    if (tc_metabolic - p_metabolic) < 0:
+        tc_met = 1
+    else:
+        tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
 
     # Execute SQL INSERT statement
     sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
