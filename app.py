@@ -331,8 +331,6 @@ def api_preferences():
 def handle_ttn_webhook():
     data = request.get_json()
 
-    userinfo = session.get('userinfo', None)
-
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
@@ -343,7 +341,7 @@ def handle_ttn_webhook():
     # Connect to the database
     cur = mysql.connection.cursor()
 
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = "0080E11505109E73" ORDER BY tc_timestamp DESC LIMIT 1''')
+    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = "0080E11505109E73" ORDER BY tc_timestamp DESC LIMIT 1''', device_id)
     previous_metabolic = cur.fetchall()
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
