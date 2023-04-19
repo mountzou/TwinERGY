@@ -107,7 +107,7 @@ def rout():
     userinfo = session.get('userinfo', None)
 
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
-    g.cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    g.cur.execute('''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
         userinfo['deviceId'],))
     daily_env = g.cur.fetchall()
 
