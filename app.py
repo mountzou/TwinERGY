@@ -5,7 +5,7 @@ from keycloak import KeycloakOpenID
 
 from decodeLoRaPackage import decodeMACPayload
 from determineMetabolic import dailyMetabolic, dailyMetabolicTime
-from determineThermalComfort import get_pmv_status, get_pmv_value
+from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate_clo_value, get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
 
 from datetime import datetime, timedelta
@@ -227,24 +227,25 @@ def api_tc():
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
+    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
     latest_env = cur.fetchall()
 
-    # Execute SQL query to get the daily physiological parameter of metabolic rate
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -10 MINUTE));''')
-    daily_metabolic = cur.fetchall()
-
-    sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
-
     # Create a list of dictionaries using a list comprehension
-    data_list = [{'air_temperature': item[0], 'globe_temperature': item[0] * 0.935, 'relative_humidity': item[1],
-                  'wearable_id': item[2], 'gateway_id': item[3],
-                  'session_met': sessions_met[-1], 'clothing_insulation': 0.8, 'air_velocity': 0.1,
+    data_list = [{'air_temperature': item[0],
+                  'globe_temperature': item[0] * 0.935,
+                  'relative_humidity': item[1],
+                  'wearable_id': item[2],
+                  'gateway_id': item[3],
+                  'session_met': item[6],
+                  'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
+                  'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
                   'voc_index': item[5],
-                  'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1),
+                  'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
                   'thermal_comfort_desc': get_pmv_status(get_pmv_value(
-                      item[0], 0.935 * item[0], item[1], sessions_met[-1], 0.8, 0.1)),
-                  'timestamp': item[4], 'user_id': '2', 'dwelling_id': 'ATH-1'
+                      item[0], 0.935 * item[0], item[1], item[5], 0.8, 0.1)),
+                  'timestamp': item[4],
+                  'user_id': '2',
+                  'dwelling_id': 'ATH-1'
                   } for item in latest_env]
 
     # Create a JSON schema from the list of dictionaries

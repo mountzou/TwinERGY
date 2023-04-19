@@ -1,6 +1,16 @@
 import math
 
 
+def get_calibrate_clo_value(clo, met):
+    clo = clo * (0.6 + 0.4 / met)
+    return round(clo, 2)
+
+
+def get_calibrate_air_speed_value(vr, met):
+    vr = (vr + 0.3 * (met - 1))
+    return round(vr, 2)
+
+
 def get_pmv_value(tr, tdb, rh, met, clo, vr, wme=0):
     pa = rh * 10 * math.exp(16.6536 - 4030.183 / (tdb + 235))
     clo = clo * (0.6 + 0.4 / met)
