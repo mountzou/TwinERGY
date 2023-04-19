@@ -7,6 +7,7 @@ from decodeLoRaPackage import decodeMACPayload
 from determineMetabolic import dailyMetabolic, dailyMetabolicTime
 from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate_clo_value, get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
+from determineWellBeing import get_well_being_description
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
@@ -184,42 +185,6 @@ def preferences():
     session['username'])
 
 
-@app.route('/cdmp', methods=['GET'])
-def cdmp():
-    userinfo = session.get('userinfo', None)
-
-    cur = mysql.connection.cursor()
-
-    # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity FROM user_thermal_comfort ORDER BY tc_timestamp DESC LIMIT 1;''')
-    (latest_temperature, latest_humidity) = cur.fetchone()
-
-    # Execute SQL query to get the daily physiological parameter of metabolic rate
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
-    daily_metabolic = cur.fetchall()
-
-    sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
-    sessions_met_time = dailyMetabolicTime(daily_metabolic)
-
-    # Determine the latest thermal comfort value
-    latest_pmv = get_pmv_value(latest_temperature, 0.935 * latest_temperature + 1.709, latest_humidity,
-        sessions_met[-1], 0.8, 0.1)
-
-    latest_pmv_status = get_pmv_status(latest_pmv)
-
-    response = {'userID': '2',
-                'airTemperature': latest_temperature,
-                'relativeHumidity': latest_humidity,
-                'globeTemperature': 0.935 * latest_temperature + 1.709,
-                'metabolicRate': sessions_met[-1],
-                'clothingInsulation': 0.8,
-                'airVelocity': 0,
-                'thermalComfort': latest_pmv,
-                'thermalStatus': latest_pmv_status,
-                'timeUnix': sessions_met_time[-1]}
-    return jsonify(response)
-
-
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
     userinfo = session.get('userinfo', None)
@@ -240,6 +205,7 @@ def api_tc():
                   'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
                   'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
                   'voc_index': item[5],
+                  'voc_index_desc': get_well_being_description(item[5]),
                   'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
                   'thermal_comfort_desc': get_pmv_status(get_pmv_value(
                       item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
