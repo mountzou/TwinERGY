@@ -109,7 +109,7 @@ def rout():
         userinfo['deviceId'],))
     daily_env = g.cur.fetchall()
 
-    return render_template("index.html") if len(daily_env) > 0 else render_template("index-empty.html")
+    return render_template("index.html") if len(daily_env) >0 else render_template("index-empty.html")
 
 
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
