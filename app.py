@@ -210,8 +210,6 @@ def api_tc():
                   'thermal_comfort_desc': get_pmv_status(get_pmv_value(
                       item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
                   'timestamp': item[4],
-                  'user_id': '2',
-                  'dwelling_id': 'ATH-1'
                   } for item in latest_env]
 
     # Create a JSON schema from the list of dictionaries
@@ -240,8 +238,7 @@ def handle_ttn_webhook():
 
     # decodedPayload = decodeMACPayload(data['uplink_message']['frm_payload'])
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
-    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
-                                                                        re[3]
+    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], re[3]
 
     # Connect to the database
     cur = mysql.connection.cursor()
