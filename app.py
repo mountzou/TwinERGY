@@ -212,7 +212,7 @@ def api_tc():
                       'timestamp': item[4],
                       } for item in latest_env]
     else:
-        data_list = { 'air_temperature': 0,
+        data_list = [{ 'air_temperature': 0,
                       'globe_temperature': 0,
                       'relative_humidity': 0,
                       'wearable_id': 0,
@@ -225,7 +225,7 @@ def api_tc():
                       'thermal_comfort': 0,
                       'thermal_comfort_desc': 0,
                       'timestamp': 0,
-                      }
+                      }]
 
                      # Create a JSON schema from the list of dictionaries
     json_schema = {'data': data_list}
