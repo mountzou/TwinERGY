@@ -1,10 +1,11 @@
-from flask import (Flask, render_template, redirect, url_for, session, request, jsonify)
+from flask import (Flask, render_template, redirect, url_for, session, request, g, jsonify)
 from flask_mysqldb import MySQL
+from flask_compress import Compress
 
 from keycloak import KeycloakOpenID
 
 from decodeLoRaPackage import decodeMACPayload
-from determineMetabolic import dailyMetabolic, dailyMetabolicTime
+
 from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate_clo_value, \
     get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
@@ -23,6 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+Compress(app)
 
 # Credentials to connect with mySQL TwinERGY UPAT database
 app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
@@ -53,6 +55,11 @@ def require_login():
     # Redirect non-authenticated user to the 'login' rout
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect(url_for('login'))
+
+
+@app.before_request
+def before_request():
+    g.cur = mysql.connection.cursor()
 
 
 # A route that implements the user authentication process
@@ -97,13 +104,10 @@ def rout():
     # Create a userInfo object with information related to the authenticated user's session
     userinfo = session.get('userinfo', None)
 
-    # Create a cursor object to interact with the TwinERGY UPAT database
-    cur = mysql.connection.cursor()
-
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
-    cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    g.cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
         userinfo['deviceId'],))
-    daily_env = cur.fetchall()
+    daily_env = g.cur.fetchall()
 
     return render_template("index.html") if len(daily_env) > 0 else render_template("index-empty.html")
 
@@ -113,13 +117,10 @@ def thermal_comfort():
     # Create a userInfo object with information related to the authenticated user's session
     userinfo = session.get('userinfo', None)
 
-    # Create a cursor object to interact with the TwinERGY UPAT database
-    cur = mysql.connection.cursor()
-
     # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
-    cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+    g.cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
         userinfo['deviceId'],))
-    daily_env = cur.fetchall()
+    daily_env = g.cur.fetchall()
 
     return render_template("thermal-comfort.html") if len(daily_env) > 0 else render_template("thermal-comfort-empty.html")
 
@@ -202,7 +203,7 @@ def api_tc():
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
     cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
     latest_env = cur.fetchall()
-    if len(latest_env)>0:
+    if len(latest_env) > 0:
         # Create a list of dictionaries using a list comprehension
         data_list = [{'air_temperature': item[0],
                       'globe_temperature': item[0] * 0.935,
@@ -220,7 +221,7 @@ def api_tc():
                       'timestamp': item[4],
                       } for item in latest_env]
     else:
-        data_list = [{ 'air_temperature': 0,
+        data_list = [{'air_temperature': 0,
                       'globe_temperature': 0,
                       'relative_humidity': 0,
                       'wearable_id': 0,
@@ -235,7 +236,7 @@ def api_tc():
                       'timestamp': 0,
                       }]
 
-                     # Create a JSON schema from the list of dictionaries
+        # Create a JSON schema from the list of dictionaries
     json_schema = {'data': data_list}
 
     return jsonify(json_schema)
@@ -358,7 +359,6 @@ def get_data_thermal_comfort_range():
 
 @app.route('/monitor_thermal_comfort_cdmp')
 def monitor_thermal_comfort_cdmp():
-
     headers = {"X-API-TOKEN": '8a3cb21d-be27-466d-a797-54fae21a0d8a'}
 
     url = "https://twinergy.s5labs.eu/api/query/0339861f-d825-47e4-9d96-beaafdc295d3?pageSize=1000"
