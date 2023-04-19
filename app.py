@@ -7,7 +7,6 @@ from decodeLoRaPackage import decodeMACPayload
 from determineMetabolic import dailyMetabolic, dailyMetabolicTime
 from determineThermalComfort import get_pmv_status, get_pmv_value
 from determineAirTemperature import get_air_temperature
-from determineWellBeing import get_well_being_description
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
