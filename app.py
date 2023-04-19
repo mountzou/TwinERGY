@@ -5,7 +5,8 @@ from keycloak import KeycloakOpenID
 
 from decodeLoRaPackage import decodeMACPayload
 from determineMetabolic import dailyMetabolic, dailyMetabolicTime
-from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate_clo_value, get_calibrate_air_speed_value
+from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate_clo_value, \
+    get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
 from determineWellBeing import get_well_being_description
 
@@ -57,10 +58,8 @@ def require_login():
 # A route that implements the user authentication process
 @app.route('/login')
 def login():
-    if urlparse(request.base_url).netloc == '127.0.0.1:5000':
-        auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
-    else:
-        auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+    scheme = 'http' if urlparse(request.base_url).netloc == '127.0.0.1:5000' else 'https'
+    auth_url = keycloak_openid.auth_url(redirect_uri=f"{scheme}://{urlparse(request.base_url).netloc}/callback", scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -111,7 +110,18 @@ def rout():
 
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    return render_template("thermal-comfort.html")
+    # Create a userInfo object with information related to the authenticated user's session
+    userinfo = session.get('userinfo', None)
+
+    # Create a cursor object to interact with the TwinERGY UPAT database
+    cur = mysql.connection.cursor()
+
+    # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
+    cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
+        userinfo['deviceId'],))
+    daily_env = cur.fetchall()
+
+    return render_template("thermal-comfort.html") if len(daily_env) > 0 else render_template("thermal-comfort-empty.html")
 
 
 @app.route("/preferences/", methods=["GET", "POST"])
@@ -187,8 +197,6 @@ def preferences():
 
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-    userinfo = session.get('userinfo', None)
-
     cur = mysql.connection.cursor()
 
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
@@ -236,9 +244,9 @@ def handle_ttn_webhook():
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
-    # decodedPayload = decodeMACPayload(data['uplink_message']['frm_payload'])
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
-    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], re[3]
+    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
+                                                                        re[3]
 
     # Connect to the database
     cur = mysql.connection.cursor()
@@ -331,6 +339,20 @@ def get_data_thermal_comfort_range():
         thermal_comfort_list.append(pmv)
 
     return jsonify(tuple(thermal_comfort_list))
+
+
+@app.route('/monitor_thermal_comfort_cdmp')
+def monitor_thermal_comfort_cdmp():
+
+    headers = {"X-API-TOKEN": '8a3cb21d-be27-466d-a797-54fae21a0d8a'}
+
+    url = "https://twinergy.s5labs.eu/api/query/0339861f-d825-47e4-9d96-beaafdc295d3?pageSize=1000"
+
+    response = requests.get(url, headers=headers)
+
+    response1 = response.json()
+
+    return jsonify(response1)
 
 
 @app.route('/session', methods=['GET'])
