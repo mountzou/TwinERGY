@@ -242,7 +242,7 @@ def api_tc():
                   'voc_index': item[5],
                   'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
                   'thermal_comfort_desc': get_pmv_status(get_pmv_value(
-                      item[0], 0.935 * item[0], item[1], item[5], 0.8, 0.1)),
+                      item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
                   'timestamp': item[4],
                   'user_id': '2',
                   'dwelling_id': 'ATH-1'
