@@ -65,8 +65,10 @@ def before_request():
 # A route that implements the user authentication process
 @app.route('/login')
 def login():
-    scheme = 'http' if urlparse(request.base_url).netloc == '127.0.0.1:5000' else 'https'
-    auth_url = keycloak_openid.auth_url(redirect_uri=f"{scheme}://{urlparse(request.base_url).netloc}/callback", scope="openid", state="af0ifjsldkj")
+    if urlparse(request.base_url).netloc == '127.0.0.1:5000':
+        auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+    else:
+        auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
