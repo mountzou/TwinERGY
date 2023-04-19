@@ -1,0 +1,64 @@
+{% extends "base-account.html" %}
+
+<!-- Add the title for the specific page -->
+{% block title %}Dashboard{% endblock title %}
+
+<!-- Import any extra .css files for the specific page -->
+{% block html_css %}{% endblock html_css %}
+
+<!-- Set the breadcrumb levels for the specific page -->
+{% set breadcrumb_level_one = 'User' %}
+{% set breadcrumb_level_two = 'Helpdesk' %}
+
+{% block js_scripts %}
+<!-- Import a .js script to retrieve session variables -->
+<script src="{{url_for('static', filename='js/session.js')}}"></script>
+<script src="{{url_for('static', filename='js/account.js')}}"></script>
+{% endblock js_scripts %}
+
+{% block content %}
+<div class="pt-32pt">
+    <div class="container page__container d-flex flex-column flex-md-row align-items-center text-center text-sm-left">
+        {% include 'breadcrumb.html' %}
+    </div>
+    <div class="container page__container">
+        <div class="page-section">
+            <div class="row mb-32pt">
+                <div class="col-lg-4">
+                    <div class="page-separator">
+                        <div class="page-separator__text">Personal Information</div>
+                    </div>
+                    <p class="card-subtitle text-70 mb-16pt mb-lg-0">
+                        Personal information as inserted into the TwinERGY Identity Server during the registration
+                    </p>
+                </div>
+                <div class="col-lg-8 d-flex align-items-center">
+                    <div class="flex" style="max-width: 100%">
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table" style="margin-bottom: 0rem;">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Full Name</th>
+                                            <th scope="col">Username</th>
+                                            <th scope="col">Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td id="account-fullname"></td>
+                                            <td id="account-username"></td>
+                                            <td id="account-email"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

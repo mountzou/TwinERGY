@@ -9,11 +9,12 @@ from determineThermalComfort import get_pmv_status, get_pmv_value
 from determineAirTemperature import get_air_temperature
 from determineWellBeing import get_well_being_description
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 import json
 import requests
+import time
 
 import os
 from dotenv import load_dotenv
@@ -108,53 +109,9 @@ def rout():
     return render_template("index.html") if len(daily_env) > 0 else render_template("index-empty.html")
 
 
-@app.route("/thermal_comfort/")
+@app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    cur = mysql.connection.cursor()
-
-    # Execute SQL query to get the average environmental parameters of temperature and humidity that recorded during the last 24-hours
-    cur.execute('''SELECT ROUND(AVG(tc_temperature),2), ROUND(AVG(tc_humidity), 2) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR))''')
-    (avg_temperature, avg_humidity) = cur.fetchone()
-
-    # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity FROM user_thermal_comfort ORDER BY tc_timestamp DESC LIMIT 1;''')
-    (latest_temperature, latest_humidity) = cur.fetchone()
-
-    # Execute SQL query to get the daily environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
-    daily_environmental = cur.fetchall()
-
-    # Execute SQL query to get the daily physiological parameter of metabolic rate
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
-    daily_metabolic = cur.fetchall()
-
-    # Determine the latest and average air temperature from corresponding wearable measurements
-    latest_temperature, avg_temperature = get_air_temperature(latest_temperature), get_air_temperature(avg_temperature)
-
-    sessions_met = [item for item in dailyMetabolic(daily_metabolic) for _ in range(2)]
-    sessions_met_time = dailyMetabolicTime(daily_metabolic)
-
-    avg_met = round(sum(sessions_met) / len(sessions_met), 2)
-
-    daily_temp = [get_air_temperature(t[0]) for t in daily_environmental]
-    daily_hum = [t[1] for t in daily_environmental]
-    daily_time = [t[2] for t in daily_environmental]
-
-    for ts, te, met in zip(sessions_met_time, sessions_met_time[1:], sessions_met[:-1]):
-        cur.execute('''SELECT AVG(tc_temperature) AS avg_temperature, AVG(tc_humidity) AS avg_humidity FROM user_thermal_comfort WHERE tc_timestamp BETWEEN %s AND %s;''', (
-            ts, te))
-        tc_parameters = cur.fetchall()
-
-        pmv = get_pmv_value(get_air_temperature(tc_parameters[0][0]), 0.935 * get_air_temperature(
-            tc_parameters[0][0]) + 1.709, tc_parameters[0][1], met, 0.8, 0.1)
-
-    daily_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in daily_time]
-    sessions_met_time = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in sessions_met_time]
-
-    return render_template("thermal-comfort.html", avg_met=avg_met, l_temp=latest_temperature, l_hum=latest_humidity, l_met=
-    sessions_met[
-        -1], avg_temp=avg_temperature, avg_hum=avg_humidity, d_temp=daily_temp, d_hum=daily_hum, d_time=daily_time, d_met=sessions_met, d_met_time=sessions_met_time, l_update=
-    daily_time[-1], usernameId=session['username'])
+    return render_template("thermal-comfort.html")
 
 
 @app.route("/preferences/", methods=["GET", "POST"])
@@ -355,6 +312,12 @@ def account():
     return render_template('account.html')
 
 
+# A route that implements an page with information related to the current user's session
+@app.route('/helpdesk')
+def helpdesk():
+    return render_template('helpdesk.html')
+
+
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
 @app.route('/get_data_thermal_comfort')
 def get_data_thermal_comfort():
@@ -372,9 +335,39 @@ def get_data_thermal_comfort():
         pmv = row + (get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1),)
         all_thermal_comfort_data.append(pmv)
 
-    data = tuple(all_thermal_comfort_data)
+    return jsonify(tuple(all_thermal_comfort_data))
 
-    return jsonify(data)
+
+@app.route('/get_data_thermal_comfort_range', methods=['GET'])
+def get_data_thermal_comfort_range():
+    userinfo = session.get('userinfo', None)
+    cur = mysql.connection.cursor()
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if not start_date or not end_date:
+        end_date = datetime.now().strftime('%Y-%m-%d')
+        start_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+
+    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = datetime.strptime(end_date, '%Y-%m-%d').date() + timedelta(days=1)
+
+    start_timestamp = int(time.mktime(start_date.timetuple()))
+    end_timestamp = int(time.mktime(end_date.timetuple()))
+
+    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s''', (
+        start_timestamp, end_timestamp, userinfo['deviceId']))
+    thermal_comfort_data = cur.fetchall()
+
+    thermal_comfort_list = []
+
+    for row in thermal_comfort_data:
+        tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
+        pmv = row + (get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1),)
+        thermal_comfort_list.append(pmv)
+
+    return jsonify(tuple(thermal_comfort_list))
 
 
 @app.route('/session', methods=['GET'])

@@ -20,6 +20,7 @@ function getSessionData() {
       });
 }
 
+/* Replace the content of HTML components related to session's information */
 getSessionData().then((sessionData) => {
     document.getElementById("building-id").innerHTML = sessionData['userinfo']['dwellingId'] + ', '  + sessionData['userinfo']['pilotId'].charAt(0).toUpperCase() + sessionData['userinfo']['pilotId'].slice(1);
     document.getElementById("wearable-id").innerHTML = sessionData['userinfo']['deviceId'];
