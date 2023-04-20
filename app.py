@@ -361,6 +361,7 @@ def get_data_thermal_comfort_range():
 
 @app.route('/monitor_thermal_comfort_cdmp')
 def monitor_thermal_comfort_cdmp():
+
     headers = {"X-API-TOKEN": '8a3cb21d-be27-466d-a797-54fae21a0d8a'}
 
     url = "https://twinergy.s5labs.eu/api/query/0339861f-d825-47e4-9d96-beaafdc295d3?pageSize=1000"
@@ -370,7 +371,6 @@ def monitor_thermal_comfort_cdmp():
     response1 = response.json()
 
     return jsonify(response1)
-
 
 @app.route('/session', methods=['GET'])
 def current_session():

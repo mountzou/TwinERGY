@@ -55,7 +55,7 @@ html {
 }
 
 [dir=ltr] article, [dir=ltr] aside, [dir=ltr] figcaption, [dir=ltr] figure, [dir=ltr] footer, [dir=ltr] header, [dir=ltr] hgroup, [dir=ltr] main, [dir=ltr] nav, [dir=ltr] section {
-  display: block
+  display: swap
 }
 
 [dir=ltr] body {

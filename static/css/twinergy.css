@@ -60,7 +60,7 @@ label {
   text-rendering: optimizeLegibility;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "liga";
-  font-display: block;
+  font-display: swap;
 }
 
 [dir="ltr"] *, [dir="ltr"] ::after, [dir="ltr"] ::before {

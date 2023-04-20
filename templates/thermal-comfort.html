@@ -11,10 +11,10 @@
 {% set breadcrumb_level_two = 'Thermal Comfort' %}
 
 {% block js_scripts %}
-    <!-- Import a .js script to retrieve session variables -->
-    <script src="{{url_for('static', filename='js/session.js')}}"></script>
-    <!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
-    <script src="{{url_for('static', filename='js/thermal-comfort.js')}}"></script>
+<!-- Import a .js script to retrieve session variables -->
+<script src="{{url_for('static', filename='js/session.js')}}"></script>
+<!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
+<script src="{{url_for('static', filename='js/thermal-comfort.js')}}"></script>
 {% endblock js_scripts %}
 
 {% block content %}
@@ -29,23 +29,21 @@
                     <div class="page-separator">
                         <div class="page-separator__text">Select Date Range</div>
                     </div>
-                    <p class="card-subtitle text-70 mb-16pt mb-lg-0">Define the desired time range to display the corresponding thermal comfort environmental & physiological parameters.</p>
+                    <p class="card-subtitle text-70 mb-16pt mb-lg-0">Define the desired time range to display the
+                        corresponding thermal comfort environmental & physiological parameters.</p>
                 </div>
                 <div class="col-lg-8 d-flex align-items-center">
                     <div class="flex" style="max-width: 100%">
-                         <form method="post">
-                            <div class="form-row">
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label class="form-label" for="start_date">From</label>
-                                    <input type="date" class="form-control" id="start_date" name="start_date">
-                                </div>
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label class="form-label" for="end_date">To</label>
-                                    <input type="date" class="form-control" id="end_date" name="end_date">
-                                </div>
+                        <form method="post">
+                            <div class="form-group">
+                                <label class="form-label" for="dateRangePickerSample02">Range</label>
+                                <input id="dateRangePickerSample02" type="text" class="form-control"
+                                       placeholder="Range example" data-toggle="daterangepicker"
+                                       data-daterangepicker-drops="up" data-daterangepicker-start-date="2018/11/06"
+                                       data-daterangepicker-end-date="2018/12/06">
                             </div>
                             <button class="btn btn-primary" type="submit">Submit</button>
-                         </form>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -61,8 +59,10 @@
                         </div>
                         <div class="card-body">
                             <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;" id="daily-mean-temperature">- °C</h3>
-                                <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY MEAN AIR TEMPERATURE</small>
+                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;"
+                                    id="daily-mean-temperature">- °C</h3>
+                                <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY
+                                    MEAN AIR TEMPERATURE</small>
                             </div>
                             <div class="text-50 mb-16pt">
                                 <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
@@ -77,7 +77,8 @@
                             <div>
                                 <div class="d-flex align-items-center">
                                     <i class="material-icons text-primary mr-4pt"></i>
-                                    <div class="text-70 l-updated" style="font-family:Josefin Sans; font-size:14px;">-</div>
+                                    <div class="text-70 l-updated" style="font-family:Josefin Sans; font-size:14px;">-
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -97,8 +98,10 @@
                         </div>
                         <div class="card-body">
                             <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;" id="daily-mean-humidity">- %</h3>
-                                <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY MEAN RELATIVE HUMIDITY</small>
+                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;"
+                                    id="daily-mean-humidity">- %</h3>
+                                <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY
+                                    MEAN RELATIVE HUMIDITY</small>
                             </div>
                             <div class="text-50 mb-16pt">
                                 <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
@@ -113,7 +116,8 @@
                             <div>
                                 <div class="d-flex align-items-center">
                                     <i class="material-icons text-primary mr-4pt"></i>
-                                    <div class="text-70 l-updated" style="font-family:Josefin Sans; font-size:14px;">-</div>
+                                    <div class="text-70 l-updated" style="font-family:Josefin Sans; font-size:14px;">-
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -134,7 +138,8 @@
                         </div>
                         <div class="card-body">
                             <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;" id="daily-mean-met">- met</h3>
+                                <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;" id="daily-mean-met">-
+                                    met</h3>
                                 <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">DAILY
                                     MEAN
                                     METABOLIC RATE</small>
@@ -152,7 +157,8 @@
                             <div>
                                 <div class="d-flex align-items-center">
                                     <i class="material-icons text-primary mr-4pt"></i>
-                                    <div class="text-70 l-updated" style="font-family:Josefin Sans; font-size:14px;">-</div>
+                                    <div class="text-70 l-updated" style="font-family:Josefin Sans; font-size:14px;">-
+                                    </div>
                                 </div>
                             </div>
                         </div>

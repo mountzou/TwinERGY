@@ -42,7 +42,7 @@ var end_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate()
 var start_date = start_date_1.toISOString().substr(0, 10);
 var end_date = end_date_1.toISOString().substr(0, 10);
 
-function updateDashboard() {
+function updateThermalComfort() {
     $.getJSON('/get_data_thermal_comfort_range', {'start_date': start_date, 'end_date': end_date}, function (data) {
         let temperature = data.map(x => x[0]);
         let humidity = data.map(x => x[1]);
@@ -245,6 +245,6 @@ function updateDashboard() {
     });
 }
 
-updateDashboard();
+updateThermalComfort();
 
-setInterval(updateDashboard, 8000);
+setInterval(updateThermalComfort, 8000);
