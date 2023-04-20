@@ -251,13 +251,15 @@ function updateThermalComfort(start_date, end_date) {
 }
 
 function initDateRangePicker() {
+    localStorage.removeItem('startDate');
+    localStorage.removeItem('endDate');
     // Calculate the default start and end dates for the latest 24 hours
     var defaultEndDate = moment().format('YYYY/MM/DD');
-    var defaultStartDate = moment().subtract(1, 'days').format('YYYY/MM/DD');
+    var defaultStartDate = moment().subtract(1, 'day').format('YYYY/MM/DD');
 
     // Get the stored date range values or use the default ones
-//    var storedStartDate = localStorage.getItem('startDate') || defaultStartDate;
-//    var storedEndDate = localStorage.getItem('endDate') || defaultEndDate;
+    var storedStartDate = localStorage.getItem('startDate') || defaultStartDate;
+    var storedEndDate = localStorage.getItem('endDate') || defaultEndDate;
 
     $('#thermalComfortRange').daterangepicker({
         drops: 'down',
@@ -274,13 +276,13 @@ function initDateRangePicker() {
     $('#thermalComfortRange').val(storedStartDate + ' - ' + storedEndDate);
 
     $('#thermalComfortRange').on('apply.daterangepicker', function(ev, picker) {
+
         var startDate = picker.startDate.format('YYYY/MM/DD');
         var endDate = picker.endDate.format('YYYY/MM/DD');
 
-        $(this).val(startDate + ' - ' + endDate);
+        console.log('Meta_to_apply'+startDate);
 
-        console.log('Start date:', startDate);
-        console.log('End date:', endDate);
+        $(this).val(startDate + ' - ' + endDate);
 
         localStorage.setItem('startDate', startDate);
         localStorage.setItem('endDate', endDate);
