@@ -47,8 +47,6 @@ var currentEndDate = endDate;
 
 function updateThermalComfort(start_date, end_date) {
     $.getJSON('/get_data_thermal_comfort_range', {'start_date': start_date, 'end_date': end_date}, function (data) {
-        console.log(start_date);
-        console.log(end_date);
         let temperature = data.map(x => x[0]);
         let humidity = data.map(x => x[1]);
         let time = data.map(x => unixToHumanReadable(x[2]));
@@ -280,8 +278,6 @@ function initDateRangePicker() {
         var startDate = picker.startDate.format('YYYY/MM/DD');
         var endDate = picker.endDate.format('YYYY/MM/DD');
 
-        console.log('Meta_to_apply'+startDate);
-
         $(this).val(startDate + ' - ' + endDate);
 
         localStorage.setItem('startDate', startDate);
@@ -298,4 +294,10 @@ initDateRangePicker();
 
 updateThermalComfort(currentStartDate, currentEndDate);
 
-setInterval(function() {updateThermalComfort(currentStartDate, currentEndDate);}, 8000);
+setInterval(function() {
+  var applystartDate = $('#thermalComfortRange').data('daterangepicker').startDate.format('YYYY-MM-DD');
+  var applyendDate = $('#thermalComfortRange').data('daterangepicker').endDate.format('YYYY-MM-DD');
+  localStorage.setItem('startDate', applystartDate);
+  localStorage.setItem('endDate', applyendDate);
+  updateThermalComfort(applystartDate, applyendDate);
+}, 8000);
