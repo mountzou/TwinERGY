@@ -26,3 +26,24 @@ getSessionData().then((sessionData) => {
     document.getElementById("wearable-id").innerHTML = sessionData['userinfo']['deviceId'];
     document.getElementById("username-id").innerHTML = 'Welcome, ' + sessionData['userinfo']['preferred_username'];
 });
+
+var hasNewData = false;
+
+function checkForNewData() {
+    var endDate = moment().format('YYYY/MM/DD');
+    var startDate = moment().subtract(1, 'minutes').format('YYYY/MM/DD');
+
+    var newEndDate = moment(endDate, 'YYYY/MM/DD').format('YYYY-MM-DD');
+    var newStartDate = moment(startDate, 'YYYY/MM/DD').format('YYYY-MM-DD');
+
+    $.getJSON('/get_data_thermal_comfort_range', {'start_date': newStartDate, 'end_date': newEndDate}, function (data) {
+        if (data !== null && data.length > 0) {
+            hasNewData = true;
+        } else {
+            hasNewData = false;
+        }
+    });
+}
+
+// Call the checkForNewData function every minute
+setInterval(checkForNewData, 60000);

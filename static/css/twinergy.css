@@ -167,3 +167,25 @@ label {
 .bg-primary-1 {
     background-color: rgba(255, 186, 77, 0.9) !important;
 }
+
+.red-dot {
+  width: 11px;
+  height: 11px;
+  background-color: white;
+  border-radius: 50%;
+  animation: pulsate 2s ease-out;
+  animation-iteration-count: infinite;
+  opacity: 1.0;
+}
+
+@keyframes pulsate {
+  0% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0.8);
+  }
+}

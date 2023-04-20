@@ -128,7 +128,7 @@ function updateThermalComfort(start_date, end_date) {
                 type: "line",
                 borderColor: "rgb(255, 186, 77)",
                 backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
+                borderWidth: 2,
                 data: met,
                 fill: true
             }]

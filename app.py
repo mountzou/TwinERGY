@@ -10,6 +10,7 @@ from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate
     get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
 from determineWellBeing import get_well_being_description
+from updatePreferences import updateThermalComfortPreference
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
@@ -129,73 +130,7 @@ def thermal_comfort():
 
 @app.route("/preferences/", methods=["GET", "POST"])
 def preferences():
-    from determinePreferences import get_importance_ranges, get_load_weights
-    userinfo = session.get('userinfo', None)
-
-    cur = mysql.connection.cursor()
-
-    if request.method == "POST":
-        unix_timestamp = (int(datetime.timestamp(datetime.now())))
-
-        importnace_thermal_comfort = request.form.get("preference_thermal_comfort").split(';')
-
-        thermal_dict = {-3: "Cold", -2: "Cool", -1: "Slightly Cool", 0: "Neutral",
-                        1: "Slightly Warm", 2: "Warm", 3: "Hot"}
-
-        importance_dict = {1: "Not Important", 2: "Slightly Important", 3: "Important", 4: "Fairly Important",
-                           5: "Very Important"}
-
-        thermal_tolerance_list = [k for k, v in thermal_dict.items() if v in importnace_thermal_comfort]
-
-        importnace_ev_range = request.form.get("preference_range_electric_vehicle").split(';')
-        importnace_dw_range = request.form.get("preference_range_dish_washer").split(';')
-        importnace_wm_range = request.form.get("preference_range_washing_machine").split(';')
-        importnace_ht_range = request.form.get("preference_range_drier").split(';')
-        importnace_wh_range = request.form.get("preference_range_water_heater").split(';')
-
-        ev_start, ev_end = int(importnace_ev_range[0].split(":")[0]), int(importnace_ev_range[1].split(":")[0])
-        dw_start, dw_end = int(importnace_dw_range[0].split(":")[0]), int(importnace_dw_range[1].split(":")[0])
-        wm_start, wm_end = int(importnace_wm_range[0].split(":")[0]), int(importnace_wm_range[1].split(":")[0])
-        ht_start, ht_end = int(importnace_ht_range[0].split(":")[0]), int(importnace_ht_range[1].split(":")[0])
-        wh_start, wh_end = int(importnace_wh_range[0].split(":")[0]), int(importnace_wh_range[1].split(":")[0])
-
-        importance_ev = list(importance_dict.keys())[
-                            list(importance_dict.values()).index(request.form.get("preference_electric_vehicle"))] - 1
-        importance_dw = list(importance_dict.keys())[
-                            list(importance_dict.values()).index(request.form.get("preference_dish_washer"))] - 1
-        importance_wm = list(importance_dict.keys())[
-                            list(importance_dict.values()).index(request.form.get("preference_washing_machine"))] - 1
-        importance_ht = list(importance_dict.keys())[
-                            list(importance_dict.values()).index(request.form.get("preference_tumble"))] - 1
-        importance_wh = list(importance_dict.keys())[
-                            list(importance_dict.values()).index(request.form.get("preference_water_heater"))] - 1
-
-        cur.execute('''INSERT INTO user_pref_thermal VALUES (2, "%s", "%s" , %s, '') ''', (
-            thermal_tolerance_list[0], thermal_tolerance_list[1], unix_timestamp))
-
-        cur.execute('''INSERT INTO user_flex_loads VALUES (2, "%s", "%s" , "%s", "%s", "%s", "%s", "%s", "%s" , "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s" ) ''', (
-            importance_ev, ev_start, ev_end, importance_ht, ht_start, ht_end, importance_wm, wm_start, wm_end,
-            importance_dw, dw_start, dw_end, importance_wh, wh_start, wh_end, unix_timestamp
-        ))
-
-        preferences_loads = {"Electric Vehicle": importance_ev + 1, "Dish Washer": importance_dw + 1,
-                             "Washing Machine": importance_wm + 1, "Tumble Drier": importance_ht + 1,
-                             "Water Heater": importance_wh + 1}
-
-        weights = determineWeights(preferences_loads)
-
-        cur.execute('''INSERT INTO load_weight_simos VALUES (2, "%s", "%s", "%s", "%s", "%s", "%s") ''', (
-            float(weights['Electric Vehicle'][0]), float(weights['Tumble Drier'][0]),
-            float(weights['Washing Machine'][0]), float(weights['Dish Washer'][0]), float(weights['Water Heater'][0]),
-            unix_timestamp
-        ))
-
-        mysql.connection.commit()
-
-    preferences_importance, preferences_simos = get_importance_ranges(), get_load_weights()
-
-    return render_template("preferences.html", preferences_importance=preferences_importance, preferences_simos=preferences_simos, usernameId=
-    session['username'])
+    return render_template("preferences.html")
 
 
 @app.route('/api_tc', methods=['GET'])
@@ -327,6 +262,54 @@ def get_data_thermal_comfort():
     return jsonify(tuple(all_thermal_comfort_data))
 
 
+# A route that implements an asynchronous call to retrieve data related to the thermal comfort
+@app.route('/get_data_preferences')
+def get_data_preferences():
+    userinfo = session.get('userinfo', None)
+
+    g.cur.execute('''
+        SELECT user_thermal_level_min, user_thermal_level_max
+        FROM user_thermal_preferences
+        WHERE wearable_id = %s
+        ORDER BY user_thermal_timestamp DESC
+        LIMIT 1;
+    ''', (userinfo['deviceId'],))
+    thermal_preferences = g.cur.fetchone()
+
+    if thermal_preferences is not None:
+        user_thermal_level_min, user_thermal_level_max = thermal_preferences
+
+        response = {
+            'preferences': [
+                {
+                    'thermal_comfort_preferences':
+                        {
+                            'thermal_comfort_min': user_thermal_level_min,
+                            'thermal_comfort_max': user_thermal_level_max
+                        }
+                }
+            ]
+        }
+
+        return jsonify(response)
+
+    else:
+
+        return jsonify(tuple("1"))
+
+
+@app.route('/update_preferences', methods=['POST'])
+def update_preferences():
+    wearable_id = session.get('userinfo', None)['deviceId']
+
+    user_thermal_level_min = request.form.get('user_thermal_level_min')
+    user_thermal_level_max = request.form.get('user_thermal_level_max')
+
+    updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max, wearable_id)
+
+    return jsonify(success=True)
+
+
 @app.route('/get_data_thermal_comfort_range', methods=['GET'])
 def get_data_thermal_comfort_range():
     userinfo = session.get('userinfo', None)
@@ -361,7 +344,6 @@ def get_data_thermal_comfort_range():
 
 @app.route('/monitor_thermal_comfort_cdmp')
 def monitor_thermal_comfort_cdmp():
-
     headers = {"X-API-TOKEN": '8a3cb21d-be27-466d-a797-54fae21a0d8a'}
 
     url = "https://twinergy.s5labs.eu/api/query/0339861f-d825-47e4-9d96-beaafdc295d3?pageSize=1000"
@@ -371,6 +353,7 @@ def monitor_thermal_comfort_cdmp():
     response1 = response.json()
 
     return jsonify(response1)
+
 
 @app.route('/session', methods=['GET'])
 def current_session():

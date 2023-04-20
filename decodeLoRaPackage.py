@@ -1,8 +1,6 @@
 import base64
 import time
 
-from determineAirTemperature import get_air_temperature
-
 
 # Function that decodes the bytes of payload from the wearable device
 def decodeMACPayload(payload):
@@ -13,9 +11,6 @@ def decodeMACPayload(payload):
     integer_temperature, decimal_temperature = int(str(int(mac_payload[-8:-4], 16))[:2]), int(str(int(mac_payload[
                                                                                                       -8:-4], 16))[2:])
     air_temperature = integer_temperature + (decimal_temperature / 100)
-
-    # Determine the value of air temperature based on the captured measurement from the wearable device
-    # air_temperature = get_air_temperature(air_temperature)
 
     # Get the integer part and the decimal part of the relative humidity from the payload
     integer_humidity, decimal_humidity = int(str(int(mac_payload[-4:], 16))[:2]), int(str(int(mac_payload[-4:], 16))[

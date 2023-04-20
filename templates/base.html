@@ -26,28 +26,29 @@
         </div>
     </div>
 
-{% include 'footer.html' %}
+    {% include 'footer.html' %}
 
-<!-- Import jQuery library -->
-<script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
+    <!-- Import jquery.min.js with jQuery library -->
+    <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
 
-<!-- Import main application .js file -->
-<script src="{{url_for('static', filename='js/app.js')}}"></script>
+    <!-- Import app.js file with application's main settings -->
+    <script src="{{url_for('static', filename='js/app.js')}}"></script>
 
-<!-- Import .js file with global settings -->
-<script src="{{url_for('static', filename='js/settings.js')}}"></script>
+    <!-- Import settings.js file with application's global settings -->
+    <script src="{{url_for('static', filename='js/settings.js')}}"></script>
 
-<!-- Chart JS -->
-<script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
-<script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
-<script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
+    <!-- Import bootstrap.min.js file with Bootstrap library -->
+    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
-<!-- Import a .js script to retrieve session variables -->
-<script src="{{url_for('static', filename='js/session.js')}}"></script>
-<!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
-<script src="{{url_for('static', filename='js/dashboard-comfort.js')}}"></script>
+    <!-- CImport Chart.min.js files with Chart JS library -->
+    <script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
 
-{% block js_scripts %}{% endblock js_scripts %}
+    <!-- Import a .js script to retrieve session variables -->
+    <script src="{{url_for('static', filename='js/session.js')}}"></script>
+    <!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
+    <script src="{{url_for('static', filename='js/dashboard-comfort.js')}}"></script>
 
 </body>
 </html>
