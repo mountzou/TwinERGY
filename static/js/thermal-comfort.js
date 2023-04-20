@@ -39,10 +39,10 @@ var today = new Date();
 var start_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 var end_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
-var start_date = start_date_1.toISOString().substr(0, 10);
-var end_date = end_date_1.toISOString().substr(0, 10);
+var startDate = start_date_1.toISOString().substr(0, 10);
+var endDate = end_date_1.toISOString().substr(0, 10);
 
-function updateThermalComfort() {
+function updateThermalComfort(start_date, end_date) {
     $.getJSON('/get_data_thermal_comfort_range', {'start_date': start_date, 'end_date': end_date}, function (data) {
         let temperature = data.map(x => x[0]);
         let humidity = data.map(x => x[1]);
@@ -245,6 +245,47 @@ function updateThermalComfort() {
     });
 }
 
-updateThermalComfort();
+function initDateRangePicker() {
+    // Get the stored date range values or use the default ones
+    var storedStartDate = localStorage.getItem('startDate') || '2023/04/04';
+    var storedEndDate = localStorage.getItem('endDate') || '2023/04/05';
 
-setInterval(updateThermalComfort, 8000);
+    $('#thermalComfortRange').daterangepicker({
+        drops: 'down',
+        startDate: storedStartDate,
+        endDate: storedEndDate,
+        maxDate: moment().format('YYYY/MM/DD'),
+        locale: {
+            format: 'YYYY/MM/DD'
+        },
+        autoUpdateInput: false,
+        applyButtonClasses: 'btn-primary'
+    });
+
+    $('#thermalComfortRange').val(storedStartDate + ' - ' + storedEndDate);
+
+    $('#thermalComfortRange').on('apply.daterangepicker', function(ev, picker) {
+        var startDate = picker.startDate.format('YYYY/MM/DD');
+        var endDate = picker.endDate.format('YYYY/MM/DD');
+
+        $(this).val(startDate + ' - ' + endDate);
+
+        console.log('Start date:', startDate);
+        console.log('End date:', endDate);
+
+        localStorage.setItem('startDate', startDate);
+        localStorage.setItem('endDate', endDate);
+
+        // Replace the '/' separator with '-' in the date format
+        var formattedStartDate = startDate.replace(/\//g, '-');
+        var formattedEndDate = endDate.replace(/\//g, '-');
+
+        updateThermalComfort(formattedStartDate, formattedEndDate);
+    });
+}
+
+initDateRangePicker();
+
+updateThermalComfort(startDate, endDate);
+
+//setInterval(updateThermalComfort, 8000);
