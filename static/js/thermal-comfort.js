@@ -42,8 +42,13 @@ var end_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate()
 var startDate = start_date_1.toISOString().substr(0, 10);
 var endDate = end_date_1.toISOString().substr(0, 10);
 
+var currentStartDate = startDate;
+var currentEndDate = endDate;
+
 function updateThermalComfort(start_date, end_date) {
     $.getJSON('/get_data_thermal_comfort_range', {'start_date': start_date, 'end_date': end_date}, function (data) {
+        console.log(start_date);
+        console.log(end_date);
         let temperature = data.map(x => x[0]);
         let humidity = data.map(x => x[1]);
         let time = data.map(x => unixToHumanReadable(x[2]));
@@ -246,14 +251,18 @@ function updateThermalComfort(start_date, end_date) {
 }
 
 function initDateRangePicker() {
+    // Calculate the default start and end dates for the latest 24 hours
+    var defaultEndDate = moment().format('YYYY/MM/DD');
+    var defaultStartDate = moment().subtract(1, 'days').format('YYYY/MM/DD');
+
     // Get the stored date range values or use the default ones
-    var storedStartDate = localStorage.getItem('startDate') || '2023/04/04';
-    var storedEndDate = localStorage.getItem('endDate') || '2023/04/05';
+//    var storedStartDate = localStorage.getItem('startDate') || defaultStartDate;
+//    var storedEndDate = localStorage.getItem('endDate') || defaultEndDate;
 
     $('#thermalComfortRange').daterangepicker({
         drops: 'down',
-        startDate: storedStartDate,
-        endDate: storedEndDate,
+        startDate: defaultStartDate,
+        endDate: defaultEndDate,
         maxDate: moment().format('YYYY/MM/DD'),
         locale: {
             format: 'YYYY/MM/DD'
@@ -276,7 +285,6 @@ function initDateRangePicker() {
         localStorage.setItem('startDate', startDate);
         localStorage.setItem('endDate', endDate);
 
-        // Replace the '/' separator with '-' in the date format
         var formattedStartDate = startDate.replace(/\//g, '-');
         var formattedEndDate = endDate.replace(/\//g, '-');
 
@@ -286,6 +294,6 @@ function initDateRangePicker() {
 
 initDateRangePicker();
 
-updateThermalComfort(startDate, endDate);
+updateThermalComfort(currentStartDate, currentEndDate);
 
-//setInterval(updateThermalComfort, 8000);
+setInterval(function() {updateThermalComfort(currentStartDate, currentEndDate);}, 8000);
