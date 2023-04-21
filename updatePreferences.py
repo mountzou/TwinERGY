@@ -27,3 +27,73 @@ def updateTemperaturePreference(mysql, cur, minTemp, maxTemp, wearable_id):
     mysql.connection.commit()
 
     return 0
+
+
+def updatePrefElectricVehicle(mysql, cur, importance_electric_vehicle, wearable_id):
+    current_timestamp = int(datetime.now().timestamp())
+
+    cur.execute('''
+        UPDATE user_flex_load_preferences 
+        SET user_ev_pref = %s, update_timestamp = %s 
+        WHERE wearable_id = %s;
+    ''', (importance_electric_vehicle, current_timestamp, wearable_id))
+
+    mysql.connection.commit()
+
+    return 0
+
+
+def updatePrefWashingMachine(mysql, cur, importance_washing_machine, wearable_id):
+    current_timestamp = int(datetime.now().timestamp())
+
+    cur.execute('''
+        UPDATE user_flex_load_preferences 
+        SET user_wm_pref = %s, update_timestamp = %s 
+        WHERE wearable_id = %s;
+    ''', (importance_washing_machine, current_timestamp, wearable_id))
+
+    mysql.connection.commit()
+
+    return 0
+
+
+def updatePrefWaterHeater(mysql, cur, importance_water_heater, wearable_id):
+    current_timestamp = int(datetime.now().timestamp())
+
+    cur.execute('''
+        UPDATE user_flex_load_preferences 
+        SET user_wh_pref = %s, update_timestamp = %s 
+        WHERE wearable_id = %s;
+    ''', (importance_water_heater, current_timestamp, wearable_id))
+
+    mysql.connection.commit()
+
+    return 0
+
+
+def updatePrefTumbleDrier(mysql, cur, importance_tumble_drier, wearable_id):
+    current_timestamp = int(datetime.now().timestamp())
+
+    cur.execute('''
+        UPDATE user_flex_load_preferences 
+        SET user_ht_pref = %s, update_timestamp = %s 
+        WHERE wearable_id = %s;
+    ''', (importance_tumble_drier, current_timestamp, wearable_id))
+
+    mysql.connection.commit()
+
+    return 0
+
+
+def updatePrefDishWasher(mysql, cur, importance_dish_washer, wearable_id):
+    current_timestamp = int(datetime.now().timestamp())
+
+    cur.execute('''
+        UPDATE user_flex_load_preferences 
+        SET user_dw_pref = %s, update_timestamp = %s 
+        WHERE wearable_id = %s;
+    ''', (importance_dish_washer, current_timestamp, wearable_id))
+
+    mysql.connection.commit()
+
+    return 0

@@ -22,3 +22,16 @@ def getTemperaturePreferences(cur, wearable_id):
     temperature_preferences = cur.fetchone()
 
     return temperature_preferences
+
+
+def getFlexibleLoadsPreferences(cur, wearable_id):
+    cur.execute('''
+        SELECT *
+        FROM user_flex_load_preferences
+        WHERE wearable_id = %s
+        ORDER BY update_timestamp DESC
+        LIMIT 1;
+    ''', (wearable_id,))
+    flexible_loads_preferences = cur.fetchone()
+
+    return flexible_loads_preferences

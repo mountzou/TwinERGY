@@ -10,9 +10,10 @@ from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate
     get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
 from determineWellBeing import get_well_being_description
-from updatePreferences import updateThermalComfortPreference, updateTemperaturePreference
+from updatePreferences import updateThermalComfortPreference, updateTemperaturePreference, updatePrefElectricVehicle, \
+    updatePrefWashingMachine, updatePrefDishWasher, updatePrefWaterHeater, updatePrefTumbleDrier
 
-from getPreferences import getThermalComfortPreferences, getTemperaturePreferences
+from getPreferences import getThermalComfortPreferences, getTemperaturePreferences, getFlexibleLoadsPreferences
 
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -181,7 +182,7 @@ def api_tc():
                           'timestamp': 0,
                           }]
 
-        # Create a JSON schema from the list of dictionaries
+    # Create a JSON schema from the list of dictionaries
     json_schema = {'data': data_list}
 
     return jsonify(json_schema)
@@ -252,7 +253,6 @@ def helpdesk():
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
 @app.route('/get_data_thermal_comfort/')
 def get_data_thermal_comfort():
-
     query = """
         SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met
         FROM user_thermal_comfort
@@ -264,7 +264,10 @@ def get_data_thermal_comfort():
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         thermal_comfort_data = cur.fetchall()
 
-    daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met, get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1)) for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in thermal_comfort_data]
+    daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
+                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1))
+                                  for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
+                                  thermal_comfort_data]
 
     return jsonify({'daily_thermal_comfort_data': daily_thermal_comfort_data})
 
@@ -276,6 +279,7 @@ def get_data_preferences():
 
     preferences_thermal_comfort = getThermalComfortPreferences(g.cur, wearable_id)
     preferences_temperature = getTemperaturePreferences(g.cur, wearable_id)
+    preferences_flexible_loads = getFlexibleLoadsPreferences(g.cur, wearable_id)
 
     if preferences_thermal_comfort is not None:
         user_thermal_level_min, user_thermal_level_max = preferences_thermal_comfort
@@ -293,6 +297,14 @@ def get_data_preferences():
                         {
                             'temperature_min': user_temperature_min,
                             'temperature_max': user_temperature_max
+                        },
+                    'flexible_load_preferences':
+                        {
+                            'importance_electric_vehicle': preferences_flexible_loads[1],
+                            'importance_tumble_drier': preferences_flexible_loads[4],
+                            'importance_washing_machine': preferences_flexible_loads[7],
+                            'importance_dish_washer': preferences_flexible_loads[10],
+                            'importance_water_heater': preferences_flexible_loads[13],
                         }
                 }
             ]
@@ -322,6 +334,56 @@ def update_preferences_temperature():
     user_temp_max = request.form.get('user_temp_max')
 
     updateTemperaturePreference(mysql, g.cur, user_temp_min, user_temp_max, wearable_id)
+    return jsonify(success=True)
+
+
+@app.route('/update_preferences_importance_electric_vehicle', methods=['POST'])
+def update_preferences_importance_electric_vehicle():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    importance_electric_vehicle = request.form.get('importance_electric_vehicle')
+
+    updatePrefElectricVehicle(mysql, g.cur, importance_electric_vehicle, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_preferences_importance_washing_machine', methods=['POST'])
+def update_preferences_importance_washing_machine():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    importance_washing_machine = request.form.get('importance_washing_machine')
+
+    updatePrefWashingMachine(mysql, g.cur, importance_washing_machine, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_preferences_importance_dish_washer', methods=['POST'])
+def update_preferences_importance_dish_washer():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    importance_dish_washer = request.form.get('importance_dish_washer')
+
+    updatePrefDishWasher(mysql, g.cur, importance_dish_washer, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_preferences_importance_tumble_drier', methods=['POST'])
+def update_preferences_importance_tumble_drier():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    importance_tumble_drier = request.form.get('importance_tumble_drier')
+
+    updatePrefTumbleDrier(mysql, g.cur, importance_tumble_drier, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_preferences_importance_water_heater', methods=['POST'])
+def update_preferences_importance_water_heater():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    importance_water_heater = request.form.get('importance_water_heater')
+
+    updatePrefWaterHeater(mysql, g.cur, importance_water_heater, wearable_id)
+
     return jsonify(success=True)
 
 

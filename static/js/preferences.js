@@ -9,6 +9,13 @@ function getConsumerPreferences() {
         var temperature_max = data['preferences'][0]['temperature_preferences']['temperature_max'];
         var temperature_min = data['preferences'][0]['temperature_preferences']['temperature_min'];
 
+        // Get the preferences related to the importance of residential flexible loads
+        var importance_electric_vehicle = data['preferences'][0]['flexible_load_preferences']['importance_electric_vehicle'];
+        var importance_washing_machine = data['preferences'][0]['flexible_load_preferences']['importance_washing_machine'];
+        var importance_tumble_drier = data['preferences'][0]['flexible_load_preferences']['importance_tumble_drier'];
+        var importance_water_heater = data['preferences'][0]['flexible_load_preferences']['importance_water_heater'];
+        var importance_dish_washer = data['preferences'][0]['flexible_load_preferences']['importance_dish_washer'];
+
         $("#preference_thermal_comfort").ionRangeSlider({
           grid: !0,
           type: 'double',
@@ -64,8 +71,143 @@ function getConsumerPreferences() {
                 }
               });
           },
-        })
+        });
+
+        $("#preference_electric_vehicle").ionRangeSlider({
+          grid: !0,
+          min: 0,
+          max: 5,
+          from: importance_electric_vehicle,
+          values: ["Not Important", "Slightly Important", "Important", "Fairly Important", "Very Important"],
+          onChange: function(data) {
+            var fromValue = data.from;
+            console.log("New values: " + fromValue);
+              $.ajax({
+                url: '/update_preferences_importance_electric_vehicle',
+                type: 'POST',
+                data: {
+                  importance_electric_vehicle: fromValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_washing_machine").ionRangeSlider({
+          grid: !0,
+          min: 0,
+          max: 5,
+          from: importance_washing_machine,
+          values: ["Not Important", "Slightly Important", "Important", "Fairly Important", "Very Important"],
+          onChange: function(data) {
+            var fromValue = data.from;
+            console.log("New values: " + fromValue);
+              $.ajax({
+                url: '/update_preferences_importance_washing_machine',
+                type: 'POST',
+                data: {
+                  importance_washing_machine: fromValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_dish_washer").ionRangeSlider({
+          grid: !0,
+          min: 0,
+          max: 5,
+          from: importance_dish_washer,
+          values: ["Not Important", "Slightly Important", "Important", "Fairly Important", "Very Important"],
+          onChange: function(data) {
+            var fromValue = data.from;
+              $.ajax({
+                url: '/update_preferences_importance_dish_washer',
+                type: 'POST',
+                data: {
+                  importance_dish_washer: fromValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_water_heater").ionRangeSlider({
+          grid: !0,
+          min: 0,
+          max: 5,
+          from: importance_water_heater,
+          values: ["Not Important", "Slightly Important", "Important", "Fairly Important", "Very Important"],
+          onChange: function(data) {
+            var fromValue = data.from;
+              $.ajax({
+                url: '/update_preferences_importance_water_heater',
+                type: 'POST',
+                data: {
+                  importance_water_heater: fromValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_tumble_drier").ionRangeSlider({
+          grid: !0,
+          min: 0,
+          max: 5,
+          from: importance_tumble_drier,
+          values: ["Not Important", "Slightly Important", "Important", "Fairly Important", "Very Important"],
+          onChange: function(data) {
+            var fromValue = data.from;
+              $.ajax({
+                url: '/update_preferences_importance_tumble_drier',
+                type: 'POST',
+                data: {
+                  importance_tumble_drier: fromValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
     });
+
+
 }
 
 getConsumerPreferences();
