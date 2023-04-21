@@ -141,43 +141,45 @@ def preferences():
 # A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-    cur = mysql.connection.cursor()
+    now = datetime.utcnow()  # Get the current UTC time
+    if now.hour >= 10 and now.hour<=11 :
+        cur = mysql.connection.cursor()
 
-    # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
-    latest_env = cur.fetchall()
-    # if len(latest_env) > 0:
-        # Create a list of dictionaries using a list comprehension
-    data_list = [{'air_temperature': item[0],
-                  'globe_temperature': round(item[0] * 0.935,2),
-                  'relative_humidity': item[1],
-                  'wearable_id': item[2],
-                  'gateway_id': item[3],
-                  'session_met': item[6],
-                  'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
-                  'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
-                  'voc_index': item[5],
-                  'voc_index_desc': get_well_being_description(item[5]),
-                  'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
-                  'thermal_comfort_desc': get_pmv_status(get_pmv_value(
-                      item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
-                  'timestamp': item[4],
-                  } for item in latest_env]
-    # else:
-    #     data_list = [{'air_temperature': 0,
-    #                   'globe_temperature': 0,
-    #                   'relative_humidity': 0,
-    #                   'wearable_id': 0,
-    #                   'gateway_id': 0,
-    #                   'session_met': 0,
-    #                   'clothing_insulation': 0,
-    #                   'air_velocity': 0,
-    #                   'voc_index': 0,
-    #                   'voc_index_desc': 0,
-    #                   'thermal_comfort': 0,
-    #                   'thermal_comfort_desc': 0,
-    #                   'timestamp': 0,
-    #                   }]
+        # Execute SQL query to get the latest environmental parameters of temperature and humidity
+        cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
+        latest_env = cur.fetchall()
+        if len(latest_env) > 0:
+            # Create a list of dictionaries using a list comprehension
+            data_list = [{'air_temperature': item[0],
+                          'globe_temperature': round(item[0] * 0.935,2),
+                          'relative_humidity': item[1],
+                          'wearable_id': item[2],
+                          'gateway_id': item[3],
+                          'session_met': item[6],
+                          'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
+                          'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
+                          'voc_index': item[5],
+                          'voc_index_desc': get_well_being_description(item[5]),
+                          'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
+                          'thermal_comfort_desc': get_pmv_status(get_pmv_value(
+                              item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
+                          'timestamp': item[4],
+                          } for item in latest_env]
+        else:
+            data_list = [{'air_temperature': 0,
+                          'globe_temperature': 0,
+                          'relative_humidity': 0,
+                          'wearable_id': 0,
+                          'gateway_id': 0,
+                          'session_met': 0,
+                          'clothing_insulation': 0,
+                          'air_velocity': 0,
+                          'voc_index': 0,
+                          'voc_index_desc': 0,
+                          'thermal_comfort': 0,
+                          'thermal_comfort_desc': 0,
+                          'timestamp': 0,
+                          }]
 
         # Create a JSON schema from the list of dictionaries
     json_schema = {'data': data_list}
@@ -349,6 +351,7 @@ def get_data_thermal_comfort_range():
 
     for row in thermal_comfort_data:
         tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
+
         pmv = row + (get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1),)
         thermal_comfort_list.append(pmv)
 
