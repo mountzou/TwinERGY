@@ -140,38 +140,38 @@ def api_tc():
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
     cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
     latest_env = cur.fetchall()
-    if len(latest_env) > 0:
+    # if len(latest_env) > 0:
         # Create a list of dictionaries using a list comprehension
-        data_list = [{'air_temperature': item[0],
-                      'globe_temperature': item[0] * 0.935,
-                      'relative_humidity': item[1],
-                      'wearable_id': item[2],
-                      'gateway_id': item[3],
-                      'session_met': item[6],
-                      'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
-                      'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
-                      'voc_index': item[5],
-                      'voc_index_desc': get_well_being_description(item[5]),
-                      'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
-                      'thermal_comfort_desc': get_pmv_status(get_pmv_value(
-                          item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
-                      'timestamp': item[4],
-                      } for item in latest_env]
-    else:
-        data_list = [{'air_temperature': 0,
-                      'globe_temperature': 0,
-                      'relative_humidity': 0,
-                      'wearable_id': 0,
-                      'gateway_id': 0,
-                      'session_met': 0,
-                      'clothing_insulation': 0,
-                      'air_velocity': 0,
-                      'voc_index': 0,
-                      'voc_index_desc': 0,
-                      'thermal_comfort': 0,
-                      'thermal_comfort_desc': 0,
-                      'timestamp': 0,
-                      }]
+    data_list = [{'air_temperature': item[0],
+                  'globe_temperature': round(item[0] * 0.935,2),
+                  'relative_humidity': item[1],
+                  'wearable_id': item[2],
+                  'gateway_id': item[3],
+                  'session_met': item[6],
+                  'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
+                  'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
+                  'voc_index': item[5],
+                  'voc_index_desc': get_well_being_description(item[5]),
+                  'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
+                  'thermal_comfort_desc': get_pmv_status(get_pmv_value(
+                      item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
+                  'timestamp': item[4],
+                  } for item in latest_env]
+    # else:
+    #     data_list = [{'air_temperature': 0,
+    #                   'globe_temperature': 0,
+    #                   'relative_humidity': 0,
+    #                   'wearable_id': 0,
+    #                   'gateway_id': 0,
+    #                   'session_met': 0,
+    #                   'clothing_insulation': 0,
+    #                   'air_velocity': 0,
+    #                   'voc_index': 0,
+    #                   'voc_index_desc': 0,
+    #                   'thermal_comfort': 0,
+    #                   'thermal_comfort_desc': 0,
+    #                   'timestamp': 0,
+    #                   }]
 
         # Create a JSON schema from the list of dictionaries
     json_schema = {'data': data_list}
@@ -346,7 +346,7 @@ def get_data_thermal_comfort_range():
 def monitor_thermal_comfort_cdmp():
     headers = {"X-API-TOKEN": '8a3cb21d-be27-466d-a797-54fae21a0d8a'}
 
-    url = "https://twinergy.s5labs.eu/api/query/0339861f-d825-47e4-9d96-beaafdc295d3?pageSize=1000"
+    url = "https://twinergy.s5labs.eu/api/query/00bb2745-578a-400f-bcef-da04f3a174d4?pageSize=1000"
 
     response = requests.get(url, headers=headers)
 
