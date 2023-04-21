@@ -141,34 +141,46 @@ def preferences():
 # A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-    # Create a query that gets all the data transmitted from wearable devices during the last 1 minute
-    query = """
-        SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met
-        FROM user_thermal_comfort
-        WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));
-    """
-    with g.cur as cur:
-        # Execute the query to get all the data transmitted from wearable devices during the last 1 minute
-        cur.execute(query)
-        cdmp_thermal_comfort_data = cur.fetchall()
+    cur = mysql.connection.cursor()
 
-    data_dict = defaultdict(lambda: 0)
-    for data in cdmp_thermal_comfort_data:
-        data_dict['air_temperature'] = data[0]
-        data_dict['globe_temperature'] = data[0] * 0.935
-        data_dict['relative_humidity'] = data[1]
-        data_dict['wearable_id'] = data[2]
-        data_dict['gateway_id'] = data[3]
-        data_dict['session_met'] = data[6]
-        data_dict['clothing_insulation'] = get_calibrate_clo_value(0.8, data[6])
-        data_dict['air_velocity'] = get_calibrate_air_speed_value(0.1, data[6])
-        data_dict['voc_index'] = data[5]
-        data_dict['voc_index_desc'] = get_well_being_description(data[5])
-        data_dict['thermal_comfort'] = get_pmv_value(data[0], 0.935 * data[0], data[1], data[6], 0.8, 0.1)
-        data_dict['thermal_comfort_desc'] = get_pmv_status(get_pmv_value(data[0], 0.935 * data[0], data[1], data[6], 0.8, 0.1))
-        data_dict['timestamp'] = data[4]
+    # Execute SQL query to get the latest environmental parameters of temperature and humidity
+    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
+    latest_env = cur.fetchall()
+    # if len(latest_env) > 0:
+        # Create a list of dictionaries using a list comprehension
+    data_list = [{'air_temperature': item[0],
+                  'globe_temperature': round(item[0] * 0.935,2),
+                  'relative_humidity': item[1],
+                  'wearable_id': item[2],
+                  'gateway_id': item[3],
+                  'session_met': item[6],
+                  'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
+                  'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
+                  'voc_index': item[5],
+                  'voc_index_desc': get_well_being_description(item[5]),
+                  'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
+                  'thermal_comfort_desc': get_pmv_status(get_pmv_value(
+                      item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
+                  'timestamp': item[4],
+                  } for item in latest_env]
+    # else:
+    #     data_list = [{'air_temperature': 0,
+    #                   'globe_temperature': 0,
+    #                   'relative_humidity': 0,
+    #                   'wearable_id': 0,
+    #                   'gateway_id': 0,
+    #                   'session_met': 0,
+    #                   'clothing_insulation': 0,
+    #                   'air_velocity': 0,
+    #                   'voc_index': 0,
+    #                   'voc_index_desc': 0,
+    #                   'thermal_comfort': 0,
+    #                   'thermal_comfort_desc': 0,
+    #                   'timestamp': 0,
+    #                   }]
 
-    json_schema = {'data': [data_dict]}
+        # Create a JSON schema from the list of dictionaries
+    json_schema = {'data': data_list}
 
     return jsonify(json_schema)
 
@@ -347,7 +359,7 @@ def get_data_thermal_comfort_range():
 def monitor_thermal_comfort_cdmp():
     headers = {"X-API-TOKEN": '8a3cb21d-be27-466d-a797-54fae21a0d8a'}
 
-    url = "https://twinergy.s5labs.eu/api/query/0339861f-d825-47e4-9d96-beaafdc295d3?pageSize=1000"
+    url = "https://twinergy.s5labs.eu/api/query/00bb2745-578a-400f-bcef-da04f3a174d4?pageSize=1000"
 
     response = requests.get(url, headers=headers)
 
