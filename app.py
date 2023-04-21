@@ -207,14 +207,22 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met >6: tc_met = 6
 
-    # Execute SQL INSERT statement
-    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+    #Exclude initial values from database
+    if tc_timestamp-p_time>50:
+        exc_counter=8
 
-    g.cur.execute(insert_sql)
+    if exc_counter==0:
+        # Execute SQL INSERT statement
+        insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
-    mysql.connection.commit()
+        g.cur.execute(insert_sql)
 
-    g.cur.close()
+        mysql.connection.commit()
+
+        g.cur.close()
+
+    if exc_counter>0:
+        exc_counter -= 1
 
     return jsonify({'status': 'success'}), 200
 
