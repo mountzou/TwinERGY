@@ -65,7 +65,6 @@ def require_login():
 @app.before_request
 def before_request():
     g.cur = mysql.connection.cursor()
-    exc_counter = 0
 
 
 # A route that implements the user authentication process
@@ -239,7 +238,7 @@ def handle_ttn_webhook():
 
     if exc_counter > 0:
         exc_counter -= 1
-
+    print(exc_counter)
     return jsonify({'status': 'success'}), 200
 
 
