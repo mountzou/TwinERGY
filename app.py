@@ -42,11 +42,11 @@ mysql = MySQL(app)
 
 # Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
-    client_id='cdt-twinergy',
-    realm_name='TwinERGY',
-    client_secret_key="secret")
+                                 client_id='cdt-twinergy',
+                                 realm_name='TwinERGY',
+                                 client_secret_key="secret")
 app.secret_key = 'secret'
-
+exc_counter = 0
 
 @app.before_request
 def require_login():
@@ -65,16 +65,18 @@ def require_login():
 @app.before_request
 def before_request():
     g.cur = mysql.connection.cursor()
-    exc_counter=0
+    exc_counter = 0
 
 
 # A route that implements the user authentication process
 @app.route('/login')
 def login():
     if urlparse(request.base_url).netloc == '127.0.0.1:5000':
-        auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+        auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback",
+                                            scope="openid", state="af0ifjsldkj")
     else:
-        auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback", scope="openid", state="af0ifjsldkj")
+        auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback",
+                                            scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -113,8 +115,10 @@ def rout():
     # Get the wearable ID from the session's object deviceId
     wearable_id = session.get('deviceId', None)
     # Execute SQL query to get the thermal comfort data regarding the specific wearable ID during the last 24 hours
-    g.cur.execute('''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-        wearable_id,))
+    g.cur.execute(
+        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
+        (
+            wearable_id,))
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
 
@@ -127,12 +131,15 @@ def thermal_comfort():
     # Get the wearable ID from the session's object deviceId
     wearable_id = session.get('deviceId', None)
     # Execute SQL query to get the thermal comfort data regarding the specific wearable ID during the last 24 hours
-    g.cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-        wearable_id,))
+    g.cur.execute(
+        '''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
+        (
+            wearable_id,))
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("thermal-comfort.html") if len(daily_thermal_comfort_data) > 0 else render_template("thermal-comfort-empty.html")
+    return render_template("thermal-comfort.html") if len(daily_thermal_comfort_data) > 0 else render_template(
+        "thermal-comfort-empty.html")
 
 
 # A functions that implements the 'Preferences' page under the route '/preferences/'
@@ -145,14 +152,16 @@ def preferences():
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    g.cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
+    g.cur.execute(
+        '''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
     latest_data = g.cur.fetchall()
+
     def create_data_dict(data=None):
         if data is None:
             data = [0, 0, 0, 0, 0, 0, 0]
         return {
             'air_temperature': data[0],
-            'globe_temperature': round(data[0] * 0.935,2),
+            'globe_temperature': round(data[0] * 0.935, 2),
             'relative_humidity': data[1],
             'wearable_id': data[2],
             'gateway_id': data[3],
@@ -161,10 +170,12 @@ def api_tc():
             'air_velocity': get_calibrate_air_speed_value(0.1, data[6]) if data[6] != 0 else 0,
             'voc_index': data[5],
             'voc_index_desc': get_well_being_description(data[5]) if data[5] != 0 else 0,
-            'thermal_comfort': get_pmv_value(data[0], 0.935* data[0], data[1], data[6], 0.8, 0.1) if data != [0] * 7 else 0,
-            'thermal_comfort_desc': get_pmv_status(get_pmv_value(data[0], 0.935* data[0], data[1], data[6], 0.8, 0.1)) if data != [0] * 7 else 0,
+            'thermal_comfort': get_pmv_value(data[0], 0.935 * data[0], data[1], data[6], 0.8, 0.1) if data != [
+                0] * 7 else 0,
+            'thermal_comfort_desc': get_pmv_status(
+                get_pmv_value(data[0], 0.935 * data[0], data[1], data[6], 0.8, 0.1)) if data != [0] * 7 else 0,
             "timestamp": data[4]
-            }
+        }
 
     data_list = [create_data_dict(data) for data in latest_data] if latest_data else [create_data_dict()]
 
@@ -176,7 +187,8 @@ def api_tc():
 @app.route('/api_preferences', methods=['GET'])
 def api_preferences():
     # Execute SQL query to retrieve consumer's preferences from the UPAT db
-    g.cur.execute('''SELECT * FROM load_weight_simos WHERE weight_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
+    g.cur.execute(
+        '''SELECT * FROM load_weight_simos WHERE weight_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
     load_weights = g.cur.fetchall()
 
     return jsonify(0)
@@ -184,6 +196,7 @@ def api_preferences():
 
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
+    global exc_counter
     data = request.get_json()
 
     device_id = data['end_device_ids']['dev_eui']
@@ -191,10 +204,12 @@ def handle_ttn_webhook():
 
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
-                                                                        re[3]
+        re[3]
 
-    g.cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (
-        device_id,))
+    g.cur.execute(
+        '''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''',
+        (
+            device_id,))
     previous_metabolic = g.cur.fetchall()
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
@@ -206,13 +221,13 @@ def handle_ttn_webhook():
     else:
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
         if tc_met < 1: tc_met = 1
-        if tc_met >6: tc_met = 6
+        if tc_met > 6: tc_met = 6
 
-    #Exclude initial values from database
-    if tc_timestamp-p_time>50:
-        exc_counter=8
+    # Exclude initial values from database
+    if tc_timestamp - p_time > 50:
+        exc_counter = 8
 
-    if exc_counter==0:
+    if exc_counter == 0:
         # Execute SQL INSERT statement
         insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
@@ -222,7 +237,7 @@ def handle_ttn_webhook():
 
         g.cur.close()
 
-    if exc_counter>0:
+    if exc_counter > 0:
         exc_counter -= 1
 
     return jsonify({'status': 'success'}), 200
@@ -263,12 +278,12 @@ def get_data_thermal_comfort():
     average_met = met_sum / met_count
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
-                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8, 0.1))
+                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8,
+                                                 0.1))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
 
     return jsonify({'daily_thermal_comfort_data': daily_thermal_comfort_data})
-
 
 
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
@@ -403,8 +418,10 @@ def get_data_thermal_comfort_range():
     start_timestamp = int(time.mktime(start_date.timetuple()))
     end_timestamp = int(time.mktime(end_date.timetuple()))
 
-    g.cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s''', (
-        start_timestamp, end_timestamp, userinfo['deviceId']))
+    g.cur.execute(
+        '''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s''',
+        (
+            start_timestamp, end_timestamp, userinfo['deviceId']))
     thermal_comfort_data = g.cur.fetchall()
 
     thermal_comfort_list = []
