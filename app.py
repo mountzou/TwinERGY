@@ -239,18 +239,27 @@ def get_data_thermal_comfort():
         FROM user_thermal_comfort
         WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR))
         AND wearable_id = %s
-        LIMIT 10
+        ORDER BY tc_timestamp DESC
+        LIMIT 100
     """
     with g.cur as cur:
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         thermal_comfort_data = cur.fetchall()
 
+    met_sum = 0
+    met_count = 0
+    for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in thermal_comfort_data[:10]:
+        met_sum += tc_met
+        met_count += 1
+    average_met = met_sum / met_count
+
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
-                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1))
+                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8, 0.1))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
-                                  thermal_comfort_data]
+                                  reversed(thermal_comfort_data)]
 
     return jsonify({'daily_thermal_comfort_data': daily_thermal_comfort_data})
+
 
 
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
