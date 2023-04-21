@@ -104,9 +104,10 @@ def logout():
     return redirect('/login')
 
 
-# A functions that implements the 'Dashboard' page under the route '/index/ and '/'
+# A functions that implements the 'Dashboard' page under the route '/index/, 'dashboard' and '/'
 @app.route("/")
 @app.route("/index/")
+@app.route("/dashboard/")
 def rout():
     # Get the wearable ID from the session's object deviceId
     wearable_id = session.get('deviceId', None)
@@ -144,11 +145,10 @@ def preferences():
 def api_tc():
     now = datetime.utcnow()  # Get the current UTC time
     if now.hour >= 10 and now.hour<=11 :
-        cur = mysql.connection.cursor()
 
         # Execute SQL query to get the latest environmental parameters of temperature and humidity
-        cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
-        latest_env = cur.fetchall()
+        g.cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
+        latest_env = g.cur.fetchall()
         if len(latest_env) > 0:
             # Create a list of dictionaries using a list comprehension
             data_list = [{'air_temperature': item[0],
@@ -166,21 +166,6 @@ def api_tc():
                               item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
                           'timestamp': item[4],
                           } for item in latest_env]
-        else:
-            data_list = [{'air_temperature': 0,
-                          'globe_temperature': 0,
-                          'relative_humidity': 0,
-                          'wearable_id': 0,
-                          'gateway_id': 0,
-                          'session_met': 0,
-                          'clothing_insulation': 0,
-                          'air_velocity': 0,
-                          'voc_index': 0,
-                          'voc_index_desc': 0,
-                          'thermal_comfort': 0,
-                          'thermal_comfort_desc': 0,
-                          'timestamp': 0,
-                          }]
 
     # Create a JSON schema from the list of dictionaries
     json_schema = {'data': data_list}
@@ -209,12 +194,9 @@ def handle_ttn_webhook():
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
                                                                         re[3]
 
-    # Connect to the database
-    cur = mysql.connection.cursor()
-
-    cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (
+    g.cur.execute('''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''', (
         device_id,))
-    previous_metabolic = cur.fetchall()
+    previous_metabolic = g.cur.fetchall()
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
 
@@ -229,11 +211,11 @@ def handle_ttn_webhook():
     # Execute SQL INSERT statement
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
-    cur.execute(insert_sql)
+    g.cur.execute(insert_sql)
 
     mysql.connection.commit()
 
-    cur.close()
+    g.cur.close()
 
     return jsonify({'status': 'success'}), 200
 
@@ -390,7 +372,6 @@ def update_preferences_importance_water_heater():
 @app.route('/get_data_thermal_comfort_range', methods=['GET'])
 def get_data_thermal_comfort_range():
     userinfo = session.get('userinfo', None)
-    cur = mysql.connection.cursor()
 
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -405,9 +386,9 @@ def get_data_thermal_comfort_range():
     start_timestamp = int(time.mktime(start_date.timetuple()))
     end_timestamp = int(time.mktime(end_date.timetuple()))
 
-    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s''', (
+    g.cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s''', (
         start_timestamp, end_timestamp, userinfo['deviceId']))
-    thermal_comfort_data = cur.fetchall()
+    thermal_comfort_data = g.cur.fetchall()
 
     thermal_comfort_list = []
 
