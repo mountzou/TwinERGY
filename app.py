@@ -230,6 +230,10 @@ def handle_ttn_webhook():
         print('inside tc_timestamp - p_time > 50:',exc_counter)
         exc_counter = 8
 
+    if exc_counter > 0:
+        print('inside exc_counter > 0:',exc_counter)
+        exc_counter -= 1
+
     if exc_counter == 0:
         # Execute SQL INSERT statement
         insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
@@ -240,9 +244,7 @@ def handle_ttn_webhook():
 
         g.cur.close()
 
-    if exc_counter > 0:
-        print('inside exc_counter > 0:',exc_counter)
-        exc_counter -= 1
+
 
     print(exc_counter)
     return jsonify({'status': 'success'}), 200
