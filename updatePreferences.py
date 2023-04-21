@@ -32,6 +32,7 @@ def updateTemperaturePreference(mysql, cur, minTemp, maxTemp, wearable_id):
 def updatePrefElectricVehicle(mysql, cur, importance_electric_vehicle, wearable_id):
     current_timestamp = int(datetime.now().timestamp())
 
+    # Update preferences related to the importance of electric vehicle into the database
     cur.execute('''
         UPDATE user_flex_load_preferences 
         SET user_ev_pref = %s, update_timestamp = %s 
@@ -46,6 +47,7 @@ def updatePrefElectricVehicle(mysql, cur, importance_electric_vehicle, wearable_
 def updatePrefWashingMachine(mysql, cur, importance_washing_machine, wearable_id):
     current_timestamp = int(datetime.now().timestamp())
 
+    # Update preferences related to the importance of washing machine into the database
     cur.execute('''
         UPDATE user_flex_load_preferences 
         SET user_wm_pref = %s, update_timestamp = %s 
@@ -60,6 +62,7 @@ def updatePrefWashingMachine(mysql, cur, importance_washing_machine, wearable_id
 def updatePrefWaterHeater(mysql, cur, importance_water_heater, wearable_id):
     current_timestamp = int(datetime.now().timestamp())
 
+    # Update preferences related to the importance of water heater into the database
     cur.execute('''
         UPDATE user_flex_load_preferences 
         SET user_wh_pref = %s, update_timestamp = %s 
@@ -74,6 +77,7 @@ def updatePrefWaterHeater(mysql, cur, importance_water_heater, wearable_id):
 def updatePrefTumbleDrier(mysql, cur, importance_tumble_drier, wearable_id):
     current_timestamp = int(datetime.now().timestamp())
 
+    # Update preferences related to the importance of tumble drier into the database
     cur.execute('''
         UPDATE user_flex_load_preferences 
         SET user_ht_pref = %s, update_timestamp = %s 
@@ -88,6 +92,7 @@ def updatePrefTumbleDrier(mysql, cur, importance_tumble_drier, wearable_id):
 def updatePrefDishWasher(mysql, cur, importance_dish_washer, wearable_id):
     current_timestamp = int(datetime.now().timestamp())
 
+    # Update preferences related to the importance of dish washer into the database
     cur.execute('''
         UPDATE user_flex_load_preferences 
         SET user_dw_pref = %s, update_timestamp = %s 
