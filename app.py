@@ -196,6 +196,7 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     global exc_counter
+
     print('start ttn',exc_counter)
     data = request.get_json()
 
@@ -223,8 +224,9 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
 
+
     # Exclude initial values from database
-    if tc_timestamp - p_time > 50:
+    if tc_timestamp - p_time > 50 & exc_counter==0:
         print('inside tc_timestamp - p_time > 50:',exc_counter)
         exc_counter = 8
 
