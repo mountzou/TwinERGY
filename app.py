@@ -65,6 +65,7 @@ def require_login():
 @app.before_request
 def before_request():
     g.cur = mysql.connection.cursor()
+    exc_counter=0
 
 
 # A route that implements the user authentication process
