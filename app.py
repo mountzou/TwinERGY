@@ -143,31 +143,31 @@ def preferences():
 # A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-    data_list = defaultdict(lambda: 0)
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
     g.cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
-    latest_env = g.cur.fetchall()
-    if len(latest_env) > 0:
-        # Create a list of dictionaries using a list comprehension
-        data_list = [{'air_temperature': item[0],
-                      'globe_temperature': round(item[0] * 0.935,2),
-                      'relative_humidity': item[1],
-                      'wearable_id': item[2],
-                      'gateway_id': item[3],
-                      'session_met': item[6],
-                      'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
-                      'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
-                      'voc_index': item[5],
-                      'voc_index_desc': get_well_being_description(item[5]),
-                      'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
-                      'thermal_comfort_desc': get_pmv_status(get_pmv_value(
-                          item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
-                      'timestamp': item[4],
-                      } for item in latest_env]
+    latest_data = g.cur.fetchall()
+    def create_data_dict(data=None):
+        if data is None:
+            data = [0, 0, 0, 0, 0, 0, 0]
+        return {
+            'air_temperature': data[0],
+            'globe_temperature': round(data[0] * 0.935,2),
+            'relative_humidity': data[1],
+            'wearable_id': data[2],
+            'gateway_id': data[3],
+            'session_met': data[6],
+            'clothing_insulation': get_calibrate_clo_value(0.8, data[6]) if data[6] != 0 else 0,
+            'air_velocity': get_calibrate_air_speed_value(0.1, data[6]) if data[6] != 0 else 0,
+            'voc_index': data[5],
+            'voc_index_desc': get_well_being_description(data[5]) if data[5] != 0 else 0,
+            'thermal_comfort': get_pmv_value(data[0], 0.935* data[0], data[1], data[6], 0.8, 0.1) if data != [0] * 7 else 0,
+            'thermal_comfort_desc': get_pmv_status(get_pmv_value(data[0], 0.935* data[0], data[1], data[6], 0.8, 0.1)) if data != [0] * 7 else 0,
+            "timestamp": data[4]
+            }
 
-    # Create a JSON schema from the list of dictionaries
+    data_list = [create_data_dict(data) for data in latest_data] if latest_data else [create_data_dict()]
+
     json_schema = {'data': data_list}
-
     return jsonify(json_schema)
 
 
