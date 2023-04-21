@@ -51,16 +51,20 @@ function updateThermalComfort(start_date, end_date) {
         let humidity = data.map(x => x[1]);
         let time = data.map(x => unixToHumanReadable(x[2]));
         let met = data.map(x => x[4]);
+        let pmv = data.map(x => x[5]);
+        let pmvStatus= pmv.map(get_pmv_status);
 
         let latestTemperature = temperature[temperature.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
         let latestTime = time[time.length - 1];
         let latestMet = met[met.length - 1]
+        let latestThermalComfort = pmv[pmv.length - 1]
 
         // Update the latest temperature and humidity
         document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
         document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
         document.getElementById("latest-met").innerHTML = latestMet + ' met';
+        document.getElementById("latest-thermal-comfort").innerHTML = get_pmv_status(latestThermalComfort) ;
 
         let sum_tem = data.reduce((accumulator, currentValue) => {
             return accumulator + currentValue[0];
@@ -94,6 +98,7 @@ function updateThermalComfort(start_date, end_date) {
         var graphTargetAirTemperature = $("#chart-temperature");
         var graphTargetHumidity = $("#chart-humidity");
         var graphTargetMetabolic = $("#chart-met");
+        var graphTargetThermalComfort = $("#chart-thermal-comfort");
 
         var indoorTemperature = {
             labels: time,
@@ -130,6 +135,22 @@ function updateThermalComfort(start_date, end_date) {
                 backgroundColor: "rgb(255, 186, 77, .1)",
                 borderWidth: 2,
                 data: met,
+                fill: true
+            }]
+        };
+
+        const pointBackgroundColors = pmv.map((value) => (value > 0 ? '#FF6D60' : '#088395'));
+
+        var thermalComfort = {
+            labels: time,
+            datasets: [{
+                label: "Thermal Comfort",
+                type: "line",
+                borderColor: "rgb(255, 186, 77)",
+                backgroundColor: "rgb(255, 186, 77, .1)",
+                borderWidth: 2,
+                data: pmv,
+                pointBackgroundColor: pointBackgroundColors,
                 fill: true
             }]
         };
@@ -203,6 +224,68 @@ function updateThermalComfort(start_date, end_date) {
                         e.stopPropagation();
                     }
                 }
+            }
+        });
+
+        var graphThermalComfort = new Chart(graphTargetThermalComfort, {
+            type: 'line',
+            data: thermalComfort,
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            padding: 25,
+                            fontFamily: "Josefin Sans",
+                            beginAtZero: false,
+                            min: -3,
+                            max: 3,
+                            callback: function (value, index, values) {
+                               switch (value) {
+                                  case -3:
+                                    return 'Cold';
+                                  case -2:
+                                    return 'Cool';
+                                  case -1:
+                                    return 'Slightly Cool';
+                                  case 0:
+                                    return 'Neutral';
+                                  case 1:
+                                    return 'Slightly Warm';
+                                  case 2:
+                                    return 'Warm';
+                                  case 3:
+                                    return 'Hot';
+                                  default:
+                                    return '';
+                               }
+                            }
+                        }
+                    }],
+                    xAxes: [{
+                        gridLines: {
+                            display: false,
+                            drawOnChartArea: true
+                        },
+                        ticks: {
+                            display: false,
+                        }
+                    }],
+                },
+                legend: {
+                    onClick: function(e) {
+                        e.stopPropagation();
+                    }
+                },
+                tooltips: {
+                    enabled: false,
+                    mode: 'single',
+                    callbacks: {
+                      label: function(tooltipItems, data) {
+                        return 'Thermal Comfort: ' + get_pmv_status(tooltipItems.yLabel);
+                      },
+                    }
+                },
             }
         });
 
