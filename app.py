@@ -226,7 +226,7 @@ def handle_ttn_webhook():
 
 
     # Exclude initial values from database
-    if tc_timestamp - p_time > 50 & exc_counter==0:
+    if (tc_timestamp - p_time > 50) and (exc_counter==0):
         print('inside tc_timestamp - p_time > 50:',exc_counter)
         exc_counter = 8
 
