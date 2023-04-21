@@ -10,8 +10,11 @@ from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate
     get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
 from determineWellBeing import get_well_being_description
-from updatePreferences import updateThermalComfortPreference
+from updatePreferences import updateThermalComfortPreference, updateTemperaturePreference
 
+from getPreferences import getThermalComfortPreferences, getTemperaturePreferences
+
+from collections import defaultdict
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
@@ -86,7 +89,7 @@ def callback():
 
     session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
     session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
-    session['access_token'] = access_token
+    session['deviceId'] = keycloak_openid.userinfo(access_token['access_token'])['deviceId']
 
     return redirect('/')
 
@@ -100,92 +103,82 @@ def logout():
     return redirect('/login')
 
 
-# The route for the dashboard page of the Consumer Digital Twin
+# A functions that implements the 'Dashboard' page under the route '/index/ and '/'
 @app.route("/")
 @app.route("/index/")
 def rout():
-    # Create a userInfo object with information related to the authenticated user's session
-    userinfo = session.get('userinfo', None)
-
-    # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
+    # Get the wearable ID from the session's object deviceId
+    wearable_id = session.get('deviceId', None)
+    # Execute SQL query to get the thermal comfort data regarding the specific wearable ID during the last 24 hours
     g.cur.execute('''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-        userinfo['deviceId'],))
-    daily_env = g.cur.fetchall()
+        wearable_id,))
+    # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
+    daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("index.html") if len(daily_env) > 0 else render_template("index-empty.html")
+    return render_template("index.html") if len(daily_thermal_comfort_data) > 0 else render_template("index-empty.html")
 
 
+# A functions that implements the default 'Thermal Comfort' page under the route '/thermal_comfort/'
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    # Create a userInfo object with information related to the authenticated user's session
-    userinfo = session.get('userinfo', None)
-
-    # Execute SQL query to get the values of air temperature and relative humidity during the last 24 hours
+    # Get the wearable ID from the session's object deviceId
+    wearable_id = session.get('deviceId', None)
+    # Execute SQL query to get the thermal comfort data regarding the specific wearable ID during the last 24 hours
     g.cur.execute('''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-        userinfo['deviceId'],))
-    daily_env = g.cur.fetchall()
+        wearable_id,))
+    # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
+    daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("thermal-comfort.html") if len(daily_env) > 0 else render_template("thermal-comfort-empty.html")
+    return render_template("thermal-comfort.html") if len(daily_thermal_comfort_data) > 0 else render_template("thermal-comfort-empty.html")
 
 
+# A functions that implements the 'Preferences' page under the route '/preferences/'
 @app.route("/preferences/", methods=["GET", "POST"])
 def preferences():
     return render_template("preferences.html")
 
 
+# A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
-    cur = mysql.connection.cursor()
+    # Create a query that gets all the data transmitted from wearable devices during the last 1 minute
+    query = """
+        SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met
+        FROM user_thermal_comfort
+        WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));
+    """
+    with g.cur as cur:
+        # Execute the query to get all the data transmitted from wearable devices during the last 1 minute
+        cur.execute(query)
+        cdmp_thermal_comfort_data = cur.fetchall()
 
-    # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
-    latest_env = cur.fetchall()
-    if len(latest_env) > 0:
-        # Create a list of dictionaries using a list comprehension
-        data_list = [{'air_temperature': item[0],
-                      'globe_temperature': item[0] * 0.935,
-                      'relative_humidity': item[1],
-                      'wearable_id': item[2],
-                      'gateway_id': item[3],
-                      'session_met': item[6],
-                      'clothing_insulation': get_calibrate_clo_value(0.8, item[6]),
-                      'air_velocity': get_calibrate_air_speed_value(0.1, item[6]),
-                      'voc_index': item[5],
-                      'voc_index_desc': get_well_being_description(item[5]),
-                      'thermal_comfort': get_pmv_value(item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1),
-                      'thermal_comfort_desc': get_pmv_status(get_pmv_value(
-                          item[0], 0.935 * item[0], item[1], item[6], 0.8, 0.1)),
-                      'timestamp': item[4],
-                      } for item in latest_env]
-    else:
-        data_list = [{'air_temperature': 0,
-                      'globe_temperature': 0,
-                      'relative_humidity': 0,
-                      'wearable_id': 0,
-                      'gateway_id': 0,
-                      'session_met': 0,
-                      'clothing_insulation': 0,
-                      'air_velocity': 0,
-                      'voc_index': 0,
-                      'voc_index_desc': 0,
-                      'thermal_comfort': 0,
-                      'thermal_comfort_desc': 0,
-                      'timestamp': 0,
-                      }]
+    data_dict = defaultdict(lambda: 0)
+    for data in cdmp_thermal_comfort_data:
+        data_dict['air_temperature'] = data[0]
+        data_dict['globe_temperature'] = data[0] * 0.935
+        data_dict['relative_humidity'] = data[1]
+        data_dict['wearable_id'] = data[2]
+        data_dict['gateway_id'] = data[3]
+        data_dict['session_met'] = data[6]
+        data_dict['clothing_insulation'] = get_calibrate_clo_value(0.8, data[6])
+        data_dict['air_velocity'] = get_calibrate_air_speed_value(0.1, data[6])
+        data_dict['voc_index'] = data[5]
+        data_dict['voc_index_desc'] = get_well_being_description(data[5])
+        data_dict['thermal_comfort'] = get_pmv_value(data[0], 0.935 * data[0], data[1], data[6], 0.8, 0.1)
+        data_dict['thermal_comfort_desc'] = get_pmv_status(get_pmv_value(data[0], 0.935 * data[0], data[1], data[6], 0.8, 0.1))
+        data_dict['timestamp'] = data[4]
 
-        # Create a JSON schema from the list of dictionaries
-    json_schema = {'data': data_list}
+    json_schema = {'data': [data_dict]}
 
     return jsonify(json_schema)
 
 
+# A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_preferences', methods=['GET'])
 def api_preferences():
-    cur = mysql.connection.cursor()
-
-    # Execute SQL query to get the latest environmental parameters of temperature and humidity
-    cur.execute('''SELECT * FROM load_weight_simos WHERE weight_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
-    load_weights = cur.fetchall()
+    # Execute SQL query to retrieve consumer's preferences from the UPAT db
+    g.cur.execute('''SELECT * FROM load_weight_simos WHERE weight_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
+    load_weights = g.cur.fetchall()
 
     return jsonify(0)
 
@@ -230,54 +223,49 @@ def handle_ttn_webhook():
     return jsonify({'status': 'success'}), 200
 
 
-# A route that implements an page with information related to the current user's session
-@app.route('/account')
+# A functions that implements the 'Acount' page under the route '/account/'
+@app.route('/account/')
 def account():
     return render_template('account.html')
 
 
-# A route that implements an page with information related to the current user's session
+# A functions that implements the 'Helpdesk' page under the route '/helpdesk/'
 @app.route('/helpdesk')
 def helpdesk():
     return render_template('helpdesk.html')
 
 
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
-@app.route('/get_data_thermal_comfort')
+@app.route('/get_data_thermal_comfort/')
 def get_data_thermal_comfort():
-    userinfo = session.get('userinfo', None)
 
-    cur = mysql.connection.cursor()
-    cur.execute('''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''', (
-        userinfo['deviceId'],))
-    thermal_comfort_data = cur.fetchall()
+    query = """
+        SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met
+        FROM user_thermal_comfort
+        WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR))
+        AND wearable_id = %s
+        LIMIT 10
+    """
+    with g.cur as cur:
+        cur.execute(query, (session.get('userinfo', None)['deviceId'],))
+        thermal_comfort_data = cur.fetchall()
 
-    all_thermal_comfort_data = []
+    daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met, get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1)) for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in thermal_comfort_data]
 
-    for row in thermal_comfort_data:
-        tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
-        pmv = row + (get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1),)
-        all_thermal_comfort_data.append(pmv)
-
-    return jsonify(tuple(all_thermal_comfort_data))
+    return jsonify({'daily_thermal_comfort_data': daily_thermal_comfort_data})
 
 
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
 @app.route('/get_data_preferences')
 def get_data_preferences():
-    userinfo = session.get('userinfo', None)
+    wearable_id = session.get('userinfo', None)['deviceId']
 
-    g.cur.execute('''
-        SELECT user_thermal_level_min, user_thermal_level_max
-        FROM user_thermal_preferences
-        WHERE wearable_id = %s
-        ORDER BY user_thermal_timestamp DESC
-        LIMIT 1;
-    ''', (userinfo['deviceId'],))
-    thermal_preferences = g.cur.fetchone()
+    preferences_thermal_comfort = getThermalComfortPreferences(g.cur, wearable_id)
+    preferences_temperature = getTemperaturePreferences(g.cur, wearable_id)
 
-    if thermal_preferences is not None:
-        user_thermal_level_min, user_thermal_level_max = thermal_preferences
+    if preferences_thermal_comfort is not None:
+        user_thermal_level_min, user_thermal_level_max = preferences_thermal_comfort
+        user_temperature_min, user_temperature_max = preferences_temperature
 
         response = {
             'preferences': [
@@ -286,6 +274,11 @@ def get_data_preferences():
                         {
                             'thermal_comfort_min': user_thermal_level_min,
                             'thermal_comfort_max': user_thermal_level_max
+                        },
+                    'temperature_preferences':
+                        {
+                            'temperature_min': user_temperature_min,
+                            'temperature_max': user_temperature_max
                         }
                 }
             ]
@@ -298,15 +291,23 @@ def get_data_preferences():
         return jsonify(tuple("1"))
 
 
-@app.route('/update_preferences', methods=['POST'])
-def update_preferences():
+@app.route('/update_preferences_thermal_comfort', methods=['POST'])
+def update_preferences_thermal_comfort():
     wearable_id = session.get('userinfo', None)['deviceId']
-
     user_thermal_level_min = request.form.get('user_thermal_level_min')
     user_thermal_level_max = request.form.get('user_thermal_level_max')
 
     updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max, wearable_id)
+    return jsonify(success=True)
 
+
+@app.route('/update_preferences_temperature', methods=['POST'])
+def update_preferences_temperature():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    user_temp_min = request.form.get('user_temp_min')
+    user_temp_max = request.form.get('user_temp_max')
+
+    updateTemperaturePreference(mysql, g.cur, user_temp_min, user_temp_max, wearable_id)
     return jsonify(success=True)
 
 

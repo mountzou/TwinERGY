@@ -55,13 +55,13 @@ function get_pmv_status(pmv) {
 }
 
 function updateDashboard() {
-    $.getJSON('/get_data_thermal_comfort', function (data) {
-        let temperature = data.map(x => x[0]);
-        let humidity = data.map(x => x[1]);
-        let voc_index = data.map(x => x[3]);
-        let time = data.map(x => unixToHumanReadable(x[2]));
-        let met = data.map(x => x[4]);
-        let pmv = data.map(x => x[5]);
+    $.getJSON('/get_data_thermal_comfort/', function (data) {
+        let temperature = data.daily_thermal_comfort_data.map(x => x[0]);
+        let humidity = data.daily_thermal_comfort_data.map(x => x[1]);
+        let voc_index = data.daily_thermal_comfort_data.map(x => x[3]);
+        let time = data.daily_thermal_comfort_data.map(x => unixToHumanReadable(x[2]));
+        let met = data.daily_thermal_comfort_data.map(x => x[4]);
+        let pmv = data.daily_thermal_comfort_data.map(x => x[5]);
 
         let latestTemperature = temperature[temperature.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
@@ -80,34 +80,26 @@ function updateDashboard() {
         document.getElementById("latest-PMV").innerHTML = latestPMV;
         document.getElementById("latest-PMV-desc").innerHTML = get_pmv_status(latestPMV);
 
-        let sum_tem = data.reduce((accumulator, currentValue) => {
-            return accumulator + currentValue[0];
+        let sum_tem = 0, sum_voc = 0, sum_hum = 0;
+
+        data.daily_thermal_comfort_data.reduce((accumulator, currentValue) => {
+            sum_tem += currentValue[0];
+            sum_voc += currentValue[3];
+            sum_hum += currentValue[1];
         }, 0);
 
-        let sum_voc = data.reduce((accumulator, currentValue) => {
-            return accumulator + currentValue[3];
-        }, 0);
+        let mean_temp = parseFloat((sum_tem / data.daily_thermal_comfort_data.length).toFixed(2));
+        let mean_hum = parseFloat((sum_hum / data.daily_thermal_comfort_data.length).toFixed(2));
+        let mean_voc = parseFloat((sum_voc / data.daily_thermal_comfort_data.length).toFixed(2));
 
-        let sum_hum = data.reduce((accumulator, currentValue) => {
-            return accumulator + currentValue[1];
-        }, 0);
-
-        let mean_temp = parseFloat((sum_tem / data.length).toFixed(2));
-        let mean_hum = parseFloat((sum_hum / data.length).toFixed(2));
-        let mean_voc = parseFloat((sum_voc / data.length).toFixed(2));
-
-        // Update the mean  temperature and humidity
+        // Update the mean temperature, humidity and VOC index
         document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
         document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
         document.getElementById("daily-mean-vocs").innerHTML = mean_voc+' voc.';
 
-        // Select all elements with the class "l-updated"
-        let time_elements = document.getElementsByClassName("l-updated");
-
-        // Update the innerHTML of all elements with the "l-updated" class
-        for (let i = 0; i < time_elements.length; i++) {
-            time_elements[i].innerHTML = 'Latest update at '+latestTime;
-        }
+        Array.from(document.getElementsByClassName("l-updated")).forEach(element => {
+            element.innerHTML = 'Latest update at ' + latestTime;;
+        });
 
         var graphTargetAirTemperature = $("#daily-temperature");
         var graphTargetHumidity = $("#daily-humidity");
