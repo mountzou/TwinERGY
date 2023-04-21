@@ -16,6 +16,7 @@
     <link href="{{url_for('static', filename='css/app.css')}}" rel="stylesheet" type="text/css">
     <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
      <!-- DateRangePicker -->
     <link type="text/css" href="../static/vendor/daterangepicker.css" rel="stylesheet">
 
@@ -28,45 +29,52 @@
 </head>
 <body class="layout-sticky-subnav layout-default">
 
-<div class="mdk-header-layout js-mdk-header-layout">
-    <div class="mdk-header-layout__content page-content ">
-        {% include 'navbar.html' %}
+    <div class="mdk-header-layout js-mdk-header-layout">
+        <div class="mdk-header-layout__content page-content ">
+            {% include 'navbar.html' %}
 
-        {% block content %}
+            {% block content %}
 
-        {% endblock content %}
+            {% endblock content %}
+        </div>
     </div>
-</div>
 
-{% include 'footer.html' %}
+    {% include 'footer.html' %}
 
-<!-- jQuery -->
-<script src="../static/vendor/jquery.min.js"></script>
+    <!-- Import jquery.min.js with jQuery library -->
+    <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
 
-<!-- Bootstrap -->
-<script src="../static/vendor/popper.min.js"></script>
-<script src="../static/vendor/bootstrap.min.js"></script>
+    <!-- Import popper.min.js file with Popper library -->
+    <script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
 
-<!-- Perfect Scrollbar -->
-<script src="../static/vendor/perfect-scrollbar.min.js"></script>
+    <!-- Import bootstrap.min.js file with Bootstrap library -->
+    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
-<!-- DOM Factory -->
-<script src="../static/vendor/dom-factory.js"></script>
+    <!-- Import app.js file with application's main settings -->
+    <script src="{{url_for('static', filename='js/app.js')}}"></script>
 
-<!-- App JS -->
-<script src="../static/js/app.js"></script>
+    <!-- Import settings.js file with application's global settings -->
+    <script src="{{url_for('static', filename='js/settings.js')}}"></script>
 
-<!-- Global Settings -->
-<script src="../static/js/settings.js"></script>
+    <!-- Import dom-factory.js file with application's dom factory -->
+    <script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
 
-<script src="../static/vendor/Chart.min.js"></script>
-<script src="../static/js/chartjs.js"></script>
-<script src="../static/js/chartjs-rounded-bar.js"></script>
-<script src="../static/vendor/moment.min.js"></script>
-<script src="../static/vendor/daterangepicker.js"></script>
-<script src="../static/js/daterangepicker.js"></script>
+    <!-- Import perfect-scrollbar.min.js file with the perfect scrollbar library -->
+    <script src="{{url_for('static', filename='vendor/perfect-scrollbar.min.js')}}"></script>
 
-{% block js_scripts %}{% endblock js_scripts %}
+    <!-- Import Chart.min.js file with the Chart JS library -->
+    <script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
+
+    <!-- Import moment.min.js file with the moment library -->
+    <script src="{{url_for('static', filename='vendor/moment.min.js')}}"></script>
+
+    <!-- Import daterangepicker.js file with the daterangepicker library -->
+    <script src="{{url_for('static', filename='vendor/daterangepicker.js')}}"></script>
+    <script src="{{url_for('static', filename='js/daterangepicker.js')}}"></script>
+
+    {% block js_scripts %}{% endblock js_scripts %}
 
 </body>
 </html>

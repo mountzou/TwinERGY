@@ -38,26 +38,28 @@
 
 {% include 'footer.html' %}
 
-<!-- jQuery -->
-<script src="static/vendor/jquery.min.js"></script>
+    <!-- Import jquery.min.js with jQuery library -->
+    <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
 
-<!-- Bootstrap -->
-<script src="static/vendor/popper.min.js"></script>
-<script src="static/vendor/bootstrap.min.js"></script>
+    <!-- Import popper.min.js file with Popper library -->
+    <script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
 
-<!-- Perfect Scrollbar -->
-<script src="static/vendor/perfect-scrollbar.min.js"></script>
+    <!-- Import bootstrap.min.js file with Bootstrap library -->
+    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
-<!-- DOM Factory -->
-<script src="static/vendor/dom-factory.js"></script>
+    <!-- Import app.js file with application's main settings -->
+    <script src="{{url_for('static', filename='js/app.js')}}"></script>
 
-<!-- App JS -->
-<script src="static/js/app.js"></script>
+    <!-- Import settings.js file with application's global settings -->
+    <script src="{{url_for('static', filename='js/settings.js')}}"></script>
 
-<!-- Global Settings -->
-<script src="static/js/settings.js"></script>
+    <!-- Import dom-factory.js file with application's dom factory -->
+    <script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
 
-{% block js_scripts %}{% endblock js_scripts %}
+    <!-- Import perfect-scrollbar.min.js file with the perfect scrollbar library -->
+    <script src="{{url_for('static', filename='vendor/perfect-scrollbar.min.js')}}"></script>
+
+    {% block js_scripts %}{% endblock js_scripts %}
 
 </body>
 </html>
