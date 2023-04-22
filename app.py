@@ -121,7 +121,7 @@ def rout():
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("index.html") if len(daily_thermal_comfort_data) > 0 else render_template("index-empty.html")
+    return render_template("index.html") if len(daily_thermal_comfort_data) > 1 else render_template("index-empty.html")
 
 
 # A functions that implements the default 'Thermal Comfort' page under the route '/thermal_comfort/'
@@ -137,7 +137,7 @@ def thermal_comfort():
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("thermal-comfort.html") if len(daily_thermal_comfort_data) > 0 else render_template(
+    return render_template("thermal-comfort.html") if len(daily_thermal_comfort_data) > 1 else render_template(
         "thermal-comfort-empty.html")
 
 
@@ -282,7 +282,11 @@ def get_data_thermal_comfort():
     for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in thermal_comfort_data[:10]:
         met_sum += tc_met
         met_count += 1
-    average_met = met_sum / met_count
+
+    if (met_count>0):
+        average_met = met_sum / met_count
+    else:
+        average_met=0
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8,
