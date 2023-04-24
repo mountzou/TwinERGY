@@ -121,7 +121,7 @@ def rout():
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("index.html") if len(daily_thermal_comfort_data) > 1 else render_template("index-empty.html")
+    return render_template("index.html") if daily_thermal_comfort_data[0][0] > 0 else render_template("index-empty.html")
 
 
 # A functions that implements the default 'Thermal Comfort' page under the route '/thermal_comfort/'
@@ -137,7 +137,7 @@ def thermal_comfort():
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("thermal-comfort.html") if len(daily_thermal_comfort_data) > 1 else render_template(
+    return render_template("thermal-comfort.html") if daily_thermal_comfort_data[0][0] > 1 else render_template(
         "thermal-comfort-empty.html")
 
 
