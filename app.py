@@ -557,7 +557,7 @@ def current_session():
     # Return a json object that includes the session data
     return jsonify(dict(session))
 
-@app.route('/get_device_status/')
+@app.route('/get_device_status')
 def get_device_status():
     exc_counter = cache.get('exc_counter')
     query = """

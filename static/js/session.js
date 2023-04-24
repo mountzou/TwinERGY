@@ -33,13 +33,11 @@ function checkForNewData() {
   $.getJSON('/get_device_status', function (data) {
 
     let currentTimestamp = Math.floor(Date.now() / 1000);
-
-    console.log(data[0][0])
     if (data[0][0]===0){
         status='init'
     }
     else{
-       if (-15 < currentTimestamp - data[0][0] && currentTimestamp - data[0][0] < 15) {
+       if (-12< currentTimestamp - data[0][0] && currentTimestamp - data[0][0] < 12) {
         status = 'active';
         }
         else {
@@ -81,4 +79,4 @@ function checkForNewData() {
 
 
 // Call the checkForNewData function every minute
-setInterval(checkForNewData, 6000);
+setInterval(checkForNewData, 2500);
