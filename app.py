@@ -51,7 +51,6 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
     client_secret_key="secret")
 app.secret_key = 'secret'
 exc_counter = cache.get('exc_counter')
-cache.set('exc_counter', 0)
 
 
 @app.before_request
@@ -205,7 +204,7 @@ def api_preferences():
 def handle_ttn_webhook():
     exc_counter = cache.get('exc_counter')
 
-    print('start ttn', exc_counter)
+    print('at start of ttn-webhook', exc_counter)
     data = request.get_json()
 
     device_id = data['end_device_ids']['dev_eui']
@@ -233,15 +232,18 @@ def handle_ttn_webhook():
         if tc_met > 6: tc_met = 6
 
     # Exclude initial values from database
-    if (tc_timestamp - p_time > 50) and (exc_counter == 0):
+    if (tc_timestamp - p_time > 50):
         print('inside tc_timestamp - p_time > 50:', exc_counter)
         cache.set('exc_counter', 8)
+    else:
+        cache.set('exc_counter', 0)
 
     if exc_counter > 0:
         print('inside exc_counter > 0:', exc_counter)
+        exc_counter = cache.get('exc_counter')
         cache.set('exc_counter', exc_counter - 1)
 
-    if exc_counter == 0:
+    if (exc_counter == 0):
         # Execute SQL INSERT statement
         insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
@@ -251,7 +253,7 @@ def handle_ttn_webhook():
 
         g.cur.close()
 
-    print(exc_counter)
+    print('before return', exc_counter)
     return jsonify({'status': 'success'}), 200
 
 
@@ -565,7 +567,7 @@ def get_device_status():
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         latest_timestamp = cur.fetchall()
     if(exc_counter!=0):
-        latest_timestamp[0][0]=0
+        latest_timestamp=[(0,),]
     print(exc_counter)
     return jsonify(latest_timestamp)
 
