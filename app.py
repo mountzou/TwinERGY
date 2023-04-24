@@ -236,13 +236,13 @@ def handle_ttn_webhook():
     # Exclude initial values from database
     if (tc_timestamp - p_time > 50) and exc_counter==0:
         print('inside tc_timestamp - p_time > 50:', exc_counter)
-        cache.set('exc_counter', 8)
+        cache.set('exc_counter', 8, timeout=300)
 
     exc_counter = cache.get('exc_counter')
     if exc_counter > 0:
         print('inside exc_counter > 0:', exc_counter)
         exc_counter = cache.get('exc_counter')
-        cache.set('exc_counter', exc_counter - 1)
+        cache.set('exc_counter', exc_counter - 1, timeout=300)
 
     exc_counter = cache.get('exc_counter')
     if (exc_counter == 0):
