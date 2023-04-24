@@ -27,23 +27,58 @@ getSessionData().then((sessionData) => {
     document.getElementById("username-id").innerHTML = 'Welcome, ' + sessionData['userinfo']['preferred_username'];
 });
 
-var hasNewData = false;
 
+var status = 'inactive';
 function checkForNewData() {
-    var endDate = moment().format('YYYY/MM/DD');
-    var startDate = moment().subtract(1, 'minutes').format('YYYY/MM/DD');
+  $.getJSON('/get_device_status', function (data) {
 
-    var newEndDate = moment(endDate, 'YYYY/MM/DD').format('YYYY-MM-DD');
-    var newStartDate = moment(startDate, 'YYYY/MM/DD').format('YYYY-MM-DD');
+    let currentTimestamp = Math.floor(Date.now() / 1000);
 
-    $.getJSON('/get_data_thermal_comfort_range', {'start_date': newStartDate, 'end_date': newEndDate}, function (data) {
-        if (data !== null && data.length > 0) {
-            hasNewData = true;
-        } else {
-            hasNewData = false;
+    console.log(data[0][0])
+    if (data[0][0]===0){
+        status='init'
+    }
+    else{
+       if (-15 < currentTimestamp - data[0][0] && currentTimestamp - data[0][0] < 15) {
+        status = 'active';
         }
-    });
+        else {
+        status='inactive';
+        }
+    }
+    var redDot = document.querySelector('.red-dot');
+    var liveText = document.querySelector('#live-id');
+
+    if (status === 'active') {
+      redDot.style.backgroundColor = 'white';
+      liveText.textContent = 'Active';
+    } else if (status === 'inactive') {
+      redDot.style.backgroundColor = 'gray';
+      liveText.textContent = 'Inactive';
+    } else {
+        redDot.style.backgroundColor = 'red';
+      liveText.textContent = 'Initializing';
+    }
+  });
 }
 
+//document.addEventListener('DOMContentLoaded', function() {
+//  var redDot = document.querySelector('.red-dot');
+//  var liveText = document.querySelector('#live-id');
+//  var status = 'inactive'; // Assume this variable is set elsewhere in the program
+//  if (status === 'active') {
+//    redDot.style.backgroundColor = 'green';
+//    liveText.textContent = 'On Wrist - Active';
+//  } else if (status === 'inactive') {
+//    redDot.style.backgroundColor = 'gray';
+//    liveText.textContent = 'On Wrist - Inactive';
+//  } else {
+//    redDot.style.backgroundColor = 'red';
+//    liveText.textContent = 'On Wrist - Error';
+//  }
+//});
+
+
+
 // Call the checkForNewData function every minute
-setInterval(checkForNewData, 60000);
+setInterval(checkForNewData, 6000);

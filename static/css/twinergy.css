@@ -171,7 +171,7 @@ label {
 .red-dot {
   width: 11px;
   height: 11px;
-  background-color: white;
+  background-color: transparent;
   border-radius: 50%;
   animation: pulsate 2s ease-out;
   animation-iteration-count: infinite;

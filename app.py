@@ -1,6 +1,7 @@
 from flask import (Flask, render_template, redirect, url_for, session, request, g, jsonify)
 from flask_mysqldb import MySQL
 from flask_compress import Compress
+from flask_caching import Cache
 
 from keycloak import KeycloakOpenID
 
@@ -31,6 +32,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 Compress(app)
 
 # Credentials to connect with mySQL TwinERGY UPAT database
@@ -48,7 +50,8 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
     realm_name='TwinERGY',
     client_secret_key="secret")
 app.secret_key = 'secret'
-exc_counter = 0
+exc_counter = cache.get('exc_counter')
+cache.set('exc_counter', 0)
 
 
 @app.before_request
@@ -196,9 +199,11 @@ def api_preferences():
     return jsonify(0)
 
 
+
+
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
-    global exc_counter
+    exc_counter = cache.get('exc_counter')
 
     print('start ttn', exc_counter)
     data = request.get_json()
@@ -230,11 +235,11 @@ def handle_ttn_webhook():
     # Exclude initial values from database
     if (tc_timestamp - p_time > 50) and (exc_counter == 0):
         print('inside tc_timestamp - p_time > 50:', exc_counter)
-        exc_counter = 8
+        cache.set('exc_counter', 8)
 
     if exc_counter > 0:
         print('inside exc_counter > 0:', exc_counter)
-        exc_counter -= 1
+        cache.set('exc_counter', exc_counter - 1)
 
     if exc_counter == 0:
         # Execute SQL INSERT statement
@@ -546,6 +551,23 @@ def current_session():
     # Return a json object that includes the session data
     return jsonify(dict(session))
 
+@app.route('/get_device_status/')
+def get_device_status():
+    exc_counter = cache.get('exc_counter')
+    query = """
+        SELECT tc_timestamp
+        FROM user_thermal_comfort
+        WHERE wearable_id = %s
+        ORDER BY tc_timestamp DESC
+        LIMIT 1
+    """
+    with g.cur as cur:
+        cur.execute(query, (session.get('userinfo', None)['deviceId'],))
+        latest_timestamp = cur.fetchall()
+    if(exc_counter!=0):
+        latest_timestamp=0
+    print(exc_counter)
+    return jsonify(latest_timestamp)
 
 if __name__ == "__main__":
     app.run(debug=True)
