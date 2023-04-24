@@ -203,6 +203,8 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     exc_counter = cache.get('exc_counter')
+    if exc_counter=None:
+        cache.set('exc_counter', 0)
 
     print('at start of ttn-webhook', exc_counter)
     data = request.get_json()
@@ -232,11 +234,10 @@ def handle_ttn_webhook():
         if tc_met > 6: tc_met = 6
 
     # Exclude initial values from database
-    if (tc_timestamp - p_time > 50):
+    if (tc_timestamp - p_time > 50) and exc_counter==0:
         print('inside tc_timestamp - p_time > 50:', exc_counter)
         cache.set('exc_counter', 8)
-    else:
-        cache.set('exc_counter', 0)
+
 
     if exc_counter > 0:
         print('inside exc_counter > 0:', exc_counter)
@@ -566,7 +567,7 @@ def get_device_status():
     with g.cur as cur:
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         latest_timestamp = cur.fetchall()
-    if(exc_counter!=0):
+    if(exc_counter>0)and(exc_counter<8):
         latest_timestamp=[(0,),]
     print(exc_counter)
     return jsonify(latest_timestamp)
