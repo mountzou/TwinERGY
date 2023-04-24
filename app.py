@@ -11,7 +11,9 @@ from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate
 from determineAirTemperature import get_air_temperature
 from determineWellBeing import get_well_being_description
 from updatePreferences import updateThermalComfortPreference, updateTemperaturePreference, updatePrefElectricVehicle, \
-    updatePrefWashingMachine, updatePrefDishWasher, updatePrefWaterHeater, updatePrefTumbleDrier
+    updatePrefWashingMachine, updatePrefDishWasher, updatePrefWaterHeater, updatePrefTumbleDrier, \
+    updateTimeElectricVehicle, updateTimeWashingMachine, updateTimeDishWasher, updateTimeTumbleDrier, \
+    updateTimeWaterHeater
 
 from getPreferences import getThermalComfortPreferences, getTemperaturePreferences, getFlexibleLoadsPreferences
 
@@ -42,11 +44,12 @@ mysql = MySQL(app)
 
 # Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
-                                 client_id='cdt-twinergy',
-                                 realm_name='TwinERGY',
-                                 client_secret_key="secret")
+    client_id='cdt-twinergy',
+    realm_name='TwinERGY',
+    client_secret_key="secret")
 app.secret_key = 'secret'
 exc_counter = 0
+
 
 @app.before_request
 def require_login():
@@ -72,10 +75,10 @@ def before_request():
 def login():
     if urlparse(request.base_url).netloc == '127.0.0.1:5000':
         auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback",
-                                            scope="openid", state="af0ifjsldkj")
+            scope="openid", state="af0ifjsldkj")
     else:
         auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback",
-                                            scope="openid", state="af0ifjsldkj")
+            scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -121,7 +124,8 @@ def rout():
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
 
-    return render_template("index.html") if daily_thermal_comfort_data[0][0] > 0 else render_template("index-empty.html")
+    return render_template("index.html") if daily_thermal_comfort_data[0][
+                                                0] > 0 else render_template("index-empty.html")
 
 
 # A functions that implements the default 'Thermal Comfort' page under the route '/thermal_comfort/'
@@ -196,7 +200,7 @@ def api_preferences():
 def handle_ttn_webhook():
     global exc_counter
 
-    print('start ttn',exc_counter)
+    print('start ttn', exc_counter)
     data = request.get_json()
 
     device_id = data['end_device_ids']['dev_eui']
@@ -204,7 +208,7 @@ def handle_ttn_webhook():
 
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
-        re[3]
+                                                                        re[3]
 
     g.cur.execute(
         '''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''',
@@ -223,14 +227,13 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
 
-
     # Exclude initial values from database
-    if (tc_timestamp - p_time > 50) and (exc_counter==0):
-        print('inside tc_timestamp - p_time > 50:',exc_counter)
+    if (tc_timestamp - p_time > 50) and (exc_counter == 0):
+        print('inside tc_timestamp - p_time > 50:', exc_counter)
         exc_counter = 8
 
     if exc_counter > 0:
-        print('inside exc_counter > 0:',exc_counter)
+        print('inside exc_counter > 0:', exc_counter)
         exc_counter -= 1
 
     if exc_counter == 0:
@@ -242,8 +245,6 @@ def handle_ttn_webhook():
         mysql.connection.commit()
 
         g.cur.close()
-
-
 
     print(exc_counter)
     return jsonify({'status': 'success'}), 200
@@ -282,14 +283,14 @@ def get_data_thermal_comfort():
         met_sum += tc_met
         met_count += 1
 
-    if (met_count>0):
+    if (met_count > 0):
         average_met = met_sum / met_count
     else:
-        average_met=0
+        average_met = 0
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8,
-                                                 0.1))
+                                       0.1))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
 
@@ -304,6 +305,8 @@ def get_data_preferences():
     preferences_thermal_comfort = getThermalComfortPreferences(g.cur, wearable_id)
     preferences_temperature = getTemperaturePreferences(g.cur, wearable_id)
     preferences_flexible_loads = getFlexibleLoadsPreferences(g.cur, wearable_id)
+
+    print(preferences_flexible_loads)
 
     if preferences_thermal_comfort is not None:
         user_thermal_level_min, user_thermal_level_max = preferences_thermal_comfort
@@ -329,7 +332,32 @@ def get_data_preferences():
                             'importance_washing_machine': preferences_flexible_loads[7],
                             'importance_dish_washer': preferences_flexible_loads[10],
                             'importance_water_heater': preferences_flexible_loads[13],
-                        }
+                        },
+                    'electric_vehicle_time':
+                        {
+                            'electric_vehicle_time_from': preferences_flexible_loads[2],
+                            'electric_vehicle_time_to': preferences_flexible_loads[3],
+                        },
+                    'tumble_drier_time':
+                        {
+                            'tumble_drier_time_from': preferences_flexible_loads[5],
+                            'tumble_drier_time_to': preferences_flexible_loads[6],
+                        },
+                    'washing_machine_time':
+                        {
+                            'washing_machine_time_from': preferences_flexible_loads[8],
+                            'washing_machine_time_to': preferences_flexible_loads[9],
+                        },
+                    'dish_washer_time':
+                        {
+                            'dish_washer_time_from': preferences_flexible_loads[11],
+                            'dish_washer_time_to': preferences_flexible_loads[12],
+                        },
+                    'water_heater_time':
+                        {
+                            'water_heater_time_from': preferences_flexible_loads[14],
+                            'water_heater_time_to': preferences_flexible_loads[15],
+                        },
                 }
             ]
         }
@@ -407,6 +435,61 @@ def update_preferences_importance_water_heater():
     importance_water_heater = request.form.get('importance_water_heater')
 
     updatePrefWaterHeater(mysql, g.cur, importance_water_heater, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_range_electric_vehicle', methods=['POST'])
+def update_range_electric_vehicle():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    fromElectricVehicle = request.form.get('fromElectricVehicle')
+    toElectricVehicle = request.form.get('toElectricVehicle')
+
+    updateTimeElectricVehicle(mysql, g.cur, fromElectricVehicle, toElectricVehicle, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_range_washing_machine', methods=['POST'])
+def update_range_washing_machine():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    fromWashingMachine = request.form.get('fromWashingMachine')
+    toWashingMachine = request.form.get('toWashingMachine')
+
+    updateTimeWashingMachine(mysql, g.cur, fromWashingMachine, toWashingMachine, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_range_dish_washer', methods=['POST'])
+def update_range_dish_washer():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    fromDishWasher = request.form.get('fromDishWasher')
+    toDishWasher = request.form.get('toDishWasher')
+
+    updateTimeDishWasher(mysql, g.cur, fromDishWasher, toDishWasher, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_range_tumble_drier', methods=['POST'])
+def update_range_tumble_drier():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    fromTumbleDrier = request.form.get('fromTumbleDrier')
+    toTumbleDrier = request.form.get('toTumbleDrier')
+
+    updateTimeTumbleDrier(mysql, g.cur, fromTumbleDrier, toTumbleDrier, wearable_id)
+
+    return jsonify(success=True)
+
+
+@app.route('/update_range_water_heater', methods=['POST'])
+def update_range_water_heater():
+    wearable_id = session.get('userinfo', None)['deviceId']
+    fromWaterHeater = request.form.get('fromWaterHeater')
+    toWaterHeater = request.form.get('toWaterHeater')
+
+    updateTimeWaterHeater(mysql, g.cur, fromWaterHeater, toWaterHeater, wearable_id)
 
     return jsonify(success=True)
 

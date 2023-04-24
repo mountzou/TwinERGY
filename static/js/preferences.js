@@ -16,6 +16,18 @@ function getConsumerPreferences() {
         var importance_water_heater = data['preferences'][0]['flexible_load_preferences']['importance_water_heater'];
         var importance_dish_washer = data['preferences'][0]['flexible_load_preferences']['importance_dish_washer'];
 
+        // Get the preferences related to the desired operation time window of each load
+        var from_electric_vehicle = data['preferences'][0]['electric_vehicle_time']['electric_vehicle_time_from'];
+        var to_electric_vehicle = data['preferences'][0]['electric_vehicle_time']['electric_vehicle_time_to'];
+        var from_washing_machine = data['preferences'][0]['washing_machine_time']['washing_machine_time_from'];
+        var to_washing_machine = data['preferences'][0]['washing_machine_time']['washing_machine_time_to'];
+        var from_tumble_drier = data['preferences'][0]['tumble_drier_time']['tumble_drier_time_from'];
+        var to_tumble_drier = data['preferences'][0]['tumble_drier_time']['tumble_drier_time_to'];
+        var from_water_heater = data['preferences'][0]['water_heater_time']['water_heater_time_from'];
+        var to_water_heater = data['preferences'][0]['water_heater_time']['water_heater_time_to'];
+        var from_dish_washer = data['preferences'][0]['dish_washer_time']['dish_washer_time_from'];
+        var to_dish_washer = data['preferences'][0]['dish_washer_time']['dish_washer_time_to'];
+
         $("#preference_thermal_comfort").ionRangeSlider({
           grid: !0,
           type: 'double',
@@ -192,6 +204,153 @@ function getConsumerPreferences() {
                 type: 'POST',
                 data: {
                   importance_tumble_drier: fromValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        let hoursList = [];
+
+        for (let hour = 0; hour < 24; hour++) {
+          let hourString = hour < 10 ? '0' + hour : '' + hour;
+          hoursList.push(hourString + ':00');
+        }
+
+        $("#preference_range_electric_vehicle").ionRangeSlider({
+          grid: !0,
+          type: 'double',
+          from: from_electric_vehicle,
+          to: to_electric_vehicle,
+          values: hoursList,
+          onChange: function(data) {
+            var fromValue = data.from;
+            var toValue = data.to;
+              $.ajax({
+                url: '/update_range_electric_vehicle',
+                type: 'POST',
+                data: {
+                    fromElectricVehicle: fromValue,
+                    toElectricVehicle: toValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_range_washing_machine").ionRangeSlider({
+          grid: !0,
+          type: 'double',
+          from: from_washing_machine,
+          to: to_washing_machine,
+          values: hoursList,
+          onChange: function(data) {
+            var fromValue = data.from;
+            var toValue = data.to;
+              $.ajax({
+                url: '/update_range_washing_machine',
+                type: 'POST',
+                data: {
+                    fromWashingMachine: fromValue,
+                    toWashingMachine: toValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_range_dish_washer").ionRangeSlider({
+          grid: !0,
+          type: 'double',
+          from: from_dish_washer,
+          to: to_dish_washer,
+          values: hoursList,
+          onChange: function(data) {
+            var fromValue = data.from;
+            var toValue = data.to;
+              $.ajax({
+                url: '/update_range_dish_washer',
+                type: 'POST',
+                data: {
+                    fromDishWasher: fromValue,
+                    toDishWasher: toValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_range_drier").ionRangeSlider({
+          grid: !0,
+          type: 'double',
+          from: from_tumble_drier,
+          to: to_tumble_drier,
+          values: hoursList,
+          onChange: function(data) {
+            var fromValue = data.from;
+            var toValue = data.to;
+              $.ajax({
+                url: '/update_range_tumble_drier',
+                type: 'POST',
+                data: {
+                    fromTumbleDrier: fromValue,
+                    toTumbleDrier: toValue,
+                },
+                success: function(response) {
+                  console.log("Preferences updated successfully");
+                  // You can add any success handling code here
+                },
+                error: function(response) {
+                  console.log("Error updating preferences");
+                  // You can add any error handling code here
+                }
+              });
+          },
+        });
+
+        $("#preference_range_water_heater").ionRangeSlider({
+          grid: !0,
+          type: 'double',
+          from: from_water_heater,
+          to: to_water_heater,
+          values: hoursList,
+          onChange: function(data) {
+            var fromValue = data.from;
+            var toValue = data.to;
+              $.ajax({
+                url: '/update_range_water_heater',
+                type: 'POST',
+                data: {
+                    fromWaterHeater: fromValue,
+                    toWaterHeater: toValue,
                 },
                 success: function(response) {
                   console.log("Preferences updated successfully");
