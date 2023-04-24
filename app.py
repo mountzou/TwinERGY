@@ -131,12 +131,11 @@ def thermal_comfort():
     wearable_id = session.get('deviceId', None)
     # Execute SQL query to get the thermal comfort data regarding the specific wearable ID during the last 24 hours
     g.cur.execute(
-        '''SELECT * FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
+        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
         (
             wearable_id,))
     # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
     daily_thermal_comfort_data = g.cur.fetchall()
-
     return render_template("thermal-comfort.html") if daily_thermal_comfort_data[0][0] > 1 else render_template(
         "thermal-comfort-empty.html")
 
