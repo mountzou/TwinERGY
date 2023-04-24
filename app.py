@@ -565,7 +565,7 @@ def get_device_status():
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         latest_timestamp = cur.fetchall()
     if(exc_counter!=0):
-        latest_timestamp=0
+        latest_timestamp[0][0]=0
     print(exc_counter)
     return jsonify(latest_timestamp)
 
