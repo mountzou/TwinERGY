@@ -51,8 +51,7 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
     client_secret_key="secret")
 app.secret_key = 'secret'
 exc_counter = cache.get('exc_counter')
-if exc_counter is None:
-    cache.set('exc_counter', exc_counter, timeout=None)
+cache.set('exc_counter', exc_counter, timeout=None)
 
 
 @app.before_request
@@ -207,6 +206,8 @@ def handle_ttn_webhook():
     exc_counter = cache.get('exc_counter')
     if exc_counter==None:
         cache.set('exc_counter', 0, timeout=None)
+    else:
+        cache.set('exc_counter', exc_counter, timeout=None)
 
     print('at start of ttn-webhook', exc_counter)
     data = request.get_json()
@@ -235,18 +236,21 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
     exc_counter = cache.get('exc_counter')
+    cache.set('exc_counter', exc_counter, timeout=None)
     # Exclude initial values from database
     if (tc_timestamp - p_time > 50) and exc_counter==0:
         print('inside tc_timestamp - p_time > 50:', exc_counter)
         cache.set('exc_counter', 8)
 
     exc_counter = cache.get('exc_counter')
+    cache.set('exc_counter', exc_counter, timeout=None)
     if exc_counter > 0:
         print('inside exc_counter > 0:', exc_counter)
         exc_counter = cache.get('exc_counter')
         cache.set('exc_counter', exc_counter - 1, timeout=None)
 
     exc_counter = cache.get('exc_counter')
+    cache.set('exc_counter', exc_counter, timeout=None)
     if (exc_counter == 0):
         # Execute SQL INSERT statement
         insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
@@ -560,6 +564,7 @@ def current_session():
 @app.route('/get_device_status')
 def get_device_status():
     exc_counter = cache.get('exc_counter')
+    cache.set('exc_counter', exc_counter, timeout=None)
     query = """
         SELECT tc_timestamp
         FROM user_thermal_comfort
