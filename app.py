@@ -232,18 +232,19 @@ def handle_ttn_webhook():
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
-
+    exc_counter = cache.get('exc_counter')
     # Exclude initial values from database
     if (tc_timestamp - p_time > 50) and exc_counter==0:
         print('inside tc_timestamp - p_time > 50:', exc_counter)
         cache.set('exc_counter', 8)
 
-
+    exc_counter = cache.get('exc_counter')
     if exc_counter > 0:
         print('inside exc_counter > 0:', exc_counter)
         exc_counter = cache.get('exc_counter')
         cache.set('exc_counter', exc_counter - 1)
 
+    exc_counter = cache.get('exc_counter')
     if (exc_counter == 0):
         # Execute SQL INSERT statement
         insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
@@ -567,6 +568,9 @@ def get_device_status():
     with g.cur as cur:
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         latest_timestamp = cur.fetchall()
+
+    if(exc_counter==None):
+        return jsonify(latest_timestamp)
     if(exc_counter>0)and(exc_counter<8):
         latest_timestamp=[(0,),]
     print(exc_counter)
