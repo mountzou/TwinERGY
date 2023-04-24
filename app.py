@@ -50,7 +50,9 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
     realm_name='TwinERGY',
     client_secret_key="secret")
 app.secret_key = 'secret'
-exc_counter = cache.get('exc_counter',timeout=None)
+exc_counter = cache.get('exc_counter')
+if exc_counter is None:
+    cache.set('exc_counter', exc_counter, timeout=None)
 
 
 @app.before_request
@@ -204,7 +206,7 @@ def api_preferences():
 def handle_ttn_webhook():
     exc_counter = cache.get('exc_counter')
     if exc_counter==None:
-        cache.set('exc_counter', 0)
+        cache.set('exc_counter', 0, timeout=None)
 
     print('at start of ttn-webhook', exc_counter)
     data = request.get_json()
@@ -242,7 +244,7 @@ def handle_ttn_webhook():
     if exc_counter > 0:
         print('inside exc_counter > 0:', exc_counter)
         exc_counter = cache.get('exc_counter')
-        cache.set('exc_counter', exc_counter - 1)
+        cache.set('exc_counter', exc_counter - 1, timeout=None)
 
     exc_counter = cache.get('exc_counter')
     if (exc_counter == 0):
