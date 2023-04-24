@@ -203,7 +203,7 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     exc_counter = cache.get('exc_counter')
-    if exc_counter=None:
+    if exc_counter==None:
         cache.set('exc_counter', 0)
 
     print('at start of ttn-webhook', exc_counter)
