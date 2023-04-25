@@ -67,6 +67,6 @@ function checkForNewData() {
     }
   });
 }
-
+checkForNewData();
 // Call the checkForNewData function every minute
 setInterval(checkForNewData, 2500);

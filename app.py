@@ -215,6 +215,34 @@ def handle_ttn_webhook():
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
 
+    g.cur.execute('''SELECT exclude_counter FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
+                  (
+                      device_id,))
+    exclude_count = g.cur.fetchone()
+    if exclude_count is None:
+        g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id) VALUES (11, '{device_id}')")
+        g.cur.execute('''SELECT exclude_counter FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
+                      (
+                          device_id,))
+        exclude_count = g.cur.fetchone()
+        print('init',exclude_count)
+
+    if exclude_count < 10:
+        exclude_count += 1
+        # Update the exclude count in the exc_counter table
+        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count} WHERE wearable_id = %s", (device_id,))
+        g.cur.close()
+        print('<10',exclude_count)
+        return jsonify({'status': 'success'}), 200
+
+    if tc_timestamp- p_time>15:
+        g.cur.execute("UPDATE exc_assist SET exclude_counter = 0 WHERE wearable_id = %s", (device_id,))
+        g.cur.close()
+        print('>15',exclude_count)
+
+        return jsonify({'status': 'success'}), 200
+
+
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
     if (tc_metabolic - p_metabolic) < 0:
         tc_met = 1
@@ -228,6 +256,9 @@ def handle_ttn_webhook():
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     g.cur.execute(insert_sql)
+
+    g.cur.execute("UPDATE exc_assist SET exclude_counter = 11 WHERE wearable_id = %s", (device_id,))
+
 
     mysql.connection.commit()
 
