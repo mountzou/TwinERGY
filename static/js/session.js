@@ -30,6 +30,12 @@ getSessionData().then((sessionData) => {
 
 var status = 'inactive';
 
+var redDot = document.querySelector('.red-dot');
+var liveText = document.querySelector('#live-id');
+
+redDot.style.backgroundColor = 'white';
+liveText.innerHTML = 'Searching..';
+
 function checkForNewData() {
   $.getJSON('/get_device_status', function (data) {
     let currentTimestamp = Math.floor(Date.now() / 1000);
@@ -42,16 +48,14 @@ function checkForNewData() {
       status = 'inactive';
     }
 
-    var redDot = document.querySelector('.red-dot');
-    var liveText = document.querySelector('#live-id');
-
     switch (status) {
       case 'active':
         redDot.style.backgroundColor = 'white';
         liveText.textContent = 'Active';
         break;
       case 'inactive':
-        redDot.style.backgroundColor = 'gray';
+        redDot.style.backgroundColor = '#1e2727';
+        redDot.style.animationIterationCount = '0';
         liveText.textContent = 'Inactive';
         break;
       case 'init':

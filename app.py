@@ -51,7 +51,6 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
 app.secret_key = 'secret'
 
 
-
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
@@ -195,8 +194,6 @@ def api_preferences():
     load_weights = g.cur.fetchall()
 
     return jsonify(0)
-
-
 
 
 @app.route('/ttn-webhook', methods=['POST'])
@@ -535,6 +532,7 @@ def current_session():
     # Return a json object that includes the session data
     return jsonify(dict(session))
 
+
 @app.route('/get_device_status')
 def get_device_status():
     query = """
@@ -549,6 +547,7 @@ def get_device_status():
         latest_timestamp = cur.fetchall()
 
     return jsonify(latest_timestamp)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

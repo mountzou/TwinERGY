@@ -169,12 +169,12 @@ label {
 }
 
 .red-dot {
+  position: relative;
   width: 11px;
   height: 11px;
   background-color: transparent;
   border-radius: 50%;
   animation: pulsate 2s ease-out;
-  animation-iteration-count: infinite;
   opacity: 1.0;
 }
 
