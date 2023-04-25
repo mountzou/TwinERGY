@@ -32,7 +32,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 Compress(app)
 
 # Credentials to connect with mySQL TwinERGY UPAT database
@@ -50,8 +49,7 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
     realm_name='TwinERGY',
     client_secret_key="secret")
 app.secret_key = 'secret'
-exc_counter = cache.get('exc_counter')
-cache.set('exc_counter', exc_counter, timeout=None)
+
 
 
 @app.before_request
@@ -203,13 +201,6 @@ def api_preferences():
 
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
-    exc_counter = cache.get('exc_counter')
-    if exc_counter==None:
-        cache.set('exc_counter', 0, timeout=None)
-    else:
-        cache.set('exc_counter', exc_counter, timeout=None)
-
-    print('at start of ttn-webhook', exc_counter)
     data = request.get_json()
 
     device_id = data['end_device_ids']['dev_eui']
@@ -235,33 +226,16 @@ def handle_ttn_webhook():
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
-    exc_counter = cache.get('exc_counter')
-    cache.set('exc_counter', exc_counter, timeout=None)
-    # Exclude initial values from database
-    if (tc_timestamp - p_time > 50) and exc_counter==0:
-        print('inside tc_timestamp - p_time > 50:', exc_counter)
-        cache.set('exc_counter', 8)
 
-    exc_counter = cache.get('exc_counter')
-    cache.set('exc_counter', exc_counter, timeout=None)
-    if exc_counter > 0:
-        print('inside exc_counter > 0:', exc_counter)
-        exc_counter = cache.get('exc_counter')
-        cache.set('exc_counter', exc_counter - 1, timeout=None)
-
-    exc_counter = cache.get('exc_counter')
-    cache.set('exc_counter', exc_counter, timeout=None)
-    if (exc_counter == 0):
         # Execute SQL INSERT statement
-        insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
-        g.cur.execute(insert_sql)
+    g.cur.execute(insert_sql)
 
-        mysql.connection.commit()
+    mysql.connection.commit()
 
-        g.cur.close()
+    g.cur.close()
 
-    print('before return', exc_counter)
     return jsonify({'status': 'success'}), 200
 
 
@@ -563,8 +537,6 @@ def current_session():
 
 @app.route('/get_device_status')
 def get_device_status():
-    exc_counter = cache.get('exc_counter')
-    cache.set('exc_counter', exc_counter, timeout=None)
     query = """
         SELECT tc_timestamp
         FROM user_thermal_comfort
@@ -576,11 +548,6 @@ def get_device_status():
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         latest_timestamp = cur.fetchall()
 
-    if(exc_counter==None):
-        return jsonify(latest_timestamp)
-    if(exc_counter>0)and(exc_counter<8):
-        latest_timestamp=[(0,),]
-    print(exc_counter)
     return jsonify(latest_timestamp)
 
 if __name__ == "__main__":
