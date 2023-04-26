@@ -237,7 +237,7 @@ def handle_ttn_webhook():
     if exclude_count < 9:
         exclude_count += 1
         # Update the exclude count in the exc_counter table
-        g.cur.execute(f"UPDATE exc_assist,time_st SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
+        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
         mysql.connection.commit()
         g.cur.close()
         print('<10',exclude_count)
@@ -245,7 +245,7 @@ def handle_ttn_webhook():
 
     if tc_timestamp- p_time>15 and exclude_count==10:
         exclude_count = 0
-        g.cur.execute(f"UPDATE exc_assist,time_st SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
+        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
         mysql.connection.commit()
         g.cur.close()
         print('>15',exclude_count)
@@ -267,7 +267,7 @@ def handle_ttn_webhook():
 
     g.cur.execute(insert_sql)
     exclude_count = 10
-    g.cur.execute(f"UPDATE exc_assist ,time_st SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
+    g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
     print('at the end',exclude_count)
 
     mysql.connection.commit()
