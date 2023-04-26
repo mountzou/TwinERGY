@@ -93,6 +93,7 @@ def callback():
         code=code_token,
         redirect_uri=request.base_url)
 
+    session['access_token']=access_token
     session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
     session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
     session['deviceId'] = keycloak_openid.userinfo(access_token['access_token'])['deviceId']
