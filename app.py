@@ -218,13 +218,17 @@ def handle_ttn_webhook():
     g.cur.execute('''SELECT exclude_counter FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
                   (
                       device_id,))
-    exclude_count = g.cur.fetchone()
+    try:
+        exclude_count = g.cur.fetchone()[0]
+    except TypeError:
+        exclude_count = g.cur.fetchone()
+
     if exclude_count is None:
         g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id) VALUES (11, '{device_id}')")
         g.cur.execute('''SELECT exclude_counter FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
                       (
                           device_id,))
-        exclude_count = g.cur.fetchone()
+        exclude_count = g.cur.fetchone()[0]
         print('init',exclude_count)
 
     if exclude_count < 10:
