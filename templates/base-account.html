@@ -14,29 +14,23 @@
     <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon">
 
     <link href="{{url_for('static', filename='css/app.css')}}" rel="stylesheet" type="text/css">
-    <link href="{{url_for('static', filename='css/twinergy.min.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Import additional .css files in the header section -->
     {% block html_css %}{% endblock html_css %}
 
-    <!-- Import additional .js files in the header section -->
-    {% block js_script_header %}{% endblock js_script_header %}
-
 </head>
 <body class="layout-sticky-subnav layout-default">
 
-<div class="mdk-header-layout js-mdk-header-layout">
-    <div class="mdk-header-layout__content page-content ">
-        {% include 'navbar.html' %}
-
-        {% block content %}
-
-        {% endblock content %}
+    <div class="mdk-header-layout js-mdk-header-layout">
+        <div class="mdk-header-layout__content page-content ">
+            {% include 'navbar.html' %}
+            {% block content %}{% endblock content %}
+        </div>
     </div>
-</div>
 
-{% include 'footer.html' %}
+    {% include 'footer.html' %}
 
     <!-- Import jquery.min.js with jQuery library -->
     <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
@@ -47,19 +41,27 @@
     <!-- Import popper.min.js file with Popper library -->
     <script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
 
-    <!-- Import bootstrap.min.js file with Bootstrap library -->
-    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
-
     <!-- Import app.js file with application's main settings -->
     <script src="{{url_for('static', filename='js/app.js')}}"></script>
 
     <!-- Import settings.js file with application's global settings -->
     <script src="{{url_for('static', filename='js/settings.js')}}"></script>
 
-    <!-- Import perfect-scrollbar.min.js file with the perfect scrollbar library -->
-    <script src="{{url_for('static', filename='vendor/perfect-scrollbar.min.js')}}"></script>
+    <!-- Import bootstrap.min.js file with Bootstrap library -->
+    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
-    {% block js_scripts %}{% endblock js_scripts %}
+    <!-- Import Chart.min.js files with Chart JS library -->
+    <script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
+
+    <!-- Import moment.min.js files with Moment JS library -->
+    <script src="{{url_for('static', filename='vendor/moment.min.js')}}"></script>
+
+    <!-- Import a .js script to retrieve session variables -->
+    <script src="{{url_for('static', filename='js/session.js')}}"></script>
+    <!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
+    <script src="{{url_for('static', filename='js/account.js')}}"></script>
 
 </body>
 </html>
