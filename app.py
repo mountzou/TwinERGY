@@ -587,6 +587,21 @@ def get_device_status():
     with g.cur as cur:
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         latest_timestamp = cur.fetchall()
+        query = """
+            SELECT exclude_counter,time_st 
+            FROM exc_assist 
+            WHERE wearable_id = %s 
+            LIMIT 1
+        """
+
+        cur.execute(query, (session.get('userinfo', None)['deviceId'],))
+        result = cur.fetchall()
+
+    exclude_count = result[0][0]
+    exclude_time = result[0][1]
+    unix_timestamp = int(time.time())
+    if exclude_count<10 and unix_timestamp-exclude_time<12:
+        latest_timestamp=((0,),)
 
     return jsonify(latest_timestamp)
 
