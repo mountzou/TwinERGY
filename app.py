@@ -219,8 +219,8 @@ def handle_ttn_webhook():
                   (
                       device_id,))
     try:
-        exclude_count = g.cur.fetchone()[0][0]
-        exclude_time = g.cur.fetchone()[0][1]
+        exclude_count = g.cur.fetchall()[0][0]
+        exclude_time = g.cur.fetchall()[0][1]
     except TypeError:
         exclude_count = g.cur.fetchone()
 
