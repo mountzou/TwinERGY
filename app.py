@@ -596,12 +596,14 @@ def get_device_status():
 
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
         result = cur.fetchall()
-
-    exclude_count = result[0][0]
-    exclude_time = result[0][1]
-    unix_timestamp = int(time.time())
-    if exclude_count<10 and unix_timestamp-exclude_time<12:
-        latest_timestamp=((0,),)
+    try:
+        exclude_count = result[0][0]
+        exclude_time = result[0][1]
+        unix_timestamp = int(time.time())
+        if exclude_count<10 and unix_timestamp-exclude_time<12:
+            latest_timestamp=((0,),)
+    except IndexError:
+        print('initial')
 
     return jsonify(latest_timestamp)
 
