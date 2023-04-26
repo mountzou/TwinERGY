@@ -225,11 +225,11 @@ def handle_ttn_webhook():
 
     if exclude_count is None:
         exclude_count=10
-        g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id) VALUES ({exclude_count}, '{device_id}')")
+        g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id, timestamp) VALUES ({exclude_count}, '{device_id}')")
         mysql.connection.commit()
         print('init',exclude_count)
 
-    if exclude_count < 10:
+    if exclude_count < 9:
         exclude_count += 1
         # Update the exclude count in the exc_counter table
         g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count} WHERE wearable_id = %s", (device_id,))
