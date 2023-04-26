@@ -222,7 +222,7 @@ def handle_ttn_webhook():
         result=g.cur.fetchall()
         exclude_count = result[0][0]
         exclude_time = result[0][1]
-    except TypeError:
+    except IndexError:
         exclude_count = g.cur.fetchone()
 
     if exclude_count is None:
