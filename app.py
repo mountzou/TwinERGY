@@ -215,24 +215,29 @@ def handle_ttn_webhook():
 
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
 
-    g.cur.execute('''SELECT exclude_counter FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
+    g.cur.execute('''SELECT exclude_counter,time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
                   (
                       device_id,))
     try:
-        exclude_count = g.cur.fetchone()[0]
+        exclude_count = g.cur.fetchone()[0][0]
+        exclude_time = g.cur.fetchone()[0][1]
     except TypeError:
         exclude_count = g.cur.fetchone()
 
     if exclude_count is None:
         exclude_count=10
-        g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id, timestamp) VALUES ({exclude_count}, '{device_id}')")
+        exclude_time=tc_timestamp
+        g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st) VALUES ({exclude_count}, '{device_id}',{tc_timestamp})")
         mysql.connection.commit()
         print('init',exclude_count)
+
+    if tc_timestamp-exclude_time>15:
+        exclude_count=10
 
     if exclude_count < 9:
         exclude_count += 1
         # Update the exclude count in the exc_counter table
-        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count} WHERE wearable_id = %s", (device_id,))
+        g.cur.execute(f"UPDATE exc_assist,time_st SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
         mysql.connection.commit()
         g.cur.close()
         print('<10',exclude_count)
@@ -240,7 +245,7 @@ def handle_ttn_webhook():
 
     if tc_timestamp- p_time>15 and exclude_count==10:
         exclude_count = 0
-        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count} WHERE wearable_id = %s", (device_id,))
+        g.cur.execute(f"UPDATE exc_assist,time_st SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
         mysql.connection.commit()
         g.cur.close()
         print('>15',exclude_count)
@@ -261,9 +266,9 @@ def handle_ttn_webhook():
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     g.cur.execute(insert_sql)
-    exclude_counter = 10
-    g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count} WHERE wearable_id = %s", (device_id,))
-    print('aat the end',exclude_count)
+    exclude_count = 10
+    g.cur.execute(f"UPDATE exc_assist ,time_st SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
+    print('at the end',exclude_count)
 
     mysql.connection.commit()
 
