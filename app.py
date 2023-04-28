@@ -52,17 +52,17 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
 app.secret_key = 'secret'
 
 
+# A function that creates the cursor object to interact with the mySQL database
 def get_db_cursor():
     return mysql.connection.cursor()
 
 
-# A function to check for updates in the SQL table during the last 24 hours
+# A function to check for updates by the specific wearable device during the last 24 hours
 def check_for_daily_updates():
-    wearable_id = session.get('deviceId', None)
     g.cur.execute(
         '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
         (
-            wearable_id,))
+            session.get('deviceId', None),))
     (number_of_daily_data,) = g.cur.fetchone()
     g.total_daily_data = number_of_daily_data
 
@@ -70,7 +70,7 @@ def check_for_daily_updates():
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'ttn-webhook']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook']
 
     # Define the relative paths that bypass the authentication mechanism
     if request.path == '/api_tc' or request.path == '/ttn-webhook':
@@ -146,7 +146,7 @@ def preferences():
     return render_template("preferences.html")
 
 
-# A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
+# A functions that implements the API service that provides consumer's thermal comfort to CDMP under the route 'api_tc'
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
@@ -184,12 +184,10 @@ def api_tc():
 # A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_preferences', methods=['GET'])
 def api_preferences():
-    # Get the wearable ID from the session's object deviceId
-    wearable_id = session.get('deviceId', None)
     # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
     g.cur.execute(
         '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''', (
-            wearable_id,))
+            session.get('deviceId', None),))
     (electric_vehicle, tumble_drier, washing_machine, water_heater, dish_washer) = g.cur.fetchone()
 
     flexible_load_preferences = {
@@ -290,7 +288,7 @@ def handle_ttn_webhook():
     return jsonify({'status': 'success'}), 200
 
 
-# A functions that implements the 'Acount' page under the route '/account/'
+# A functions that implements the 'Account' page under the route '/account/'
 @app.route('/account/')
 def account():
     return render_template('account.html')
@@ -302,7 +300,7 @@ def helpdesk():
     return render_template('helpdesk.html')
 
 
-# A route that implements an asynchronous call to retrieve data related to the thermal comfort
+# A route that implements an asynchronous call to retrieve data related to the user's thermal comfort during the last 24 hours
 @app.route('/get_data_thermal_comfort/')
 def get_data_thermal_comfort():
     query = """
@@ -314,23 +312,16 @@ def get_data_thermal_comfort():
         LIMIT 100
     """
     with g.cur as cur:
-        cur.execute(query, (session.get('userinfo', None)['deviceId'],))
+        cur.execute(query, (session.get('deviceId', None),))
         thermal_comfort_data = cur.fetchall()
 
-    met_sum = 0
-    met_count = 0
-    for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in thermal_comfort_data[:10]:
-        met_sum += tc_met
-        met_count += 1
+    met_data = [tc_met for _, _, _, _, tc_met in thermal_comfort_data[:10]]
+    met_sum, met_count = sum(met_data), len(met_data)
 
-    if met_count > 0:
-        average_met = met_sum / met_count
-    else:
-        average_met = 0
+    average_met = met_sum / met_count if met_count > 0 else 0
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
-                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8,
-                                       0.1))
+                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8, 0.1))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
 
@@ -340,11 +331,9 @@ def get_data_thermal_comfort():
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
 @app.route('/get_data_preferences')
 def get_data_preferences():
-    wearable_id = session.get('userinfo', None)['deviceId']
-
-    preferences_thermal_comfort = getThermalComfortPreferences(g.cur, wearable_id)
-    preferences_temperature = getTemperaturePreferences(g.cur, wearable_id)
-    preferences_flexible_loads = getFlexibleLoadsPreferences(g.cur, wearable_id)
+    preferences_thermal_comfort = getThermalComfortPreferences(g.cur, session.get('deviceId', None))
+    preferences_temperature = getTemperaturePreferences(g.cur, session.get('deviceId', None))
+    preferences_flexible_loads = getFlexibleLoadsPreferences(g.cur, session.get('deviceId', None))
 
     if preferences_thermal_comfort is not None:
         user_thermal_level_min, user_thermal_level_max = preferences_thermal_comfort
@@ -409,125 +398,113 @@ def get_data_preferences():
 
 @app.route('/update_preferences_thermal_comfort', methods=['POST'])
 def update_preferences_thermal_comfort():
-    wearable_id = session.get('userinfo', None)['deviceId']
     user_thermal_level_min = request.form.get('user_thermal_level_min')
     user_thermal_level_max = request.form.get('user_thermal_level_max')
 
-    updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max, wearable_id)
+    updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max, session.get('deviceId', None))
     return jsonify(success=True)
 
 
 @app.route('/update_preferences_temperature', methods=['POST'])
 def update_preferences_temperature():
-    wearable_id = session.get('userinfo', None)['deviceId']
     user_temp_min = request.form.get('user_temp_min')
     user_temp_max = request.form.get('user_temp_max')
 
-    updateTemperaturePreference(mysql, g.cur, user_temp_min, user_temp_max, wearable_id)
+    updateTemperaturePreference(mysql, g.cur, user_temp_min, user_temp_max, session.get('deviceId', None))
     return jsonify(success=True)
 
 
 @app.route('/update_preferences_importance_electric_vehicle', methods=['POST'])
 def update_preferences_importance_electric_vehicle():
-    wearable_id = session.get('userinfo', None)['deviceId']
     importance_electric_vehicle = request.form.get('importance_electric_vehicle')
 
-    updatePrefElectricVehicle(mysql, g.cur, importance_electric_vehicle, wearable_id)
+    updatePrefElectricVehicle(mysql, g.cur, importance_electric_vehicle, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_preferences_importance_washing_machine', methods=['POST'])
 def update_preferences_importance_washing_machine():
-    wearable_id = session.get('userinfo', None)['deviceId']
     importance_washing_machine = request.form.get('importance_washing_machine')
 
-    updatePrefWashingMachine(mysql, g.cur, importance_washing_machine, wearable_id)
+    updatePrefWashingMachine(mysql, g.cur, importance_washing_machine, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_preferences_importance_dish_washer', methods=['POST'])
 def update_preferences_importance_dish_washer():
-    wearable_id = session.get('userinfo', None)['deviceId']
     importance_dish_washer = request.form.get('importance_dish_washer')
 
-    updatePrefDishWasher(mysql, g.cur, importance_dish_washer, wearable_id)
+    updatePrefDishWasher(mysql, g.cur, importance_dish_washer, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_preferences_importance_tumble_drier', methods=['POST'])
 def update_preferences_importance_tumble_drier():
-    wearable_id = session.get('userinfo', None)['deviceId']
     importance_tumble_drier = request.form.get('importance_tumble_drier')
 
-    updatePrefTumbleDrier(mysql, g.cur, importance_tumble_drier, wearable_id)
+    updatePrefTumbleDrier(mysql, g.cur, importance_tumble_drier, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_preferences_importance_water_heater', methods=['POST'])
 def update_preferences_importance_water_heater():
-    wearable_id = session.get('userinfo', None)['deviceId']
     importance_water_heater = request.form.get('importance_water_heater')
 
-    updatePrefWaterHeater(mysql, g.cur, importance_water_heater, wearable_id)
+    updatePrefWaterHeater(mysql, g.cur, importance_water_heater, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_range_electric_vehicle', methods=['POST'])
 def update_range_electric_vehicle():
-    wearable_id = session.get('userinfo', None)['deviceId']
     fromElectricVehicle = request.form.get('fromElectricVehicle')
     toElectricVehicle = request.form.get('toElectricVehicle')
 
-    updateTimeElectricVehicle(mysql, g.cur, fromElectricVehicle, toElectricVehicle, wearable_id)
+    updateTimeElectricVehicle(mysql, g.cur, fromElectricVehicle, toElectricVehicle, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_range_washing_machine', methods=['POST'])
 def update_range_washing_machine():
-    wearable_id = session.get('userinfo', None)['deviceId']
     fromWashingMachine = request.form.get('fromWashingMachine')
     toWashingMachine = request.form.get('toWashingMachine')
 
-    updateTimeWashingMachine(mysql, g.cur, fromWashingMachine, toWashingMachine, wearable_id)
+    updateTimeWashingMachine(mysql, g.cur, fromWashingMachine, toWashingMachine, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_range_dish_washer', methods=['POST'])
 def update_range_dish_washer():
-    wearable_id = session.get('userinfo', None)['deviceId']
     fromDishWasher = request.form.get('fromDishWasher')
     toDishWasher = request.form.get('toDishWasher')
 
-    updateTimeDishWasher(mysql, g.cur, fromDishWasher, toDishWasher, wearable_id)
+    updateTimeDishWasher(mysql, g.cur, fromDishWasher, toDishWasher, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_range_tumble_drier', methods=['POST'])
 def update_range_tumble_drier():
-    wearable_id = session.get('userinfo', None)['deviceId']
     fromTumbleDrier = request.form.get('fromTumbleDrier')
     toTumbleDrier = request.form.get('toTumbleDrier')
 
-    updateTimeTumbleDrier(mysql, g.cur, fromTumbleDrier, toTumbleDrier, wearable_id)
+    updateTimeTumbleDrier(mysql, g.cur, fromTumbleDrier, toTumbleDrier, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
 @app.route('/update_range_water_heater', methods=['POST'])
 def update_range_water_heater():
-    wearable_id = session.get('userinfo', None)['deviceId']
     fromWaterHeater = request.form.get('fromWaterHeater')
     toWaterHeater = request.form.get('toWaterHeater')
 
-    updateTimeWaterHeater(mysql, g.cur, fromWaterHeater, toWaterHeater, wearable_id)
+    updateTimeWaterHeater(mysql, g.cur, fromWaterHeater, toWaterHeater, session.get('deviceId', None))
 
     return jsonify(success=True)
 
