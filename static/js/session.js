@@ -40,9 +40,9 @@ function checkForNewData() {
   $.getJSON('/get_device_status', function (data) {
     let currentTimestamp = Math.floor(Date.now() / 1000);
 
-    if (data[0][0] === 0) {
+    if (data[0] === 0) {
       status = 'init';
-    } else if (-12 < currentTimestamp - data[0][0] && currentTimestamp - data[0][0] < 12) {
+    } else if (-12 < currentTimestamp - data[0] && currentTimestamp - data[0] < 12) {
       status = 'active';
     } else {
       status = 'inactive';
