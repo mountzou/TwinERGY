@@ -52,6 +52,21 @@ keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/'
 app.secret_key = 'secret'
 
 
+def get_db_cursor():
+    return mysql.connection.cursor()
+
+
+# A function to check for updates in the SQL table during the last 24 hours
+def check_for_daily_updates():
+    wearable_id = session.get('deviceId', None)
+    g.cur.execute(
+        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
+        (
+            wearable_id,))
+    (number_of_daily_data,) = g.cur.fetchone()
+    g.total_daily_data = number_of_daily_data
+
+
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
@@ -69,6 +84,7 @@ def require_login():
 @app.before_request
 def before_request():
     g.cur = mysql.connection.cursor()
+    check_for_daily_updates()
 
 
 # A route that implements the user authentication process
@@ -116,34 +132,12 @@ def logout():
 @app.route("/index/")
 @app.route("/dashboard/")
 def rout():
-    # Get the wearable ID from the session's object deviceId
-    wearable_id = session.get('deviceId', None)
-    # Execute SQL query to get the thermal comfort data regarding the specific wearable ID during the last 24 hours
-    g.cur.execute(
-        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
-        (
-            wearable_id,))
-    # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
-    daily_thermal_comfort_data = g.cur.fetchall()
-
-    return render_template("index.html") if daily_thermal_comfort_data[0][
-                                                0] > 0 else render_template("index-empty.html")
+    return render_template("index.html") if g.total_daily_data else render_template("index-empty.html")
 
 
-# A functions that implements the default 'Thermal Comfort' page under the route '/thermal_comfort/'
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    # Get the wearable ID from the session's object deviceId
-    wearable_id = session.get('deviceId', None)
-    # Execute SQL query to get the thermal comfort data regarding the specific wearable ID during the last 24 hours
-    g.cur.execute(
-        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
-        (
-            wearable_id,))
-    # Fetch all records (data) associated with the specific wearable ID during the last 24 hours
-    daily_thermal_comfort_data = g.cur.fetchall()
-    return render_template("thermal-comfort.html") if daily_thermal_comfort_data[0][0] > 1 else render_template(
-        "thermal-comfort-empty.html")
+    return render_template("thermal-comfort.html") if g.total_daily_data else render_template("thermal-comfort-empty.html")
 
 
 # A functions that implements the 'Preferences' page under the route '/preferences/'
@@ -351,8 +345,6 @@ def get_data_preferences():
     preferences_thermal_comfort = getThermalComfortPreferences(g.cur, wearable_id)
     preferences_temperature = getTemperaturePreferences(g.cur, wearable_id)
     preferences_flexible_loads = getFlexibleLoadsPreferences(g.cur, wearable_id)
-
-    print(preferences_flexible_loads)
 
     if preferences_thermal_comfort is not None:
         user_thermal_level_min, user_thermal_level_max = preferences_thermal_comfort
