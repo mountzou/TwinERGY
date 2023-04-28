@@ -374,36 +374,46 @@ function getLoadWeights() {
         const progressBarEV = document.getElementById('weight-ev');
         progressBarEV.style.width = weightElectricVehicle + '%';
         progressBarEV.setAttribute('aria-valuenow', weightElectricVehicle);
+        const weightPercentageLabelEV = document.getElementById('weight-per-ev');
         const weightPercentageEV = document.getElementById('weight-ev');
         weightPercentageEV.innerHTML = weightElectricVehicle + '%';
+        weightPercentageLabelEV.innerHTML = weightElectricVehicle + '%';
 
         weightWashingMachine = data['Washing Machine'].shift()
         const progressBarWM = document.getElementById('weight-wm');
         progressBarWM.style.width = weightWashingMachine + '%';
         progressBarWM.setAttribute('aria-valuenow', weightWashingMachine);
         const weightPercentageWM = document.getElementById('weight-wm');
+        const weightPercentageLabelWM = document.getElementById('weight-per-wm');
         weightPercentageWM.innerHTML = weightWashingMachine + '%';
+        weightPercentageLabelWM.innerHTML = weightWashingMachine + '%';
 
         weightTumbleDrier = data['Tumble Drier'].shift()
         const progressBarTD = document.getElementById('weight-td');
         progressBarTD.style.width = weightTumbleDrier + '%';
         progressBarTD.setAttribute('aria-valuenow', weightTumbleDrier);
         const weightPercentageTD = document.getElementById('weight-td');
+        const weightPercentageLabelTD = document.getElementById('weight-per-td');
         weightPercentageTD.innerHTML = weightTumbleDrier + '%';
+        weightPercentageLabelTD.innerHTML = weightTumbleDrier + '%';
 
         weightWaterHeater = data['Water Heater'].shift()
         const progressBarWH = document.getElementById('weight-wh');
         progressBarWH.style.width = weightWaterHeater + '%';
         progressBarWH.setAttribute('aria-valuenow', weightWaterHeater);
         const weightPercentageWH = document.getElementById('weight-wh');
+        const weightPercentageLabelWH = document.getElementById('weight-per-wh');
         weightPercentageWH.innerHTML = weightWaterHeater + '%';
+        weightPercentageLabelWH.innerHTML = weightWaterHeater + '%';
 
         weightDishWasher = data['Dish Washer'].shift()
         const progressBarDW = document.getElementById('weight-dw');
         progressBarDW.style.width = weightDishWasher + '%';
         progressBarDW.setAttribute('aria-valuenow', weightDishWasher);
         const weightPercentageDW = document.getElementById('weight-dw');
+        const weightPercentageLabelDW = document.getElementById('weight-per-dw');
         weightPercentageDW.innerHTML = weightDishWasher + '%';
+        weightPercentageLabelDW.innerHTML = weightDishWasher + '%';
     });
 }
 
