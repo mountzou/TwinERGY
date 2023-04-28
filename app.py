@@ -181,7 +181,7 @@ def api_tc():
     return jsonify(json_schema)
 
 
-# A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
+# A function that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_preferences', methods=['GET'])
 def api_preferences():
     # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
@@ -396,6 +396,28 @@ def get_data_preferences():
         return jsonify(tuple("1"))
 
 
+@app.route('/get_preferences_weights')
+def get_preferences_weights():
+    # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
+    g.cur.execute(
+        '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''', (
+            session.get('deviceId', None),))
+    (electric_vehicle, tumble_drier, washing_machine, water_heater, dish_washer) = g.cur.fetchone()
+
+    flexible_load_preferences = {
+        'Electric Vehicle': electric_vehicle,
+        'Tumble Drier': tumble_drier,
+        'Washing Machine': washing_machine,
+        'Water Heater': water_heater,
+        'Dish Washer': dish_washer
+    }
+
+    # Determine the importance of each household flexible load according to SIMOS revised method
+    flexible_load_weights = determineWeights(flexible_load_preferences)
+
+    return jsonify(flexible_load_weights)
+
+
 @app.route('/update_preferences_thermal_comfort', methods=['POST'])
 def update_preferences_thermal_comfort():
     user_thermal_level_min = request.form.get('user_thermal_level_min')
@@ -513,8 +535,7 @@ def update_range_water_heater():
 def get_data_thermal_comfort_range():
     userinfo = session.get('userinfo', None)
 
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
+    start_date, end_date = request.args.get('start_date'), request.args.get('end_date')
 
     if not start_date or not end_date:
         end_date = datetime.now().strftime('%Y-%m-%d')
@@ -523,8 +544,7 @@ def get_data_thermal_comfort_range():
     start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
     end_date = datetime.strptime(end_date, '%Y-%m-%d').date() + timedelta(days=1)
 
-    start_timestamp = int(time.mktime(start_date.timetuple()))
-    end_timestamp = int(time.mktime(end_date.timetuple()))
+    start_timestamp, end_timestamp = int(time.mktime(start_date.timetuple())), int(time.mktime(end_date.timetuple()))
 
     g.cur.execute(
         '''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s''',
@@ -543,17 +563,19 @@ def get_data_thermal_comfort_range():
     return jsonify(tuple(thermal_comfort_list))
 
 
-@app.route('/monitor_thermal_comfort_cdmp')
+# A method that retrieves a specific number of results for the thermal comfort dataset in CDMP
+@app.route('/monitor_thermal_comfort_cdmp/')
 def monitor_thermal_comfort_cdmp():
+    # Create a header with the X-API-TOKEN of our user in CDMP
     headers = {"X-API-TOKEN": '8a3cb21d-be27-466d-a797-54fae21a0d8a'}
+    # Define the number of results in response object through the page size
+    page_size = 1000
+    # Insert the URL of a specific dataset included in the CDMP
+    url = f"https://twinergy.s5labs.eu/api/query/00bb2745-578a-400f-bcef-da04f3a174d4?pageSize={page_size}"
+    # Assign the response in a JSON format variable
+    response_thermal_comfort = requests.get(url, headers=headers).json()
 
-    url = "https://twinergy.s5labs.eu/api/query/00bb2745-578a-400f-bcef-da04f3a174d4?pageSize=1000"
-
-    response = requests.get(url, headers=headers)
-
-    response1 = response.json()
-
-    return jsonify(response1)
+    return jsonify(response_thermal_comfort)
 
 
 @app.route('/session', methods=['GET'])

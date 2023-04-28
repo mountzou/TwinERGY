@@ -366,7 +366,47 @@ function getConsumerPreferences() {
 
     });
 
+}
 
+function getLoadWeights() {
+    $.getJSON('/get_preferences_weights', function (data) {
+        weightElectricVehicle = data['Electric Vehicle'].shift()
+        const progressBarEV = document.getElementById('weight-ev');
+        progressBarEV.style.width = weightElectricVehicle + '%';
+        progressBarEV.setAttribute('aria-valuenow', weightElectricVehicle);
+        const weightPercentageEV = document.getElementById('weight-ev');
+        weightPercentageEV.innerHTML = weightElectricVehicle + '%';
+
+        weightWashingMachine = data['Washing Machine'].shift()
+        const progressBarWM = document.getElementById('weight-wm');
+        progressBarWM.style.width = weightWashingMachine + '%';
+        progressBarWM.setAttribute('aria-valuenow', weightWashingMachine);
+        const weightPercentageWM = document.getElementById('weight-wm');
+        weightPercentageWM.innerHTML = weightWashingMachine + '%';
+
+        weightTumbleDrier = data['Tumble Drier'].shift()
+        const progressBarTD = document.getElementById('weight-td');
+        progressBarTD.style.width = weightTumbleDrier + '%';
+        progressBarTD.setAttribute('aria-valuenow', weightTumbleDrier);
+        const weightPercentageTD = document.getElementById('weight-td');
+        weightPercentageTD.innerHTML = weightTumbleDrier + '%';
+
+        weightWaterHeater = data['Water Heater'].shift()
+        const progressBarWH = document.getElementById('weight-wh');
+        progressBarWH.style.width = weightWaterHeater + '%';
+        progressBarWH.setAttribute('aria-valuenow', weightWaterHeater);
+        const weightPercentageWH = document.getElementById('weight-wh');
+        weightPercentageWH.innerHTML = weightWaterHeater + '%';
+
+        weightDishWasher = data['Dish Washer'].shift()
+        const progressBarDW = document.getElementById('weight-dw');
+        progressBarDW.style.width = weightDishWasher + '%';
+        progressBarDW.setAttribute('aria-valuenow', weightDishWasher);
+        const weightPercentageDW = document.getElementById('weight-dw');
+        weightPercentageDW.innerHTML = weightDishWasher + '%';
+    });
 }
 
 getConsumerPreferences();
+
+getLoadWeights();
