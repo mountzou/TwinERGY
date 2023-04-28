@@ -195,15 +195,15 @@ def api_preferences():
     # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
     g.cur.execute(
         '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''', (
-        wearable_id,))
+            wearable_id,))
     (electric_vehicle, tumble_drier, washing_machine, water_heater, dish_washer) = g.cur.fetchone()
 
     flexible_load_preferences = {
-        'electric_vehicle': electric_vehicle,
-        'tumble_drier': tumble_drier,
-        'washing_machine': washing_machine,
-        'water_heater': water_heater,
-        'dish_washer': dish_washer
+        'Electric Vehicle': electric_vehicle,
+        'Tumble Drier': tumble_drier,
+        'Washing Machine': washing_machine,
+        'Water Heater': water_heater,
+        'Dish Washer': dish_washer
     }
 
     # Determine the importance of each household flexible load according to SIMOS revised method
