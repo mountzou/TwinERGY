@@ -11,6 +11,7 @@ from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate
     get_calibrate_air_speed_value
 from determineAirTemperature import get_air_temperature
 from determineWellBeing import get_well_being_description
+from determineSimosMethod import determineWeights
 from updatePreferences import updateThermalComfortPreference, updateTemperaturePreference, updatePrefElectricVehicle, \
     updatePrefWashingMachine, updatePrefDishWasher, updatePrefWaterHeater, updatePrefTumbleDrier, \
     updateTimeElectricVehicle, updateTimeWashingMachine, updateTimeDishWasher, updateTimeTumbleDrier, \
@@ -93,7 +94,7 @@ def callback():
         code=code_token,
         redirect_uri=request.base_url)
 
-    session['access_token']=access_token
+    session['access_token'] = access_token
     session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
     session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
     session['deviceId'] = keycloak_openid.userinfo(access_token['access_token'])['deviceId']
@@ -189,12 +190,26 @@ def api_tc():
 # A functions that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_preferences', methods=['GET'])
 def api_preferences():
-    # Execute SQL query to retrieve consumer's preferences from the UPAT db
+    # Get the wearable ID from the session's object deviceId
+    wearable_id = session.get('deviceId', None)
+    # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
     g.cur.execute(
-        '''SELECT * FROM load_weight_simos WHERE weight_timestamp >= UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL -1 MINUTE));''')
-    load_weights = g.cur.fetchall()
+        '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''', (
+        wearable_id,))
+    (electric_vehicle, tumble_drier, washing_machine, water_heater, dish_washer) = g.cur.fetchone()
 
-    return jsonify(0)
+    flexible_load_preferences = {
+        'electric_vehicle': electric_vehicle,
+        'tumble_drier': tumble_drier,
+        'washing_machine': washing_machine,
+        'water_heater': water_heater,
+        'dish_washer': dish_washer
+    }
+
+    # Determine the importance of each household flexible load according to SIMOS revised method
+    flexible_load_weights = determineWeights(flexible_load_preferences)
+
+    return jsonify(flexible_load_weights)
 
 
 @app.route('/ttn-webhook', methods=['POST'])
@@ -217,43 +232,44 @@ def handle_ttn_webhook():
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
 
     g.cur.execute('''SELECT exclude_counter,time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
-                  (
-                      device_id,))
+        (
+            device_id,))
     try:
-        result=g.cur.fetchall()
+        result = g.cur.fetchall()
         exclude_count = result[0][0]
         exclude_time = result[0][1]
     except IndexError:
         exclude_count = g.cur.fetchone()
 
     if exclude_count is None:
-        exclude_count=10
-        exclude_time=tc_timestamp
+        exclude_count = 10
+        exclude_time = tc_timestamp
         g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st) VALUES ({exclude_count}, '{device_id}',{tc_timestamp})")
         mysql.connection.commit()
-        print('init',exclude_count)
+        print('init', exclude_count)
 
-    if tc_timestamp-exclude_time>15:
-        exclude_count=10
+    if tc_timestamp - exclude_time > 15:
+        exclude_count = 10
 
     if exclude_count < 9:
         exclude_count += 1
         # Update the exclude count in the exc_counter table
-        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
+        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
+            device_id,))
         mysql.connection.commit()
         g.cur.close()
-        print('<10',exclude_count)
+        print('<10', exclude_count)
         return jsonify({'status': 'success'}), 200
 
-    if tc_timestamp- p_time>15 and exclude_count==10:
+    if tc_timestamp - p_time > 15 and exclude_count == 10:
         exclude_count = 0
-        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
+        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
+            device_id,))
         mysql.connection.commit()
         g.cur.close()
-        print('>15',exclude_count)
+        print('>15', exclude_count)
 
         return jsonify({'status': 'success'}), 200
-
 
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
     if (tc_metabolic - p_metabolic) < 0:
@@ -269,8 +285,9 @@ def handle_ttn_webhook():
 
     g.cur.execute(insert_sql)
     exclude_count = 10
-    g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (device_id,))
-    print('at the end',exclude_count)
+    g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
+        device_id,))
+    print('at the end', exclude_count)
 
     mysql.connection.commit()
 
@@ -312,7 +329,7 @@ def get_data_thermal_comfort():
         met_sum += tc_met
         met_count += 1
 
-    if (met_count > 0):
+    if met_count > 0:
         average_met = met_sum / met_count
     else:
         average_met = 0
@@ -578,16 +595,19 @@ def current_session():
 
 @app.route('/get_device_status')
 def get_device_status():
-    query = """
-        SELECT tc_timestamp
-        FROM user_thermal_comfort
-        WHERE wearable_id = %s
-        ORDER BY tc_timestamp DESC
-        LIMIT 1
-    """
     with g.cur as cur:
+
+        query = """
+            SELECT tc_timestamp
+            FROM user_thermal_comfort
+            WHERE wearable_id = %s
+            ORDER BY tc_timestamp DESC
+            LIMIT 1
+        """
+
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
-        latest_timestamp = cur.fetchall()
+        latest_timestamp = cur.fetchone()
+
         query = """
             SELECT exclude_counter,time_st 
             FROM exc_assist 
@@ -596,15 +616,15 @@ def get_device_status():
         """
 
         cur.execute(query, (session.get('userinfo', None)['deviceId'],))
-        result = cur.fetchall()
+        result = cur.fetchone()
+
     try:
-        exclude_count = result[0][0]
-        exclude_time = result[0][1]
-        unix_timestamp = int(time.time())
-        if exclude_count<10 and unix_timestamp-exclude_time<12:
-            latest_timestamp=((0,),)
+        exclude_count, exclude_time = result[0], result[1]
+        current_timestamp = int(time.time())
+        if exclude_count < 10 and current_timestamp - exclude_time < 12:
+            latest_timestamp = (0,)
     except IndexError:
-        print('initial')
+        print('Initial')
 
     return jsonify(latest_timestamp)
 
