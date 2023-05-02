@@ -39,8 +39,8 @@ var today = new Date();
 var start_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 var end_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
-var startDate = start_date_1.toISOString().substr(0, 10);
-var endDate = end_date_1.toISOString().substr(0, 10);
+var startDate = moment().subtract(1, 'day').format('YYYY/MM/DD');
+var endDate = moment().format('YYYY/MM/DD');
 
 var currentStartDate = startDate;
 var currentEndDate = endDate;
@@ -63,10 +63,10 @@ function updateThermalComfort(start_date, end_date) {
         // Update the latest temperature and humidity
         // Handle empty data
         if (latestTemperature===undefined){
-            document.getElementById("latest-indoor-temperature").innerHTML = 'No available data for the time range defined';
-            document.getElementById("latest-indoor-humidity").innerHTML = 'No available data for the time range defined';
-            document.getElementById("latest-met").innerHTML = 'No available data for the time range defined';
-            document.getElementById("latest-thermal-comfort").innerHTML = 'No available data for the time range defined';
+            document.getElementById("latest-indoor-temperature").innerHTML = 'No available data for the selected time range';
+            document.getElementById("latest-indoor-humidity").innerHTML = 'No available data for the selected time range';
+            document.getElementById("latest-met").innerHTML = 'No available data for the selected time range';
+            document.getElementById("latest-thermal-comfort").innerHTML = 'No available data for the selected time range';
         }
         else{
             document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
@@ -362,7 +362,7 @@ function initDateRangePicker() {
     // Get the stored date range values or use the default ones
     var storedStartDate = localStorage.getItem('startDate') || defaultStartDate;
     var storedEndDate = localStorage.getItem('endDate') || defaultEndDate;
-
+    console.log(storedStartDate)
     $('#thermalComfortRange').daterangepicker({
         drops: 'down',
         startDate: defaultStartDate,
@@ -375,21 +375,20 @@ function initDateRangePicker() {
         applyButtonClasses: 'btn-primary'
     });
 
-    $('#thermalComfortRange').val(storedStartDate + ' - ' + storedEndDate);
+    $('#thermalComfortRange').val(storedStartDate + ' / ' + storedEndDate);
 
     $('#thermalComfortRange').on('apply.daterangepicker', function(ev, picker) {
 
         var startDate = picker.startDate.format('YYYY/MM/DD');
         var endDate = picker.endDate.format('YYYY/MM/DD');
 
-        $(this).val(startDate + ' - ' + endDate);
+        $(this).val(startDate + ' / ' + endDate);
 
         localStorage.setItem('startDate', startDate);
         localStorage.setItem('endDate', endDate);
 
         var formattedStartDate = startDate.replace(/\//g, '-');
         var formattedEndDate = endDate.replace(/\//g, '-');
-
         updateThermalComfort(formattedStartDate, formattedEndDate);
     });
 }
@@ -398,16 +397,17 @@ initDateRangePicker();
 
 localStorage.setItem('startDate', currentStartDate);
 localStorage.setItem('endDate', currentEndDate);
+currentStartDate = currentStartDate.replace(/\//g, '-');
+currentEndDate = currentEndDate.replace(/\//g, '-');
 updateThermalComfort(currentStartDate, currentEndDate);
 
 setInterval(function() {
 //do not update if the range excludes the current day
   var applystartDate_ = localStorage.getItem('startDate');
   var applyendDate_ = localStorage.getItem('endDate');
-  console.log(applyendDate_)
-  console.log(moment().format('YYYY/MM/DD'))
   if(applyendDate_===moment().format('YYYY/MM/DD')){
-  var formattedStartDate_ = applystartDate_.replace(/\//g, '-');
+    var formattedStartDate_ = applystartDate_.replace(/\//g, '-');
   var formattedEndDate_ = applyendDate_.replace(/\//g, '-');
+  console.log(formattedEndDate_);
   updateThermalComfort(formattedStartDate_, formattedEndDate_);
 }}, 8000);
