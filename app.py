@@ -1,8 +1,6 @@
 from flask import (Flask, render_template, redirect, url_for, session, request, g, jsonify)
 from flask_mysqldb import MySQL
 from flask_compress import Compress
-from flask_caching import Cache
-
 from keycloak import KeycloakOpenID
 
 from decodeLoRaPackage import decodeMACPayload
@@ -19,7 +17,6 @@ from updatePreferences import updateThermalComfortPreference, updateTemperatureP
 
 from getPreferences import getThermalComfortPreferences, getTemperaturePreferences, getFlexibleLoadsPreferences
 
-from collections import defaultdict
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
@@ -46,9 +43,9 @@ mysql = MySQL(app)
 
 # Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
-    client_id='cdt-twinergy',
-    realm_name='TwinERGY',
-    client_secret_key="secret")
+                                 client_id='cdt-twinergy',
+                                 realm_name='TwinERGY',
+                                 client_secret_key="secret")
 app.secret_key = 'secret'
 
 
@@ -92,10 +89,10 @@ def before_request():
 def login():
     if urlparse(request.base_url).netloc == '127.0.0.1:5000':
         auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback",
-            scope="openid", state="af0ifjsldkj")
+                                            scope="openid", state="af0ifjsldkj")
     else:
         auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback",
-            scope="openid", state="af0ifjsldkj")
+                                            scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -137,7 +134,8 @@ def rout():
 
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    return render_template("thermal-comfort.html") if g.total_daily_data else render_template("thermal-comfort-empty.html")
+    return render_template("thermal-comfort.html")
+    # if g.total_daily_data else render_template("thermal-comfort-empty.html")
 
 
 # A functions that implements the 'Preferences' page under the route '/preferences/'
@@ -186,7 +184,8 @@ def api_tc():
 def api_preferences():
     # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
     g.cur.execute(
-        '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''', (
+        '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''',
+        (
             session.get('deviceId', None),))
     (electric_vehicle, tumble_drier, washing_machine, water_heater, dish_washer) = g.cur.fetchone()
 
@@ -213,7 +212,7 @@ def handle_ttn_webhook():
 
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
-                                                                        re[3]
+        re[3]
 
     g.cur.execute(
         '''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''',
@@ -224,8 +223,8 @@ def handle_ttn_webhook():
     p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
 
     g.cur.execute('''SELECT exclude_counter,time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
-        (
-            device_id,))
+                  (
+                      device_id,))
     try:
         result = g.cur.fetchall()
         exclude_count = result[0][0]
@@ -236,7 +235,8 @@ def handle_ttn_webhook():
     if exclude_count is None:
         exclude_count = 10
         exclude_time = tc_timestamp
-        g.cur.execute(f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st) VALUES ({exclude_count}, '{device_id}',{tc_timestamp})")
+        g.cur.execute(
+            f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st) VALUES ({exclude_count}, '{device_id}',{tc_timestamp})")
         mysql.connection.commit()
         print('init', exclude_count)
 
@@ -246,8 +246,9 @@ def handle_ttn_webhook():
     if exclude_count < 9:
         exclude_count += 1
         # Update the exclude count in the exc_counter table
-        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
-            device_id,))
+        g.cur.execute(
+            f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
+                device_id,))
         mysql.connection.commit()
         g.cur.close()
         print('<10', exclude_count)
@@ -255,8 +256,9 @@ def handle_ttn_webhook():
 
     if tc_timestamp - p_time > 15 and exclude_count == 10:
         exclude_count = 0
-        g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
-            device_id,))
+        g.cur.execute(
+            f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
+                device_id,))
         mysql.connection.commit()
         g.cur.close()
         print('>15', exclude_count)
@@ -277,8 +279,9 @@ def handle_ttn_webhook():
 
     g.cur.execute(insert_sql)
     exclude_count = 10
-    g.cur.execute(f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
-        device_id,))
+    g.cur.execute(
+        f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
+            device_id,))
     print('at the end', exclude_count)
 
     mysql.connection.commit()
@@ -321,7 +324,8 @@ def get_data_thermal_comfort():
     average_met = met_sum / met_count if met_count > 0 else 0
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
-                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8, 0.1))
+                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8,
+                                                 0.1))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
 
@@ -400,7 +404,8 @@ def get_data_preferences():
 def get_preferences_weights():
     # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
     g.cur.execute(
-        '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''', (
+        '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''',
+        (
             session.get('deviceId', None),))
     (electric_vehicle, tumble_drier, washing_machine, water_heater, dish_washer) = g.cur.fetchone()
 
@@ -423,7 +428,8 @@ def update_preferences_thermal_comfort():
     user_thermal_level_min = request.form.get('user_thermal_level_min')
     user_thermal_level_max = request.form.get('user_thermal_level_max')
 
-    updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max, session.get('deviceId', None))
+    updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max,
+                                   session.get('deviceId', None))
     return jsonify(success=True)
 
 

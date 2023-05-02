@@ -61,10 +61,19 @@ function updateThermalComfort(start_date, end_date) {
         let latestThermalComfort = pmv[pmv.length - 1]
 
         // Update the latest temperature and humidity
-        document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
-        document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
-        document.getElementById("latest-met").innerHTML = latestMet + ' met';
-        document.getElementById("latest-thermal-comfort").innerHTML = get_pmv_status(latestThermalComfort) ;
+        // Handle empty data
+        if (latestTemperature===undefined){
+            document.getElementById("latest-indoor-temperature").innerHTML = 'No available data for the time range defined';
+            document.getElementById("latest-indoor-humidity").innerHTML = 'No available data for the time range defined';
+            document.getElementById("latest-met").innerHTML = 'No available data for the time range defined';
+            document.getElementById("latest-thermal-comfort").innerHTML = 'No available data for the time range defined';
+        }
+        else{
+            document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
+            document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
+            document.getElementById("latest-met").innerHTML = latestMet + ' met';
+            document.getElementById("latest-thermal-comfort").innerHTML = get_pmv_status(latestThermalComfort) ;
+        }
 
         let sum_tem = data.reduce((accumulator, currentValue) => {
             return accumulator + currentValue[0];
@@ -83,16 +92,28 @@ function updateThermalComfort(start_date, end_date) {
         let mean_met = parseFloat((sum_met / data.length).toFixed(2));
 
         // Update the mean  temperature and humidity
-        document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
-        document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
-        document.getElementById("daily-mean-met").innerHTML = mean_met+' met';
-
+        if (latestTemperature===undefined){
+            document.getElementById("daily-mean-temperature").innerHTML ='- °C';
+            document.getElementById("daily-mean-humidity").innerHTML = '- %';
+            document.getElementById("daily-mean-met").innerHTML = '- met';
+        }
+        else{
+            document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
+            document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
+            document.getElementById("daily-mean-met").innerHTML = mean_met+' met';
+        }
         // Select all elements with the class "l-updated"
         let time_elements = document.getElementsByClassName("l-updated");
 
-        // Update the innerHTML of all elements with the "l-updated" class
-        for (let i = 0; i < time_elements.length; i++) {
-            time_elements[i].innerHTML = 'Latest update at '+latestTime;
+        if (latestTemperature===undefined){
+            for (let i = 0; i < time_elements.length; i++) {
+                time_elements[i].innerHTML = '     ';
+            }
+        }
+        else{
+            for (let i = 0; i < time_elements.length; i++) {
+                time_elements[i].innerHTML = 'Latest update at '+latestTime;
+            }
         }
 
         var graphTargetAirTemperature = $("#chart-temperature");
@@ -375,12 +396,18 @@ function initDateRangePicker() {
 
 initDateRangePicker();
 
+localStorage.setItem('startDate', currentStartDate);
+localStorage.setItem('endDate', currentEndDate);
 updateThermalComfort(currentStartDate, currentEndDate);
 
 setInterval(function() {
-  var applystartDate = $('#thermalComfortRange').data('daterangepicker').startDate.format('YYYY-MM-DD');
-  var applyendDate = $('#thermalComfortRange').data('daterangepicker').endDate.format('YYYY-MM-DD');
-  localStorage.setItem('startDate', applystartDate);
-  localStorage.setItem('endDate', applyendDate);
-  updateThermalComfort(applystartDate, applyendDate);
-}, 8000);
+//do not update if the range excludes the current day
+  var applystartDate_ = localStorage.getItem('startDate');
+  var applyendDate_ = localStorage.getItem('endDate');
+  console.log(applyendDate_)
+  console.log(moment().format('YYYY/MM/DD'))
+  if(applyendDate_===moment().format('YYYY/MM/DD')){
+  var formattedStartDate_ = applystartDate_.replace(/\//g, '-');
+  var formattedEndDate_ = applyendDate_.replace(/\//g, '-');
+  updateThermalComfort(formattedStartDate_, formattedEndDate_);
+}}, 8000);
