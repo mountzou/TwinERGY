@@ -4,6 +4,11 @@ function convertPMVToPercentage(value) {
   return percentage.toFixed(2);
 }
 
+// A function that replaces the '/' with '-' in date formatted variables
+function replaceDateFormat(inputString) {
+    return inputString.split('/').join('-');
+}
+
 // A function that converts the timestamp to human readable form
 function unixToHumanReadable(unixTimestamp) {
     let date = new Date(unixTimestamp * 1000);
@@ -35,21 +40,110 @@ function get_pmv_status(pmv) {
   }
 }
 
-var today = new Date();
-var start_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-var end_date_1 = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+// A function that implements the Yaxis callback for thermal comfort
+function thermalComfortYAxisCallback(value) {
+    switch (value) {
+        case -3:
+            return 'Cold';
+        case -2:
+            return 'Cool';
+        case -1:
+            return 'Slightly Cool';
+        case 0:
+            return 'Neutral';
+        case 1:
+            return 'Slightly Warm';
+        case 2:
+            return 'Warm';
+        case 3:
+            return 'Hot';
+        default:
+            return '';
+    }
+}
 
-var startDate = moment().subtract(1, 'day').format('YYYY/MM/DD');
-var endDate = moment().format('YYYY/MM/DD');
+// A function that updates the innerHTML content of an HTML element by element ID
+function updateElement(id, content) {
+    document.getElementById(id).innerHTML = content;
+}
 
-var currentStartDate = startDate;
-var currentEndDate = endDate;
+// A function that updates the innerHTML content of an HTML element by class name
+function updateElementsByClass(className, content) {
+    let elements = document.getElementsByClassName(className);
+    for (let i = 0; i < elements.length; i++) {
+        elements[i].innerHTML = content;
+    }
+}
+
+// A function that generates the chart configuration object
+function createChartConfig(labels, data, datasetLabel) {
+    return {
+        labels: labels,
+        datasets: [{
+            label: datasetLabel,
+            type: "line",
+            borderColor: "rgb(255, 186, 77)",
+            backgroundColor: "rgba(255, 186, 77, .1)",
+            borderWidth: 3,
+            data: data,
+            fill: true
+        }]
+    };
+}
+
+// A function that generates a new Chart instance with the given parameters
+function createChart(target, data, yAxisCallback, yAxisMin, yAxisMax, customTooltips, yAxisStepSize, annotationsConfig) {
+    return new Chart(target, {
+        type: 'line',
+        data: data,
+        options: {
+            annotation:
+                annotationsConfig
+            ,
+            animation: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        padding: 25,
+                        fontFamily: "Josefin Sans",
+                        beginAtZero: false,
+                        autoSkip: true,
+                        maxTicksLimit: 7,
+                        callback: yAxisCallback,
+                        ...(yAxisMin ? { min: yAxisMin } : {}),
+                        ...(yAxisMax ? { max: yAxisMax } : {}),
+                        ...(yAxisStepSize ? { stepSize: yAxisStepSize } : {})
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        display: false,
+                        drawOnChartArea: true
+                    },
+                    ticks: {
+                        display: false,
+                    }
+                }],
+            },
+            legend: {
+                onClick: function(e) {
+                    e.stopPropagation();
+                }
+            },
+            ...(customTooltips ? { tooltips: customTooltips } : {})
+        }
+    });
+}
+
+var currentStartDate = moment().subtract(1, 'day').format('YYYY/MM/DD');
+var currentEndDate = moment().format('YYYY/MM/DD');
 
 function updateThermalComfort(start_date, end_date) {
     $.getJSON('/get_data_thermal_comfort_range', {'start_date': start_date, 'end_date': end_date}, function (data) {
         let temperature = data.map(x => x[0]);
         let humidity = data.map(x => x[1]);
         let time = data.map(x => unixToHumanReadable(x[2]));
+        let timee = data.map(x => x[2]);
         let met = data.map(x => x[4]);
         let pmv = data.map(x => x[5]);
         let pmvStatus= pmv.map(get_pmv_status);
@@ -60,20 +154,17 @@ function updateThermalComfort(start_date, end_date) {
         let latestMet = met[met.length - 1]
         let latestThermalComfort = pmv[pmv.length - 1]
 
-        // Update the latest temperature and humidity
-        // Handle empty data
-        if (latestTemperature===undefined){
-            document.getElementById("latest-indoor-temperature").innerHTML = 'No available data for the selected time range';
-            document.getElementById("latest-indoor-humidity").innerHTML = 'No available data for the selected time range';
-            document.getElementById("latest-met").innerHTML = 'No available data for the selected time range';
-            document.getElementById("latest-thermal-comfort").innerHTML = 'No available data for the selected time range';
-        }
-        else{
-            document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
-            document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
-            document.getElementById("latest-met").innerHTML = latestMet + ' met';
-            document.getElementById("latest-thermal-comfort").innerHTML = get_pmv_status(latestThermalComfort) ;
-        }
+        // Update the innerHTML content of HTML elements regarding the latest data
+        const noData = 'Data unavailable for the selected range';
+        const latestTemperatureContent = latestTemperature === undefined ? noData : latestTemperature + ' °C';
+        const latestHumidityContent = latestHumidity === undefined ? noData : latestHumidity + ' %';
+        const latestMetContent = latestMet === undefined ? noData : latestMet + ' met';
+        const latestThermalComfortContent = latestThermalComfort === undefined ? noData : get_pmv_status(latestThermalComfort);
+
+        updateElement("latest-indoor-temperature", latestTemperatureContent);
+        updateElement("latest-indoor-humidity", latestHumidityContent);
+        updateElement("latest-met", latestMetContent);
+        updateElement("latest-thermal-comfort", latestThermalComfortContent);
 
         let sum_tem = data.reduce((accumulator, currentValue) => {
             return accumulator + currentValue[0];
@@ -91,263 +182,86 @@ function updateThermalComfort(start_date, end_date) {
         let mean_hum = parseFloat((sum_hum / data.length).toFixed(2));
         let mean_met = parseFloat((sum_met / data.length).toFixed(2));
 
-        // Update the mean  temperature and humidity
-        if (latestTemperature===undefined){
-            document.getElementById("daily-mean-temperature").innerHTML ='- °C';
-            document.getElementById("daily-mean-humidity").innerHTML = '- %';
-            document.getElementById("daily-mean-met").innerHTML = '- met';
-        }
-        else{
-            document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
-            document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
-            document.getElementById("daily-mean-met").innerHTML = mean_met+' met';
-        }
-        // Select all elements with the class "l-updated"
-        let time_elements = document.getElementsByClassName("l-updated");
+        // Update the mean air temperature, relative humidity and metabolic rate
+        const noDataValue = '-';
+        const dailyMeanTemperatureContent = latestTemperature === undefined ? noDataValue : mean_temp + ' °C';
+        const dailyMeanHumidityContent = latestTemperature === undefined ? noDataValue : mean_hum + ' %';
+        const dailyMeanMetContent = latestTemperature === undefined ? noDataValue : mean_met + ' met';
 
-        if (latestTemperature===undefined){
-            for (let i = 0; i < time_elements.length; i++) {
-                time_elements[i].innerHTML = '     ';
-            }
-        }
-        else{
-            for (let i = 0; i < time_elements.length; i++) {
-                time_elements[i].innerHTML = 'Latest update at '+latestTime;
-            }
-        }
+        updateElement("daily-mean-temperature", dailyMeanTemperatureContent);
+        updateElement("daily-mean-humidity", dailyMeanHumidityContent);
+        updateElement("daily-mean-met", dailyMeanMetContent);
+
+        // Select all elements with the class "l-updated"
+        const latestTimeContent = latestTemperature === undefined ? noDataValue : 'Latest update at ' + latestTime;
+
+        updateElementsByClass("l-updated", latestTimeContent);
 
         var graphTargetAirTemperature = $("#chart-temperature");
         var graphTargetHumidity = $("#chart-humidity");
         var graphTargetMetabolic = $("#chart-met");
         var graphTargetThermalComfort = $("#chart-thermal-comfort");
 
-        var indoorTemperature = {
-            labels: time,
-            datasets: [{
-                label: "Air Temperature",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
-                data: temperature,
-                fill: true
-            }]
-        };
+        var indoorTemperature = createChartConfig(time, temperature, "Air Temperature");
+        var indoorHumidity = createChartConfig(timee, humidity, "Relative Humidity");
+        var indoorMetabolic = createChartConfig(time, met, "Metabolic Rate");
+        var thermalComfort = createChartConfig(time, pmv, "Thermal Comfort");
 
-        var indoorHumidity = {
-            labels: time,
-            datasets: [{
-                label: "Relative Humidity",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
-                data: humidity,
-                fill: true
-            }]
-        };
-
-        var indoorMetabolic = {
-            labels: time,
-            datasets: [{
-                label: "Metabolic Rate",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 2,
-                data: met,
-                fill: true
-            }]
-        };
-
-        const pointBackgroundColors = pmv.map((value) => (value > 0 ? '#FF6D60' : '#088395'));
-
-        var thermalComfort = {
-            labels: time,
-            datasets: [{
-                label: "Thermal Comfort",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 2,
-                data: pmv,
-                pointBackgroundColor: pointBackgroundColors,
-                fill: true
-            }]
-        };
-
-        var graphTemperature = new Chart(graphTargetAirTemperature, {
-            type: 'line',
-            data: indoorTemperature,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " °C";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                }
-            }
-        });
-
-        var graphHumidity = new Chart(graphTargetHumidity, {
-            type: 'line',
-            data: indoorHumidity,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " %";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                }
-            }
-        });
-
-        var graphThermalComfort = new Chart(graphTargetThermalComfort, {
-            type: 'line',
-            data: thermalComfort,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 25,
-                            fontFamily: "Josefin Sans",
-                            beginAtZero: false,
-                            min: -3,
-                            max: 3,
-                            callback: function (value, index, values) {
-                               switch (value) {
-                                  case -3:
-                                    return 'Cold';
-                                  case -2:
-                                    return 'Cool';
-                                  case -1:
-                                    return 'Slightly Cool';
-                                  case 0:
-                                    return 'Neutral';
-                                  case 1:
-                                    return 'Slightly Warm';
-                                  case 2:
-                                    return 'Warm';
-                                  case 3:
-                                    return 'Hot';
-                                  default:
-                                    return '';
-                               }
-                            }
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltips: {
-                    enabled: false,
-                    mode: 'single',
-                    callbacks: {
-                      label: function(tooltipItems, data) {
-                        return 'Thermal Comfort: ' + get_pmv_status(tooltipItems.yLabel);
-                      },
-                    }
+        var thermalComfortTooltips = {
+            enabled: false,
+            mode: 'single',
+            callbacks: {
+                label: function(tooltipItems, data) {
+                    return 'Thermal Comfort: ' + get_pmv_status(tooltipItems.yLabel);
                 },
             }
-        });
+        };
 
-        var graphMetabolic = new Chart(graphTargetMetabolic, {
-            type: 'line',
-            data: indoorMetabolic,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " met";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                            maxTicksLimit: 4,
-                            maxRotation: 0,
-                            minRotation: 0
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                }
+        var yAxisMin = -3;
+        var yAxisMax = 3;
+        var numberOfTicks = 7;
+        var yAxisStepSize = 1;
+
+        var graphThermalComfort = createChart(
+            graphTargetThermalComfort,
+            thermalComfort,
+            thermalComfortYAxisCallback,
+            yAxisMin,
+            yAxisMax,
+            thermalComfortTooltips,
+            yAxisStepSize
+        );
+
+        let annotationsConfig = {
+            annotations: []
+        };
+
+        for (let i = 0; i < timee.length - 1; i++) {
+            if (new Date(timee[i] * 1000).getUTCDate() !== new Date(timee[i + 1] * 1000).getUTCDate()) {
+                annotationsConfig.annotations.push({
+                    type: 'line',
+                    mode: 'vertical',
+                    scaleID: 'x-axis-0',
+                    value: i + 0.5,
+                    borderColor: 'red',
+                    borderWidth: 2,
+                    borderDash: [2, 2],
+                    label: {
+                        content: 'Day Change',
+                        enabled: true,
+                        position: 'bottom'
+                    },
+                    zIndex: 1000
+                });
             }
-        });
+        }
+
+        console.log(annotationsConfig);
+
+
+        var graphTemperature = createChart(graphTargetAirTemperature, indoorTemperature, (value) => value + " °C");
+        var graphMetabolic = createChart(graphTargetMetabolic, indoorMetabolic, (value) => value + " met");
+        var graphHumidity = createChart(graphTargetHumidity, indoorHumidity, (value) => value + " %", false, null, null, null, null, annotationsConfig);
 
     });
 }
@@ -362,7 +276,7 @@ function initDateRangePicker() {
     // Get the stored date range values or use the default ones
     var storedStartDate = localStorage.getItem('startDate') || defaultStartDate;
     var storedEndDate = localStorage.getItem('endDate') || defaultEndDate;
-    console.log(storedStartDate)
+
     $('#thermalComfortRange').daterangepicker({
         drops: 'down',
         startDate: defaultStartDate,
@@ -387,8 +301,9 @@ function initDateRangePicker() {
         localStorage.setItem('startDate', startDate);
         localStorage.setItem('endDate', endDate);
 
-        var formattedStartDate = startDate.replace(/\//g, '-');
-        var formattedEndDate = endDate.replace(/\//g, '-');
+        var formattedStartDate = replaceDateFormat(startDate)
+        var formattedEndDate = replaceDateFormat(endDate)
+
         updateThermalComfort(formattedStartDate, formattedEndDate);
     });
 }
@@ -397,17 +312,19 @@ initDateRangePicker();
 
 localStorage.setItem('startDate', currentStartDate);
 localStorage.setItem('endDate', currentEndDate);
-currentStartDate = currentStartDate.replace(/\//g, '-');
-currentEndDate = currentEndDate.replace(/\//g, '-');
+
+currentStartDate = replaceDateFormat(currentStartDate);
+currentEndDate = replaceDateFormat(currentEndDate);
 updateThermalComfort(currentStartDate, currentEndDate);
 
 setInterval(function() {
-//do not update if the range excludes the current day
   var applystartDate_ = localStorage.getItem('startDate');
   var applyendDate_ = localStorage.getItem('endDate');
+
   if(applyendDate_===moment().format('YYYY/MM/DD')){
-    var formattedStartDate_ = applystartDate_.replace(/\//g, '-');
-  var formattedEndDate_ = applyendDate_.replace(/\//g, '-');
-  console.log(formattedEndDate_);
-  updateThermalComfort(formattedStartDate_, formattedEndDate_);
-}}, 8000);
+    var formattedStartDate_ = replaceDateFormat(applystartDate_)
+    var formattedEndDate_ = replaceDateFormat(applyendDate_)
+    updateThermalComfort(formattedStartDate_, formattedEndDate_);
+  }
+
+}, 8000);
