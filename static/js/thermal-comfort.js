@@ -22,15 +22,6 @@ function unixToHumanReadableWithoutTime(unixTimestamp) {
     return date.toLocaleDateString('en-US', options);
 }
 
-function createCustomLabel(content, color) {
-  const customLabel = document.createElement('div');
-  customLabel.innerHTML = content;
-  customLabel.style.color = color;
-  customLabel.style.fontSize = '12px'; // Change this to the desired font size
-  return customLabel;
-}
-
-
 // A function that matches the PMV index to a literal description
 function get_pmv_status(pmv) {
   const status_dict = new Map([
@@ -273,9 +264,6 @@ function updateThermalComfort(start_date, end_date) {
                 });
             }
         }
-
-        console.log(annotationsConfig);
-
 
         var graphTemperature = createChart(graphTargetAirTemperature, indoorTemperature, (value) => value + " °C", false, null, null, null, annotationsConfig);
         var graphMetabolic = createChart(graphTargetMetabolic, indoorMetabolic, (value) => value + " met", false, null, null, null, annotationsConfig);
