@@ -243,11 +243,11 @@ function updateThermalComfort(start_date, end_date) {
                     mode: 'vertical',
                     scaleID: 'x-axis-0',
                     value: i + 0.5,
-                    borderColor: 'red',
+                    borderColor: '#1e2727',
                     borderWidth: 2,
                     borderDash: [2, 2],
                     label: {
-                        content: 'Day Change',
+                        content: unixToHumanReadable(timee[i]),
                         enabled: true,
                         position: 'bottom'
                     },
@@ -261,7 +261,7 @@ function updateThermalComfort(start_date, end_date) {
 
         var graphTemperature = createChart(graphTargetAirTemperature, indoorTemperature, (value) => value + " °C");
         var graphMetabolic = createChart(graphTargetMetabolic, indoorMetabolic, (value) => value + " met");
-        var graphHumidity = createChart(graphTargetHumidity, indoorHumidity, (value) => value + " %", false, null, null, null, null, annotationsConfig);
+        var graphHumidity = createChart(graphTargetHumidity, indoorHumidity, (value) => value + " %", false, null, null, null, annotationsConfig);
 
     });
 }
