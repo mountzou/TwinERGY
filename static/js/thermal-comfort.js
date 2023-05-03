@@ -15,6 +15,22 @@ function unixToHumanReadable(unixTimestamp) {
     return date.toLocaleString();
 }
 
+// A function that converts the timestamp to human readable form without the time
+function unixToHumanReadableWithoutTime(unixTimestamp) {
+    let date = new Date(unixTimestamp * 1000);
+    let options = { month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+function createCustomLabel(content, color) {
+  const customLabel = document.createElement('div');
+  customLabel.innerHTML = content;
+  customLabel.style.color = color;
+  customLabel.style.fontSize = '12px'; // Change this to the desired font size
+  return customLabel;
+}
+
+
 // A function that matches the PMV index to a literal description
 function get_pmv_status(pmv) {
   const status_dict = new Map([
@@ -97,9 +113,7 @@ function createChart(target, data, yAxisCallback, yAxisMin, yAxisMax, customTool
         type: 'line',
         data: data,
         options: {
-            annotation:
-                annotationsConfig
-            ,
+            annotation:annotationsConfig,
             animation: false,
             scales: {
                 yAxes: [{
@@ -244,14 +258,18 @@ function updateThermalComfort(start_date, end_date) {
                     scaleID: 'x-axis-0',
                     value: i + 0.5,
                     borderColor: '#1e2727',
-                    borderWidth: 2,
+                    borderWidth: 1,
                     borderDash: [2, 2],
                     label: {
-                        content: unixToHumanReadable(timee[i]),
+                        fontFamily: "Josefin Sans",
+                        fontSize: 13,
+                        fontStyle: "normal",
+                        fontColor: "#1e2727",
+                        content: 'End of '+unixToHumanReadableWithoutTime(timee[i]),
                         enabled: true,
-                        position: 'bottom'
+                        position: 'top',
+                        backgroundColor: 'rgba(0, 0, 0, 0)',
                     },
-                    zIndex: 1000
                 });
             }
         }
@@ -259,8 +277,8 @@ function updateThermalComfort(start_date, end_date) {
         console.log(annotationsConfig);
 
 
-        var graphTemperature = createChart(graphTargetAirTemperature, indoorTemperature, (value) => value + " °C");
-        var graphMetabolic = createChart(graphTargetMetabolic, indoorMetabolic, (value) => value + " met");
+        var graphTemperature = createChart(graphTargetAirTemperature, indoorTemperature, (value) => value + " °C", false, null, null, null, annotationsConfig);
+        var graphMetabolic = createChart(graphTargetMetabolic, indoorMetabolic, (value) => value + " met", false, null, null, null, annotationsConfig);
         var graphHumidity = createChart(graphTargetHumidity, indoorHumidity, (value) => value + " %", false, null, null, null, annotationsConfig);
 
     });
