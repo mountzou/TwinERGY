@@ -149,7 +149,7 @@ def preferences():
 def api_tc():
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
     g.cur.execute(
-        '''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR));''')
+        '''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MINUTE));''')
     latest_data = g.cur.fetchall()
 
     def create_data_dict(data=None):
@@ -553,7 +553,7 @@ def get_data_thermal_comfort_range():
     start_timestamp, end_timestamp = int(time.mktime(start_date.timetuple())), int(time.mktime(end_date.timetuple()))
 
     g.cur.execute(
-        '''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s''',
+        '''SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= %s AND tc_timestamp <= %s AND wearable_id = %s ORDER BY tc_timestamp ASC''',
         (
             start_timestamp, end_timestamp, userinfo['deviceId']))
     thermal_comfort_data = g.cur.fetchall()

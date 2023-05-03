@@ -241,6 +241,8 @@ function updateThermalComfort(start_date, end_date) {
             annotations: []
         };
 
+        let labelCounter = 0;
+
         for (let i = 0; i < timee.length - 1; i++) {
             if (new Date(timee[i] * 1000).getUTCDate() !== new Date(timee[i + 1] * 1000).getUTCDate()) {
                 annotationsConfig.annotations.push({
@@ -258,10 +260,11 @@ function updateThermalComfort(start_date, end_date) {
                         fontColor: "#1e2727",
                         content: 'End of '+unixToHumanReadableWithoutTime(timee[i]),
                         enabled: true,
-                        position: 'top',
+                        position: (labelCounter % 2 === 0) ? 'top' : 'bottom', // Alternate between 'top' and 'bottom' based on the labelCounter
                         backgroundColor: 'rgba(0, 0, 0, 0)',
                     },
                 });
+                labelCounter++;
             }
         }
 
