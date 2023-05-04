@@ -77,6 +77,7 @@ function updateDashboard() {
         document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
         document.getElementById("latest-met").innerHTML = latestMet.toFixed(2) + ' met';
+        document.getElementById("latest-clo").innerHTML = (0.8 * (0.6 + 0.4 / latestMet.toFixed(2) ) ).toFixed(2) + ' clo';
         document.getElementById("latest-PMV").innerHTML = latestPMV;
         document.getElementById("latest-PMV-desc").innerHTML = get_pmv_status(latestPMV);
 
@@ -149,7 +150,7 @@ function updateDashboard() {
             labels: ["Comfort", "Discomfort"],
             datasets: [{
                 label: "Thermal Comfort",
-                data: [convertPMVToPercentage(latestPMV), 100-convertPMVToPercentage(latestPMV)],
+                data: [convertPMVToPercentage(latestPMV), (100-convertPMVToPercentage(latestPMV)).toFixed(2)],
                 backgroundColor: [
                     "#ffba4d",
                     "#EEEEEE",
