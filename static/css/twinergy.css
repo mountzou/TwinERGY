@@ -172,9 +172,9 @@ label {
   position: relative;
   width: 11px;
   height: 11px;
-  background-color: transparent;
+  background-color: white;
   border-radius: 50%;
-  animation: pulsate 2s ease-out;
+  animation: pulsate 2s ease-out infinite;
   opacity: 1.0;
 }
 

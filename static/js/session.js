@@ -50,6 +50,7 @@ function checkForNewData() {
 
     switch (status) {
       case 'active':
+        redDot.style.animationIterationCount = 'infinite';
         redDot.style.backgroundColor = 'white';
         liveText.textContent = 'Active';
         break;
@@ -59,8 +60,9 @@ function checkForNewData() {
         liveText.textContent = 'Inactive';
         break;
       case 'init':
-        redDot.style.backgroundColor = 'red';
-        liveText.textContent = 'Initializing';
+        redDot.style.animationIterationCount = 'infinite';
+        redDot.style.backgroundColor = '#FFF7D4';
+        liveText.textContent = 'Initializing...';
         break;
       default:
         throw new Error(`Unknown status: ${status}`);
