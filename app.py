@@ -219,8 +219,10 @@ def handle_ttn_webhook():
         (
             device_id,))
     previous_metabolic = g.cur.fetchall()
-
-    p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
+    try:
+        p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
+    except IndexError:
+        p_metabolic, p_time = 0, 0
 
     g.cur.execute('''SELECT exclude_counter,time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
                   (
@@ -622,6 +624,9 @@ def get_device_status():
             latest_timestamp = (0,)
     except IndexError:
         print('Initial')
+    except TypeError:
+        print('Initial')
+
 
     return jsonify(latest_timestamp)
 
