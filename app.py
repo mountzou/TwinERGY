@@ -143,6 +143,11 @@ def thermal_comfort():
 def preferences():
     return render_template("preferences.html")
 
+# A functions that implements the 'Clothing Insulation' page under the route '/clothing_insulation /'
+@app.route("/clothing_insulation/", methods=["GET", "POST"])
+def clothing_insulation():
+    return render_template("clothing-insulation.html")
+
 
 # A functions that implements the API service that provides consumer's thermal comfort to CDMP under the route 'api_tc'
 @app.route('/api_tc', methods=['GET'])
