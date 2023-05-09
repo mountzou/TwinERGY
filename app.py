@@ -210,7 +210,14 @@ def api_preferences():
 
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
+
+    messages2exclude=5
+    # Time to ensure that a message did not come exactly after the previous
+    time_diff=15
+
     data = request.get_json()
+
+    # Decode incoming LoRa message
 
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
@@ -218,6 +225,8 @@ def handle_ttn_webhook():
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
         re[3]
+
+    # Retrieve the latest stored value in the thermal comfort database
 
     g.cur.execute(
         '''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''',
@@ -227,7 +236,11 @@ def handle_ttn_webhook():
     try:
         p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
     except IndexError:
+        # In case there are no available data for the specific wearable ID
         p_metabolic, p_time = 0, 0
+
+    # Retrieve the latest value from the exclude_assist database, which stores the time of arrival of the most recent rejected LoRa message
+    # and the counter of how many messages have already been rejected
 
     g.cur.execute('''SELECT exclude_counter,time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
                   (
@@ -237,22 +250,27 @@ def handle_ttn_webhook():
         exclude_count = result[0][0]
         exclude_time = result[0][1]
     except IndexError:
+        # In case that no data for the specific wearable ID have been stored
         exclude_count = g.cur.fetchone()
 
+    # "Initialize the exclusion procedure"
+    # For the first time, populate the exclude_assist db with the received message's Wearable ID and timestamp.
+
     if exclude_count is None:
-        exclude_count = 10
+        exclude_count = messages2exclude
         exclude_time = tc_timestamp
         g.cur.execute(
             f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st) VALUES ({exclude_count}, '{device_id}',{tc_timestamp})")
         mysql.connection.commit()
         print('init', exclude_count)
 
-    if tc_timestamp - exclude_time > 15:
-        exclude_count = 10
+    #tc_timestamp->Most recent message to arrive, exclude_time->Latest excluded message, p_time->Latest stored message
+    if tc_timestamp - exclude_time > time_diff:
+        exclude_count = messages2exclude
 
-    if exclude_count < 9:
+    if exclude_count < messages2exclude-1:
         exclude_count += 1
-        # Update the exclude count in the exc_counter table
+        # Update exclude counter in the exc_counter table with the most recent received LoRa message
         g.cur.execute(
             f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
                 device_id,))
@@ -261,7 +279,7 @@ def handle_ttn_webhook():
         print('<10', exclude_count)
         return jsonify({'status': 'success'}), 200
 
-    if tc_timestamp - p_time > 15 and exclude_count == 10:
+    if tc_timestamp - p_time > time_diff and exclude_count == messages2exclude:
         exclude_count = 0
         g.cur.execute(
             f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
@@ -285,7 +303,7 @@ def handle_ttn_webhook():
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     g.cur.execute(insert_sql)
-    exclude_count = 10
+    exclude_count = messages2exclude
     g.cur.execute(
         f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
             device_id,))
