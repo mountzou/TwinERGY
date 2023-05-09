@@ -643,7 +643,7 @@ def get_device_status():
     try:
         exclude_count, exclude_time = result[0], result[1]
         current_timestamp = int(time.time())
-        if exclude_count < 10 and current_timestamp - exclude_time < 12:
+        if exclude_count < 5 and current_timestamp - exclude_time < 12:
             latest_timestamp = (0,)
     except IndexError:
         print('Initial')
