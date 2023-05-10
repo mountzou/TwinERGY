@@ -223,6 +223,7 @@ def handle_ttn_webhook():
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
+    raw_temp = re[0]
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
         re[3]
 
@@ -270,6 +271,10 @@ def handle_ttn_webhook():
 
     if exclude_count < messages2exclude-1:
         exclude_count += 1
+
+        if exclude_count == 0:
+            g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp} WHERE wearable_id = %s", (device_id,))
+
         # Update exclude counter in the exc_counter table with the most recent received LoRa message
         g.cur.execute(
             f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
@@ -299,7 +304,14 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
 
-        # Execute SQL INSERT statement
+    g.cur.execute('''SELECT init_temp FROM exc_assist WHERE wearable_id = %s''',(device_id,))
+
+    initial_temp = g.cur.fetchone()
+
+    if initial_temp - tc_temperature > 0.3 or initial_temp - tc_temperature < 0.3:
+        tc_temperature = initial_temp
+
+    # Execute SQL INSERT statement
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     g.cur.execute(insert_sql)
