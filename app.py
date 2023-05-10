@@ -19,7 +19,7 @@ from getPreferences import getThermalComfortPreferences, getTemperaturePreferenc
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
-
+import random
 import json
 import requests
 import time
@@ -63,6 +63,8 @@ def check_for_daily_updates():
     (number_of_daily_data,) = g.cur.fetchone()
     g.total_daily_data = number_of_daily_data
 
+def generate_random_number_near(number, range_start, range_end):
+    return random.uniform(number - range_start, number + range_end)
 
 @app.before_request
 def require_login():
@@ -309,8 +311,13 @@ def handle_ttn_webhook():
 
     initial_temp = g.cur.fetchone()
 
-    if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < 0.3:
-        tc_temperature = initial_temp[0]
+    if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < -0.3:
+        result = generate_random_number_near(initial_temp[0], 0, 0.28)
+        tc_temperature = result
+    else:
+        g.cur.execute(
+            f"UPDATE exc_assist SET init_temp = {tc_temperature} WHERE wearable_id = %s", (
+                device_id,))
 
     # Execute SQL INSERT statement
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
