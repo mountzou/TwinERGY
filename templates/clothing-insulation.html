@@ -20,42 +20,12 @@
 
 <div class="container page__container page-section">
 
-    <div class="row mb-32pt">
-        <div class="col-lg-4">
-            <div class="page-separator">
-                <div class="page-separator__text">Seasonal Typical Outfit</div>
-            </div>
-            <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">Select
-                a <code>SEASON</code> and define the clothing garments that consist your typical outfit.</p>
-        </div>
-        <div class="col-lg-8 align-items-center">
-            <div class="flex" style="max-width: 100%">
-
-                <div class="button-list">
-                    <button class="btn btn-primary" id="summer-outfit" type="button">
-                        Summer Outfit
-                    </button>
-                    <button class="btn btn-outline-primary" id="winter-outfit" type="button">
-                        Winter Outfit
-                    </button>
-                    <button class="btn btn-outline-primary" id="spring-outfit" type="button">
-                        Spring Outfit
-                    </button>
-                    <button class="btn btn-outline-primary" id="autumn-outfit" type="button">
-                        Autumn Outfit
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
 
     <div class="row mb-32pt">
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
-                    <h4 class="h2 mb-0">0.5 clo.</h4>
+                    <h4 class="h2 mb-0" id="summer-clo">- clo.</h4>
                     <div class="outfit-text">Summer Outfit</div>
                 </div>
             </div>
@@ -63,7 +33,7 @@
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
-                    <h4 class="h2 mb-0">0.3 clo.</h4>
+                    <h4 class="h2 mb-0" id="winter-clo">- clo.</h4>
                     <div class="outfit-text">Winter Outfit</div>
                 </div>
             </div>
@@ -71,7 +41,7 @@
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
-                    <h4 class="h2 mb-0">0.5 clo.</h4>
+                    <h4 class="h2 mb-0" id="autumn-clo">- clo.</h4>
                     <div class="outfit-text">Autumn Outfit</div>
                 </div>
             </div>
@@ -79,174 +49,108 @@
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
-                    <h4 class="h2 mb-0">0.4 clo.</h4>
+                    <h4 class="h2 mb-0" id="spring-clo">- clo.</h4>
                     <div class="outfit-text">Spring Outfit</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-32pt" id="clothing-area" style="">
+    <form action="" id="clothing-form" method="post">
 
-        <form action="update_clothing_insulation.php" id="clothing-form" method="post">
-
-            <div class="row mb-32pt">
-                <div class="col-lg-4">
-                    <div class="page-separator">
-                        <div class="page-separator__text">Shirts and blouses</div>
-                    </div>
-                    <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                        Select the clothing garment from the list that provides with the <code>HIGHEST</code>
-                        insulation.</p>
+        <div class="row mt-32pt mb-32pt">
+            <div class="col-lg-4">
+                <div class="page-separator">
+                    <div class="page-separator__text">Summer</div>
                 </div>
-                <div class="col-lg-8 d-flex align-items-center">
-                    <div class="flex" style="max-width: 100%">
-
-                        <div class="form-group">
-                            <label class="form-label" for="select02">Select a garment from the dropdown list</label>
-                            <select class="form-control custom-select" id="blouses-select" name="blouses-select">
-                                <option selected="" value="0.12">Sleeveless / scoop-neck blouse - 0.12 clo.</option>
-                                <option value="0.17">Short-sleeve knit sport shirt - 0.17 clo.</option>
-                                <option value="0.19">Short-sleeve dress shirt - 0.19 clo.</option>
-                                <option value="0.25">Long-sleeve dress shirt - 0.25 clo.</option>
-                                <option value="0.34">Long-sleeve flannel shirt - 0.34 clo.</option>
-                                <option value="0.34">Long-sleeve sweatshirt - 0.34 clo.</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
+                <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
+                    Insert your typical <code>summer outfit</code> clothing garments.
+                </p>
             </div>
-
-            <div class="row mb-32pt">
-                <div class="col-lg-4">
-                    <div class="page-separator">
-                        <div class="page-separator__text">Trousers and Coveralls</div>
-                    </div>
-                    <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                        Select the clothing garment from the list that provides with the <code>HIGHEST</code>
-                        insulation.</p>
-                </div>
-                <div class="col-lg-8 d-flex align-items-center">
-                    <div class="flex" style="max-width: 100%">
-
-                        <div class="form-group">
-                            <label class="form-label" for="select02">Select a garment from the dropdown list</label>
-                            <select class="form-control custom-select" id="trousers-select" name="trousers-select">
-                                <option selected="" value="0.06">Short shorts - 0.06 clo.</option>
-                                <option value="0.08">Walking shorts - 0.08 clo.</option>
-                                <option value="0.15">Straight trousers (thin) - 0.15 clo.</option>
-                                <option value="0.24">Straight trousers (thick) - 0.24 clo.</option>
-                                <option value="0.28">Sweatpants - 0.28 clo.</option>
-                                <option value="0.30">Overalls - 0.30 clo.</option>
-                                <option value="0.49">Coveralls - 0.49 clo.</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-32pt">
-                <div class="col-lg-4">
-                    <div class="page-separator">
-                        <div class="page-separator__text">Dresses and Skirts</div>
-                    </div>
-                    <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                        Select the clothing garment from the list that provides with the <code>HIGHEST</code>
-                        insulation.</p>
-                </div>
-                <div class="col-lg-8 d-flex align-items-center">
-                    <div class="flex" style="max-width: 100%">
-
-                        <div class="form-group">
-                            <label class="form-label" for="dresses-select">Select a garment from the dropdown
-                                list</label>
-                            <select class="form-control custom-select" id="dresses-select" name="dresses-select">
-                                <option selected="" value="0.00">None</option>
-                                <option value="0.14">Skirt (thin) - 0.14 clo.</option>
-                                <option value="0.23">Skirt (thick) - 0.23 clo.</option>
-                                <option value="0.23">Sleeveless, scoop neck (thin) - 0.23 clo.</option>
-                                <option value="0.27">Sleeveless, scoop neck (thick) - 0.27 clo.</option>
-                                <option value="0.29">Short-sleeve shirtdress (thin) - 0.29 clo.</option>
-                                <option value="0.33">Long-sleeve shirtdress (thin) - 0.33 clo.</option>
-                                <option value="0.47">Long-sleeve shirtdress (thick) - 0.47 clo.</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-32pt" id="sweaters" style="display: none;">
-                <div class="col-lg-4">
-                    <div class="page-separator">
-                        <div class="page-separator__text">Sweaters</div>
-                    </div>
-                    <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                        Select the clothing garment from the list that provides with the <code>HIGHEST</code>
-                        insulation.</p>
-                </div>
-                <div class="col-lg-8 d-flex align-items-center">
-                    <div class="flex" style="max-width: 100%">
-
-                        <div class="form-group">
-                            <label class="form-label" for="select02">Select a garment from the dropdown list</label>
-                            <select class="form-control custom-select" id="sweaters-select" name="sweaters-select">
-                                <option selected="" value="0.13">Sleeveless vest (thin) - 0.13 clo.</option>
-                                <option value="0.22">Sleeveless vest (thick) - 0.22 clo.</option>
-                                <option value="0.25">Long-sleeve (thin) - 0.25 clo.</option>
-                                <option value="0.36">Long-sleeve (thick) - 0.36 clo.</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-32pt" id="suit-jackets" style="display: none;">
-                <div class="col-lg-4">
-                    <div class="page-separator">
-                        <div class="page-separator__text">Suit jackets and Waistcoasts</div>
-                    </div>
-                    <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                        Select the clothing garment from the list that provides with the <code>HIGHEST</code>
-                        insulation.</p>
-                </div>
-                <div class="col-lg-8 d-flex align-items-center">
-                    <div class="flex" style="max-width: 100%">
-
-                        <div class="form-group">
-                            <label class="form-label" for="select02">Select a garment from the dropdown list</label>
-                            <select class="form-control custom-select" id="suit-select" name="suit-select">
-                                <option selected="" value="0.10">Sleeveless vest (thin) - 0.10 clo.</option>
-                                <option value="0.17">Sleeveless vest (thick) - 0.17 clo.</option>
-                                <option value="0.36">Single-breasted (thin) - 0.36 clo.</option>
-                                <option value="0.44">Single-breasted (thick) - 0.44 clo.</option>
-                                <option value="0.42">Double-breasted (thin) - 0.42 clo.</option>
-                                <option value="0.48">Double-breasted (thick) - 0.48 clo.</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-        </form>
-
-        <div class="row">
             <div class="col-lg-8 d-flex align-items-center">
                 <div class="flex" style="max-width: 100%">
 
-                    <div class="button-list">
-                        <button class="btn btn-outline-primary" id="submit-button" type="button">Update</button>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label" for="summer_total_clo">Typical Outfit</label>
+                        <div class="col-sm-9">
+                            <input id="summer_total_clo" name="summer_total_clo" type="text">
+                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
 
-    </div>
+        <div class="row mt-32pt mb-32pt">
+            <div class="col-lg-4">
+                <div class="page-separator">
+                    <div class="page-separator__text">Winter</div>
+                </div>
+                <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
+                    Insert your typical <code>winter outfit</code> clothing garments.
+                </p>
+            </div>
+            <div class="col-lg-8 d-flex align-items-center">
+                <div class="flex" style="max-width: 100%">
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label" for="winter_total_clo">Typical Outfit</label>
+                        <div class="col-sm-9">
+                            <input id="winter_total_clo" name="winter_total_clo" type="text">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-32pt mb-32pt">
+            <div class="col-lg-4">
+                <div class="page-separator">
+                    <div class="page-separator__text">Autumn</div>
+                </div>
+                <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
+                    Insert your typical <code>autumn outfit</code> clothing garments.
+                </p>
+            </div>
+            <div class="col-lg-8 d-flex align-items-center">
+                <div class="flex" style="max-width: 100%">
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label" for="autumn_total_clo">Typical Outfit</label>
+                        <div class="col-sm-9">
+                            <input id="autumn_total_clo" name="autumn_total_clo" type="text">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-32pt mb-32pt">
+            <div class="col-lg-4">
+                <div class="page-separator">
+                    <div class="page-separator__text">Spring</div>
+                </div>
+                <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
+                    Insert your typical <code>spring outfit</code> clothing garments.
+                </p>
+            </div>
+            <div class="col-lg-8 d-flex align-items-center">
+                <div class="flex" style="max-width: 100%">
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label" for="spring_total_clo">Typical Outfit</label>
+                        <div class="col-sm-9">
+                            <input id="spring_total_clo" name="spring_total_clo" type="text">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </form>
 
 </div>
 

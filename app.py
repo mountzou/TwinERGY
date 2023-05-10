@@ -43,15 +43,28 @@ mysql = MySQL(app)
 
 # Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
-                                 client_id='cdt-twinergy',
-                                 realm_name='TwinERGY',
-                                 client_secret_key="secret")
+    client_id='cdt-twinergy',
+    realm_name='TwinERGY',
+    client_secret_key="secret")
 app.secret_key = 'secret'
 
 
 # A function that creates the cursor object to interact with the mySQL database
 def get_db_cursor():
     return mysql.connection.cursor()
+
+
+def check_and_insert_wearable_id(device_id):
+    gateway_id = '0'
+    tables = ['user_clo_winter', 'user_clo_summer', 'user_clo_autumn', 'user_clo_spring']
+    for table in tables:
+        g.cur.execute(f'''SELECT 1 FROM {table} WHERE wearable_id = %s''', (device_id,))
+        result = g.cur.fetchone()
+        if result is None:
+            user_timestamp = int(time.time())
+            g.cur.execute(f'''INSERT INTO {table} (wearable_id, gateway_id, user_clo, user_timestamp) VALUES (%s, %s, 0.6, %s)''', (
+                device_id, gateway_id, user_timestamp))
+            mysql.connection.commit()
 
 
 # A function to check for updates by the specific wearable device during the last 24 hours
@@ -91,10 +104,10 @@ def before_request():
 def login():
     if urlparse(request.base_url).netloc == '127.0.0.1:5000':
         auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback",
-                                            scope="openid", state="af0ifjsldkj")
+            scope="openid", state="af0ifjsldkj")
     else:
         auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback",
-                                            scope="openid", state="af0ifjsldkj")
+            scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -113,6 +126,8 @@ def callback():
     session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
     session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
     session['deviceId'] = keycloak_openid.userinfo(access_token['access_token'])['deviceId']
+
+    check_and_insert_wearable_id(session['deviceId'])
 
     return redirect('/')
 
@@ -144,6 +159,7 @@ def thermal_comfort():
 @app.route("/preferences/", methods=["GET", "POST"])
 def preferences():
     return render_template("preferences.html")
+
 
 # A functions that implements the 'Clothing Insulation' page under the route '/clothing_insulation /'
 @app.route("/clothing_insulation/", methods=["GET", "POST"])
@@ -227,7 +243,7 @@ def handle_ttn_webhook():
     re = decodeMACPayload(data["uplink_message"]["frm_payload"])
     raw_temp = re[0]
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
-        re[3]
+                                                                        re[3]
 
     # Retrieve the latest stored value in the thermal comfort database
 
@@ -246,8 +262,8 @@ def handle_ttn_webhook():
     # and the counter of how many messages have already been rejected
 
     g.cur.execute('''SELECT exclude_counter,time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
-                  (
-                      device_id,))
+        (
+            device_id,))
     try:
         result = g.cur.fetchall()
         exclude_count = result[0][0]
@@ -370,11 +386,27 @@ def get_data_thermal_comfort():
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8,
-                                                 0.1))
+                                       0.1))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
 
     return jsonify({'daily_thermal_comfort_data': daily_thermal_comfort_data})
+
+
+@app.route('/get_user_clothing_insulation')
+def get_user_clothing_insulation():
+    tables = ['user_clo_winter', 'user_clo_summer', 'user_clo_autumn', 'user_clo_spring']
+    seasons = ['winter', 'summer', 'autumn', 'spring']
+    user_clo_dict = {}
+
+    for season, table in zip(seasons, tables):
+        g.cur.execute(f'''SELECT user_clo FROM {table} WHERE wearable_id = %s''', (
+            session.get('userinfo', None)['deviceId'],))
+        clo_value = g.cur.fetchone()
+        user_clo_dict[season] = clo_value[0] if clo_value else None
+
+    user_clo_json = json.dumps(user_clo_dict)
+    return user_clo_json
 
 
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
@@ -474,7 +506,7 @@ def update_preferences_thermal_comfort():
     user_thermal_level_max = request.form.get('user_thermal_level_max')
 
     updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max,
-                                   session.get('deviceId', None))
+        session.get('deviceId', None))
     return jsonify(success=True)
 
 
@@ -582,6 +614,88 @@ def update_range_water_heater():
     return jsonify(success=True)
 
 
+# A route that implements an asynchronous call to retrieve data related to the thermal comfort
+@app.route('/get_user_clothing')
+def get_user_clothing():
+    winter_clo = getWinterClo(g.cur, session.get('deviceId', None))
+    spring_clo = getSpringClo(g.cur, session.get('deviceId', None))
+    summer_clo = getSummerClo(g.cur, session.get('deviceId', None))
+    autumn_clo = getAutumnClo(g.cur, session.get('deviceId', None))
+
+    response = {
+        'clothing_insulation': [
+            {
+            'season_insulation':
+                {
+                    'winter_clo': winter_clo,
+                    'summer_clo': summer_clo,
+                    'spring_clo': spring_clo,
+                    'autumn_clo': autumn_clo
+                },
+            }
+        ]
+    }
+
+    return jsonify(response)
+
+
+@app.route('/update_clothing_summer', methods=['POST'])
+def update_clothing_summer():
+
+    g.cur.execute('''
+        UPDATE user_clo_summer
+        SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
+        WHERE wearable_id = %s;
+    ''', (session['deviceId'], 0, request.form.get('summer_clo'), int(datetime.now().timestamp()), session['deviceId']))
+
+    mysql.connection.commit()
+
+
+    return jsonify(success=True)
+
+
+@app.route('/update_clothing_winter', methods=['POST'])
+def update_clothing_winter():
+
+    g.cur.execute('''
+        UPDATE user_clo_winter
+        SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
+        WHERE wearable_id = %s;
+    ''', (session['deviceId'], 0, request.form.get('winter_clo'), int(datetime.now().timestamp()), session['deviceId']))
+
+    mysql.connection.commit()
+
+    return jsonify(success=True)
+
+
+@app.route('/update_clothing_autumn', methods=['POST'])
+def update_clothing_autumn():
+
+    g.cur.execute('''
+        UPDATE user_clo_autumn
+        SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
+        WHERE wearable_id = %s;
+    ''', (session['deviceId'], 0, request.form.get('autumn_clo'), int(datetime.now().timestamp()), session['deviceId']))
+
+    mysql.connection.commit()
+
+    return jsonify(success=True)
+
+
+@app.route('/update_clothing_spring', methods=['POST'])
+def update_clothing_spring():
+
+    g.cur.execute('''
+        UPDATE user_clo_spring 
+        SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
+        WHERE wearable_id = %s;
+    ''', (session['deviceId'], 0, request.form.get('spring_clo'), int(datetime.now().timestamp()), session['deviceId']))
+
+    mysql.connection.commit()
+
+    return jsonify(success=True)
+
+
 @app.route('/get_data_thermal_comfort_range', methods=['GET'])
 def get_data_thermal_comfort_range():
     userinfo = session.get('userinfo', None)
@@ -669,7 +783,6 @@ def get_device_status():
         print('Initial')
     except TypeError:
         print('Initial')
-
 
     return jsonify(latest_timestamp)
 
