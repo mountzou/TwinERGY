@@ -309,7 +309,7 @@ def handle_ttn_webhook():
 
     initial_temp = g.cur.fetchone()
 
-    if initial_temp - tc_temperature > 0.3 or initial_temp - tc_temperature < 0.3:
+    if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < 0.3:
         tc_temperature = initial_temp
 
     # Execute SQL INSERT statement
