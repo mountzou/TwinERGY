@@ -291,7 +291,7 @@ def handle_ttn_webhook():
 
     if exclude_count < messages2exclude-1:
 
-        if exclude_count == 0 and tc_timestamp - p_time > 50:
+        if exclude_count == 0 and tc_timestamp - p_time > 600:
             g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp} WHERE wearable_id = %s", (device_id,))
 
         exclude_count += 1
@@ -369,6 +369,7 @@ def helpdesk():
 # A route that implements an asynchronous call to retrieve data related to the user's thermal comfort during the last 24 hours
 @app.route('/get_data_thermal_comfort/')
 def get_data_thermal_comfort():
+    userinfo = session.get('userinfo', None)
     query = """
         SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met
         FROM user_thermal_comfort
