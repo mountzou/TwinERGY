@@ -17,6 +17,8 @@ from updatePreferences import updateThermalComfortPreference, updateTemperatureP
 
 from getPreferences import getThermalComfortPreferences, getTemperaturePreferences, getFlexibleLoadsPreferences
 
+from getClothing import getWinterClo, getSummerClo, getSpringClo, getAutumnClo, getUseClo
+
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 import random
@@ -384,8 +386,10 @@ def get_data_thermal_comfort():
 
     average_met = met_sum / met_count if met_count > 0 else 0
 
+    clo_insulation = getUseClo(g.cur, userinfo['deviceId'])[0]
+
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
-                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, 0.8,
+                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, clo_insulation,
                                        0.1))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
@@ -719,10 +723,12 @@ def get_data_thermal_comfort_range():
 
     thermal_comfort_list = []
 
+    clo_insulation = getUseClo(g.cur, userinfo['deviceId'])[0]
+
     for row in thermal_comfort_data:
         tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
 
-        pmv = row + (get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, 0.8, 0.1),)
+        pmv = row + (get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, clo_insulation, 0.1),)
         thermal_comfort_list.append(pmv)
 
     return jsonify(tuple(thermal_comfort_list))

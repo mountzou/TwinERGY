@@ -10,16 +10,16 @@ $(document).ready(function() {
     }
 
     var customValues = {
-      "Tank top & short-shorts": 0.28,
-      "T-shirt & short-shorts": 0.32,
-      "Tank top & thin-trousers": 0.36,
-      "T-shirt & thick-trousers": 0.40,
-      "Thin jacket & thin-trousers": 0.44,
-      "Thick jacket & thin-trousers": 0.48,
-      "Thick jacket & thick-trousers": 0.52,
-      "Coveralls": 0.56,
-      "Long-sleeve shirt & thin-trousers": 0.60,
-      "Long-sleeve sweatshirt & thick-trousers": 0.64
+      "Tank top & short-shorts": 0.20,
+      "T-shirt & short-shorts": 0.23,
+      "Tank top & thin-trousers": 0.27,
+      "T-shirt & thick-trousers": 0.36,
+      "Thin jacket & thin-trousers": 0.51,
+      "Thick jacket & thin-trousers": 0.59,
+      "Thick jacket & thick-trousers": 0.68,
+      "Coveralls": 1.00,
+      "Long-sleeve shirt & thin-trousers": 0.40,
+      "Long-sleeve sweatshirt & thick-trousers": 0.60
     };
 
     $("#summer_total_clo").ionRangeSlider({
