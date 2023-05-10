@@ -1,5 +1,3 @@
-from datetime import datetime
-
 # A function that returns the value of the current season
 def get_season():
     now = datetime.now()
@@ -56,13 +54,14 @@ def getAutumnClo(cur, wearable_id):
 
     return autumn_clo
 
-def getUseClo(cur, wearable_id):
+def getUseClo(connection, wearable_id):
     current_season = get_season()
-    if current_season == "winter":
-        return getWinterClo(cur, wearable_id)
-    elif current_season == "spring":
-        return getSpringClo(cur, wearable_id)
-    elif current_season == "summer":
-        return getSummerClo(cur, wearable_id)
-    else:
-        return getAutumnClo(cur, wearable_id)
+    with mysql.connection.cursor() as cur:
+        if current_season == "winter":
+            return getWinterClo(cur, wearable_id)
+        elif current_season == "spring":
+            return getSpringClo(cur, wearable_id)
+        elif current_season == "summer":
+            return getSummerClo(cur, wearable_id)
+        else:
+            return getAutumnClo(cur, wearable_id)

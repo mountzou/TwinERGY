@@ -63,6 +63,8 @@ function updateDashboard() {
         let met = data.daily_thermal_comfort_data.map(x => x[4]);
         let pmv = data.daily_thermal_comfort_data.map(x => x[5]);
 
+        console.log(data);
+
         let latestTemperature = temperature[temperature.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
         let latestVocIndex = voc_index[voc_index.length - 1];
