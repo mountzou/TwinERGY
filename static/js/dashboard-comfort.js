@@ -62,16 +62,16 @@ function updateDashboard() {
         let time = data.daily_thermal_comfort_data.map(x => unixToHumanReadable(x[2]));
         let met = data.daily_thermal_comfort_data.map(x => x[4]);
         let pmv = data.daily_thermal_comfort_data.map(x => x[5]);
-
-        console.log(data);
+        let clo = data.daily_thermal_comfort_data.map(x => x[6]);
 
         let latestTemperature = temperature[temperature.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
         let latestVocIndex = voc_index[voc_index.length - 1];
         let latestVocDesc = getWellBeingDescription(voc_index[voc_index.length - 1]);
         let latestTime = time[time.length - 1];
-        let latestMet = met[met.length - 1]
-        let latestPMV = pmv[pmv.length - 1]
+        let latestMet = met[met.length - 1];
+        let latestPMV = pmv[pmv.length - 1];
+        let latestClo = clo[clo.length - 1];
 
         // Update the latest temperature and humidity
         document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
@@ -79,7 +79,7 @@ function updateDashboard() {
         document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
         document.getElementById("latest-met").innerHTML = latestMet.toFixed(2) + ' met';
-        document.getElementById("latest-clo").innerHTML = (0.8 * (0.6 + 0.4 / latestMet.toFixed(2) ) ).toFixed(2) + ' clo';
+        document.getElementById("latest-clo").innerHTML = latestClo + ' clo';
         document.getElementById("latest-PMV").innerHTML = latestPMV;
         document.getElementById("latest-PMV-desc").innerHTML = get_pmv_status(latestPMV);
 
