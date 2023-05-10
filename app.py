@@ -310,7 +310,7 @@ def handle_ttn_webhook():
     initial_temp = g.cur.fetchone()
 
     if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < 0.3:
-        tc_temperature = initial_temp
+        tc_temperature = initial_temp[0]
 
     # Execute SQL INSERT statement
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
