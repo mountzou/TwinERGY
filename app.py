@@ -359,7 +359,7 @@ def handle_ttn_webhook():
     if exclude_count < messages2exclude-1:
 
         if exclude_count == 0 and tc_timestamp - p_time > 600:
-            g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp} WHERE wearable_id = %s", (device_id,))
+            g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp-1.5} WHERE wearable_id = %s", (device_id,))
 
         exclude_count += 1
 

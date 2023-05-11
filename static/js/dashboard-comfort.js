@@ -170,6 +170,8 @@ function updateDashboard() {
                         ticks: {
                             padding: 12,
                             fontFamily: "Josefin Sans",
+                            suggestedMin: Math.min(...indoorTemperature.datasets[0].data) - 5, // Adjust the desired space below the chart line
+                            suggestedMax: Math.max(...indoorTemperature.datasets[0].data) + 5, // Adjust the desired space above the chart line
                             beginAtZero: false,
                             autoSkip: true,
                             maxTicksLimit: 5,
@@ -206,6 +208,9 @@ function updateDashboard() {
                         ticks: {
                             padding: 12,
                             fontFamily: "Josefin Sans",
+                            suggestedMin: Math.min(...indoorHumidity.datasets[0].data) - 5, // Adjust the desired space below the chart line
+                            suggestedMax: Math.max(...indoorHumidity.datasets[0].data) + 5, // Adjust the desired space above the chart line
+                            beginAtZero: false,
                             beginAtZero: false,
                             autoSkip: true,
                             maxTicksLimit: 5,
