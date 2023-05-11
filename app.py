@@ -152,10 +152,10 @@ def require_login():
 def before_request():
     g.cur = mysql.connection.cursor()
     check_for_daily_updates()
-    global case
-    global new_ses
-    global reset
-    global initial_temp
+    case = 0
+    new_ses = False
+    reset = False
+    initial_temp = 0
 
 
 # A route that implements the user authentication process
@@ -287,7 +287,10 @@ def api_preferences():
 
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
-
+    global case
+    global reset
+    global new_ses
+    global initial_temp
 
     data = request.get_json()
 
@@ -354,6 +357,7 @@ def handle_ttn_webhook():
         new_ses = True
         reset = False
         initial_temp = raw_temp
+        print(reset)
 
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
     if (tc_metabolic - p_metabolic) < 0:
