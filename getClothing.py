@@ -1,7 +1,8 @@
+from datetime import datetime
+
 # A function that returns the value of the current season
-def get_season():
-    now = datetime.now()
-    month = now.month
+def getSeason():
+    month = datetime.now().month
     if month in [12, 1, 2]:
         return "winter"
     elif month in [3, 4, 5]:

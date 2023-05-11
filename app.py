@@ -16,8 +16,7 @@ from updatePreferences import updateThermalComfortPreference, updateTemperatureP
     updateTimeWaterHeater
 
 from getPreferences import getThermalComfortPreferences, getTemperaturePreferences, getFlexibleLoadsPreferences
-
-from getClothing import getWinterClo, getSummerClo, getSpringClo, getAutumnClo, getUseClo
+from getClothing import getWinterClo, getSummerClo, getSpringClo, getAutumnClo, getSeason, getUseClo
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
@@ -54,19 +53,6 @@ app.secret_key = 'secret'
 # A function that creates the cursor object to interact with the mySQL database
 def get_db_cursor():
     return mysql.connection.cursor()
-
-# A function that returns the value of the current season
-def get_season():
-    now = datetime.now()
-    month = now.month
-    if month in [12, 1, 2]:
-        return "winter"
-    elif month in [3, 4, 5]:
-        return "spring"
-    elif month in [6, 7, 8]:
-        return "summer"
-    else:
-        return "autumn"
 
 def getWinterClo(cur, wearable_id):
     cur.execute('''
@@ -112,7 +98,7 @@ def getAutumnClo(cur, wearable_id):
     return autumn_clo
 
 def getUseClo(connection, wearable_id):
-    current_season = get_season()
+    current_season = getSeason()
     with mysql.connection.cursor() as cur:
         if current_season == "winter":
             return getWinterClo(cur, wearable_id)
@@ -404,8 +390,10 @@ def handle_ttn_webhook():
             f"UPDATE exc_assist SET init_temp = {tc_temperature} WHERE wearable_id = %s", (
                 device_id,))
 
+    tc_clo = getUseClo(g.cur, session['deviceId'])[0]
+
     # Execute SQL INSERT statement
-    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_clo}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     g.cur.execute(insert_sql)
     exclude_count = messages2exclude
