@@ -152,6 +152,8 @@ def require_login():
 def before_request():
     g.cur = mysql.connection.cursor()
     check_for_daily_updates()
+    global case
+
 
 
 # A route that implements the user authentication process
@@ -284,9 +286,6 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
 
-    messages2exclude=5
-    # Time to ensure that a message did not come exactly after the previous
-    time_diff=15
 
     data = request.get_json()
 
@@ -303,89 +302,65 @@ def handle_ttn_webhook():
     # Retrieve the latest stored value in the thermal comfort database
 
     g.cur.execute(
-        '''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''',
+        '''SELECT tc_metabolic, tc_timestamp, tc_temperature FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''',
         (
             device_id,))
     previous_metabolic = g.cur.fetchall()
     try:
-        p_metabolic, p_time = previous_metabolic[0][0], previous_metabolic[0][1]
+        p_metabolic, p_time, p_temperature = previous_metabolic[0][0], previous_metabolic[0][1], previous_metabolic[0][2]
     except IndexError:
         # In case there are no available data for the specific wearable ID
-        p_metabolic, p_time = 0, 0
+        p_metabolic, p_time, p_temperature = 0, 0, 0
 
-    # Retrieve the latest value from the exclude_assist database, which stores the time of arrival of the most recent rejected LoRa message
-    # and the counter of how many messages have already been rejected
 
-    g.cur.execute('''SELECT exclude_counter,time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
-        (
-            device_id,))
-    try:
-        result = g.cur.fetchall()
-        exclude_count = result[0][0]
-        exclude_time = result[0][1]
-    except IndexError:
-        # In case that no data for the specific wearable ID have been stored
-        exclude_count = g.cur.fetchone()
+    # Check the time difference of the current timestamp to the previous stored to decide what is the case
+    new_session=0
+    normal_flow=1
+    unwanted_reset=2
 
-    # "Initialize the exclusion procedure"
-    # For the first time, populate the exclude_assist db with the received message's Wearable ID and timestamp.
+    if tc_timestamp -p_time > 30:
+        case = new_session
 
-    if exclude_count is None:
-        exclude_count = messages2exclude
-        exclude_time = tc_timestamp
-        g.cur.execute(
-            f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st,init_temp) VALUES ({exclude_count}, '{device_id}',{tc_timestamp},{raw_temp})")
-        mysql.connection.commit()
+    else:
+        if tc_timestamp - p_time > 12:
+            case=unwanted_reset
+        else:
+            case=normal_flow
 
-    #tc_timestamp->Most recent message to arrive, exclude_time->Latest excluded message, p_time->Latest stored message
-    if tc_timestamp - exclude_time > time_diff:
-        exclude_count = messages2exclude
+    print(case)
 
-    if exclude_count < messages2exclude-1:
+    if case == unwanted_reset:
+        reset = True
+        if wb_index < 100:
+            wb_index = 100
 
-        if exclude_count == 0 and tc_timestamp - p_time > 600:
-            g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp-2} WHERE wearable_id = %s", (device_id,))
+    if case == normal_flow:
 
-        exclude_count += 1
+        if reset == True:
+            if wb_index < 100:
+                wb_index = 100
+            else:
+                reset = False
 
-        # Update exclude counter in the exc_counter table with the most recent received LoRa message
-        g.cur.execute(
-            f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
-                device_id,))
-        mysql.connection.commit()
-        g.cur.close()
-        return jsonify({'status': 'success'}), 200
+        if new_ses == True:
+            if raw_temp - p_temperature > 0:
+                tc_temperature = initial_temp
+            else:
+                new_ses = False
 
-    if tc_timestamp - p_time > time_diff and exclude_count == messages2exclude:
-        exclude_count = 0
-        g.cur.execute(
-            f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
-                device_id,))
-        mysql.connection.commit()
-        g.cur.close()
-        return jsonify({'status': 'success'}), 200
+    if case == new_session:
+        new_ses = True
+        initial_temp = raw_temp
 
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
     if (tc_metabolic - p_metabolic) < 0:
         tc_met = 1
 
-    # Calculate the met for the 2nd, 3rd, etc..
+        # Calculate the met for the 2nd, 3rd, etc..
     else:
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
-
-    g.cur.execute('''SELECT init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1''',(device_id,))
-
-    initial_temp = g.cur.fetchone()
-
-    if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < -0.3:
-        result = generate_random_number_near(initial_temp[0], 0, 0.28)
-        tc_temperature = result
-    else:
-        g.cur.execute(
-            f"UPDATE exc_assist SET init_temp = {tc_temperature} WHERE wearable_id = %s", (
-                device_id,))
 
     tc_clo = getUseClo(g.cur, device_id)[0]
 
