@@ -334,7 +334,7 @@ def handle_ttn_webhook():
         exclude_count = messages2exclude
         exclude_time = tc_timestamp
         g.cur.execute(
-            f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st) VALUES ({exclude_count}, '{device_id}',{tc_timestamp})")
+            f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st,init_temp) VALUES ({exclude_count}, '{device_id}',{tc_timestamp},{raw_temp})")
         mysql.connection.commit()
 
     #tc_timestamp->Most recent message to arrive, exclude_time->Latest excluded message, p_time->Latest stored message
