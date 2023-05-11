@@ -390,7 +390,7 @@ def handle_ttn_webhook():
             f"UPDATE exc_assist SET init_temp = {tc_temperature} WHERE wearable_id = %s", (
                 device_id,))
 
-    tc_clo = getUseClo(g.cur, session['deviceId'])[0]
+    tc_clo = getUseClo(g.cur, device_id)[0]
 
     # Execute SQL INSERT statement
     insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_clo}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
