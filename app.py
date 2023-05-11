@@ -152,10 +152,6 @@ def require_login():
 def before_request():
     g.cur = mysql.connection.cursor()
     check_for_daily_updates()
-    case = 0
-    new_ses = False
-    reset = False
-    initial_temp = 0
 
 
 # A route that implements the user authentication process
@@ -287,10 +283,7 @@ def api_preferences():
 
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
-    global case
-    global reset
-    global new_ses
-    global initial_temp
+
 
     data = request.get_json()
 
@@ -373,7 +366,7 @@ def handle_ttn_webhook():
 
         if new_ses == True:
             if raw_temp - p_temperature > 0:
-                tc_temperature = initial_temp
+                tc_temperature = init_temp
             else:
                 new_ses = False
                 g.cur.execute(
