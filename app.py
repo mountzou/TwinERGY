@@ -153,7 +153,9 @@ def before_request():
     g.cur = mysql.connection.cursor()
     check_for_daily_updates()
     global case
-
+    global new_ses
+    global reset
+    global initial_temp
 
 
 # A route that implements the user authentication process
@@ -350,6 +352,7 @@ def handle_ttn_webhook():
 
     if case == new_session:
         new_ses = True
+        reset = False
         initial_temp = raw_temp
 
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
