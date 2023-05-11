@@ -336,7 +336,6 @@ def handle_ttn_webhook():
         g.cur.execute(
             f"INSERT INTO exc_assist (exclude_counter, wearable_id, time_st) VALUES ({exclude_count}, '{device_id}',{tc_timestamp})")
         mysql.connection.commit()
-        print('init', exclude_count)
 
     #tc_timestamp->Most recent message to arrive, exclude_time->Latest excluded message, p_time->Latest stored message
     if tc_timestamp - exclude_time > time_diff:
@@ -344,8 +343,8 @@ def handle_ttn_webhook():
 
     if exclude_count < messages2exclude-1:
 
-        if exclude_count == 0 and tc_timestamp - p_time > 600:
-            g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp-1.5} WHERE wearable_id = %s", (device_id,))
+        # if exclude_count == 0 and tc_timestamp - p_time > 600:
+        #     g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp-1.5} WHERE wearable_id = %s", (device_id,))
 
         exclude_count += 1
 
@@ -355,7 +354,6 @@ def handle_ttn_webhook():
                 device_id,))
         mysql.connection.commit()
         g.cur.close()
-        print('<10', exclude_count)
         return jsonify({'status': 'success'}), 200
 
     if tc_timestamp - p_time > time_diff and exclude_count == messages2exclude:
@@ -365,30 +363,29 @@ def handle_ttn_webhook():
                 device_id,))
         mysql.connection.commit()
         g.cur.close()
-        print('>15', exclude_count)
-
         return jsonify({'status': 'success'}), 200
 
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
     if (tc_metabolic - p_metabolic) < 0:
         tc_met = 1
+
     # Calculate the met for the 2nd, 3rd, etc..
     else:
         tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
 
-    g.cur.execute('''SELECT init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1''',(device_id,))
-
-    initial_temp = g.cur.fetchone()
-
-    if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < -0.3:
-        result = generate_random_number_near(initial_temp[0], 0, 0.28)
-        tc_temperature = result
-    else:
-        g.cur.execute(
-            f"UPDATE exc_assist SET init_temp = {tc_temperature} WHERE wearable_id = %s", (
-                device_id,))
+    # g.cur.execute('''SELECT init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1''',(device_id,))
+    #
+    # initial_temp = g.cur.fetchone()
+    #
+    # if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < -0.3:
+    #     result = generate_random_number_near(initial_temp[0], 0, 0.28)
+    #     tc_temperature = result
+    # else:
+    #     g.cur.execute(
+    #         f"UPDATE exc_assist SET init_temp = {tc_temperature} WHERE wearable_id = %s", (
+    #             device_id,))
 
     tc_clo = getUseClo(g.cur, device_id)[0]
 
@@ -400,10 +397,8 @@ def handle_ttn_webhook():
     g.cur.execute(
         f"UPDATE exc_assist SET exclude_counter = {exclude_count}, time_st={tc_timestamp} WHERE wearable_id = %s", (
             device_id,))
-    print('at the end', exclude_count)
 
     mysql.connection.commit()
-
     g.cur.close()
 
     return jsonify({'status': 'success'}), 200
