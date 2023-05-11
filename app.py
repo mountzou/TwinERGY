@@ -317,6 +317,25 @@ def handle_ttn_webhook():
         # In case there are no available data for the specific wearable ID
         p_metabolic, p_time, p_temperature = 0, 0, 0
 
+    g.cur.execute('''SELECT new_ses , reset , init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
+                  (
+                      device_id,))
+    try:
+        result = g.cur.fetchall()
+        new_ses = result[0][0]
+        reset = result[0][1]
+        init_temp=result[0][2]
+    except IndexError:
+        # In case that no data for the specific wearable ID have been stored
+        result = g.cur.fetchone()
+
+    # "Initialize the exclusion procedure"
+    # For the first time, populate the exclude_assist db with the received message's Wearable ID and timestamp.
+
+    if result is None:
+        g.cur.execute(
+            f"INSERT INTO exc_assist (new_ses , reset , init_temp , wearable_id) VALUES ({False}, '{False}',{0},{device_id})")
+        mysql.connection.commit()
 
     # Check the time difference of the current timestamp to the previous stored to decide what is the case
     new_session=0
@@ -346,17 +365,34 @@ def handle_ttn_webhook():
                 wb_index = 100
             else:
                 reset = False
+                g.cur.execute(
+                    f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s",
+                    (
+                        device_id,))
+                mysql.connection.commit()
 
         if new_ses == True:
             if raw_temp - p_temperature > 0:
                 tc_temperature = initial_temp
             else:
                 new_ses = False
+                g.cur.execute(
+                    f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s",
+                    (
+                        device_id,))
+                mysql.connection.commit()
 
     if case == new_session:
         new_ses = True
         reset = False
         initial_temp = raw_temp
+
+        g.cur.execute(
+            f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {initial_temp} WHERE wearable_id = %s",
+            (
+                device_id,))
+        mysql.connection.commit()
+
         print(reset)
 
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
