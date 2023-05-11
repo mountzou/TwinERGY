@@ -343,8 +343,8 @@ def handle_ttn_webhook():
 
     if exclude_count < messages2exclude-1:
 
-        # if exclude_count == 0 and tc_timestamp - p_time > 600:
-        #     g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp-1.5} WHERE wearable_id = %s", (device_id,))
+        if exclude_count == 0 and tc_timestamp - p_time > 600:
+            g.cur.execute(f"UPDATE exc_assist SET init_temp = {raw_temp-1.5} WHERE wearable_id = %s", (device_id,))
 
         exclude_count += 1
 
@@ -375,17 +375,17 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
 
-    # g.cur.execute('''SELECT init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1''',(device_id,))
-    #
-    # initial_temp = g.cur.fetchone()
-    #
-    # if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < -0.3:
-    #     result = generate_random_number_near(initial_temp[0], 0, 0.28)
-    #     tc_temperature = result
-    # else:
-    #     g.cur.execute(
-    #         f"UPDATE exc_assist SET init_temp = {tc_temperature} WHERE wearable_id = %s", (
-    #             device_id,))
+    g.cur.execute('''SELECT init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1''',(device_id,))
+
+    initial_temp = g.cur.fetchone()
+
+    if initial_temp[0] - tc_temperature > 0.3 or initial_temp[0] - tc_temperature < -0.3:
+        result = generate_random_number_near(initial_temp[0], 0, 0.28)
+        tc_temperature = result
+    else:
+        g.cur.execute(
+            f"UPDATE exc_assist SET init_temp = {0} WHERE wearable_id = %s", (
+                device_id,))
 
     tc_clo = getUseClo(g.cur, device_id)[0]
 
