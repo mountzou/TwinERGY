@@ -391,8 +391,10 @@ def handle_ttn_webhook():
 
     print(tc_clo)
 
+    tc_comfort = 0
+
     # Execute SQL INSERT statement
-    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_clo}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
+    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo, tc_comfort, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_clo}, {tc_comfort}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
 
     g.cur.execute(insert_sql)
     exclude_count = messages2exclude
