@@ -62,7 +62,6 @@ function checkForNewData() {
           }
           status = 'active';
       } else {
-        status = 'inactive';
         if (previousStatus !== 'inactive') {
                 Swal.fire({
                       title: 'Error !',
@@ -75,6 +74,7 @@ function checkForNewData() {
                       height: '200px'
                 });
         }
+        status = 'inactive';
       }
       previousStatus = status;
     }
