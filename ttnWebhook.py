@@ -100,7 +100,7 @@ def handle_new_session(cur, mysql, raw_temp, device_id):
     query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {tc_temperature} WHERE wearable_id = %s"
     params = (device_id,)
     execute_query(cur, mysql, query, params, commit=True)
-    return new_ses, reset, tc_temperature, wb_index
+    return tc_temperature, wb_index
 
 
 def calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time):
