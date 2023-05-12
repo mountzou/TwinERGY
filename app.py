@@ -4,21 +4,19 @@ from flask_compress import Compress
 from keycloak import KeycloakOpenID
 
 from decodeLoRaPackage import decodeMACPayload
-from getDeviceStatus import device_status
-from initializeUser import initialize_user_clothing_insulation, initialize_user_temperature_preferences, initialize_user_thermal_comfort_preferences, initialize_user_load_preferences
+from getDeviceStatus import *
+from initializeUser import *
 
-from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate_clo_value, \
-    get_calibrate_air_speed_value
-from determineAirTemperature import get_air_temperature
-from determineWellBeing import get_well_being_description
-from determineSimosMethod import determineWeights
-from updatePreferences import updateThermalComfortPreference, updateTemperaturePreference, updatePrefElectricVehicle, \
-    updatePrefWashingMachine, updatePrefDishWasher, updatePrefWaterHeater, updatePrefTumbleDrier, \
-    updateTimeElectricVehicle, updateTimeWashingMachine, updateTimeDishWasher, updateTimeTumbleDrier, \
-    updateTimeWaterHeater
+from determineThermalComfort import *
+from determineAirTemperature import *
+from determineWellBeing import *
+from determineSimosMethod import *
+from updatePreferences import *
 
-from getPreferences import getThermalComfortPreferences, getTemperaturePreferences, getFlexibleLoadsPreferences
-from getClothing import getWinterClo, getSummerClo, getSpringClo, getAutumnClo, get_clo_insulation
+from getPreferences import *
+from getClothing import *
+
+from ttnWebhook import *
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
@@ -234,137 +232,48 @@ def api_preferences():
 
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
-
-    messages2exclude=5
-    # Time to ensure that a message did not come exactly after the previous
-    time_diff=15
-
     data = request.get_json()
 
     # Decode incoming LoRa message
-
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
-    re = decodeMACPayload(data["uplink_message"]["frm_payload"])
-    raw_temp = re[0]
-    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(re[0]), re[1], re[2], re[4], \
-                                                                        re[3]
+    decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
+    raw_temp = decodedPayload[0]
+    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), decodedPayload[1], decodedPayload[2], decodedPayload[4], decodedPayload[3]
 
     # Retrieve the latest stored value in the thermal comfort database
+    previous_metabolic = fetch_previous_metabolic(g.cur, device_id)
 
-    g.cur.execute(
-        '''SELECT tc_metabolic, tc_timestamp, tc_temperature FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1''',
-        (
-            device_id,))
-    previous_metabolic = g.cur.fetchall()
-    try:
-        p_metabolic, p_time, p_temperature = previous_metabolic[0][0], previous_metabolic[0][1], previous_metabolic[0][2]
-    except IndexError:
-        # In case there are no available data for the specific wearable ID
-        p_metabolic, p_time, p_temperature = 0, 0, 0
+    # Extract previous values or set defaults
+    p_metabolic, p_time, p_temperature = previous_metabolic[0] if previous_metabolic else (0, 0, 0)
 
-    g.cur.execute('''SELECT new_ses , reset , init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1''',
-                  (
-                      device_id,))
-    try:
-        result = g.cur.fetchall()
-        new_ses = result[0][0]
-        reset = result[0][1]
-        init_temp=result[0][2]
-    except IndexError:
-        # In case that no data for the specific wearable ID have been stored
-        result = g.cur.fetchone()
-
-    # "Initialize the exclusion procedure"
-    # For the first time, populate the exclude_assist db with the received message's Wearable ID and timestamp.
+    result = fetch_exc_assist(g.cur, device_id)
 
     if result is None:
-        g.cur.execute(
-            f"INSERT INTO exc_assist (new_ses , reset , init_temp , wearable_id) VALUES ({False}, '{False}',{0},{device_id})")
-        mysql.connection.commit()
+        insert_into_exc_assist(g.cur, mysql, device_id)
+    else:
+        new_ses, reset, init_temp = result[0]
 
     # Check the time difference of the current timestamp to the previous stored to decide what is the case
-    new_session=0
-    normal_flow=1
-    unwanted_reset=2
+    case = check_case(tc_timestamp, p_time)
 
-    if tc_timestamp -p_time > 30:
-        case = new_session
-        print("new session")
+    if case == CASE_UNWANTED_RESET:
+        reset, wb_index = handle_unwanted_reset(reset, wb_index)
 
-    else:
-        if tc_timestamp - p_time > 12:
-            case=unwanted_reset
-            print("unwanted_reset")
-        else:
-            case=normal_flow
-            print("normal_flow")
+    reset, new_ses = handle_normal_flow(case, reset, new_ses, raw_temp, p_temperature, init_temp, device_id)
 
+    new_ses, reset = handle_new_session(case, new_ses, reset, raw_temp, device_id)
 
-    if case == unwanted_reset:
-        reset = True
-        if wb_index < 100:
-            wb_index = 100
+    # Calculate tc_met
+    tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
 
-    if case == normal_flow:
-        if reset == True:
-            if wb_index < 100:
-                wb_index = 100
-            else:
-                reset = False
-                g.cur.execute(
-                    f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s",
-                    (
-                        device_id,))
-                mysql.connection.commit()
-
-        if new_ses == True:
-            if raw_temp - p_temperature >= 0:
-                tc_temperature = init_temp
-            else:
-                new_ses = False
-                g.cur.execute(
-                    f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s",
-                    (
-                        device_id,))
-                mysql.connection.commit()
-
-    if case == new_session:
-        new_ses = True
-        reset = True
-        initial_temp = raw_temp
-        tc_temperature = initial_temp
-        wb_index=100
-        g.cur.execute(
-            f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {initial_temp} WHERE wearable_id = %s",
-            (
-                device_id,))
-        mysql.connection.commit()
-
-
-
-    # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
-    if (tc_metabolic - p_metabolic) < 0:
-        tc_met = 1
-
-        # Calculate the met for the 2nd, 3rd, etc..
-    else:
-        tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
-        if tc_met < 1: tc_met = 1
-        if tc_met > 6: tc_met = 6
-
-    tc_clo = get_clo_insulation(mysql, g.cur, device_id)[0]
+    tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
 
     tc_comfort = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
     # Execute SQL INSERT statement
-    insert_sql = f"INSERT INTO user_thermal_comfort (tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo, tc_comfort, tc_timestamp, wearable_id, gateway_id, wb_index) VALUES ({tc_temperature}, {tc_humidity}, {tc_metabolic}, {tc_met}, {tc_clo}, {tc_comfort}, {tc_timestamp}, '{device_id}', '{gateway_id}', '{wb_index}')"
-
-    g.cur.execute(insert_sql)
-
-    mysql.connection.commit()
-    g.cur.close()
+    insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo, tc_comfort, tc_timestamp, device_id, gateway_id, wb_index)
 
     return jsonify({'status': 'success'}), 200
 
