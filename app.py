@@ -23,7 +23,7 @@ from getClothing import *
 from ttnWebhook import *
 
 # Import functions regarding the date and time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time, timezone
 import time
 from urllib.parse import urlparse
 import random
@@ -273,17 +273,24 @@ def handle_ttn_webhook():
 # A route that implements an asynchronous call to retrieve data related to the user's thermal comfort during the last 24 hours
 @app.route('/get_data_thermal_comfort/')
 def get_data_thermal_comfort():
-    userinfo = session.get('userinfo', None)
+    # Get the current date
+    now = datetime.now()
+
+    # Create a new datetime at midnight
+    midnight = datetime(year=now.year, month=now.month, day=now.day, hour=0, minute=0, second=0, tzinfo=timezone.utc)
+
+    # Convert the datetime to a UNIX timestamp
+    timestamp = int(midnight.timestamp())
+
     query = """
         SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met
         FROM user_thermal_comfort
-        WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR))
+        WHERE tc_timestamp >= %s
         AND wearable_id = %s
         ORDER BY tc_timestamp DESC
-        LIMIT 100
     """
     with g.cur as cur:
-        cur.execute(query, (session.get('deviceId', None),))
+        cur.execute(query, (timestamp, session.get('deviceId', None)))
         thermal_comfort_data = cur.fetchall()
 
     met_data = [tc_met for _, _, _, _, tc_met in thermal_comfort_data[:10]]
