@@ -337,14 +337,16 @@ def handle_ttn_webhook():
 
     if tc_timestamp -p_time > 30:
         case = new_session
+        print("new session")
 
     else:
         if tc_timestamp - p_time > 12:
             case=unwanted_reset
+            print("unwanted_reset")
         else:
             case=normal_flow
+            print("normal_flow")
 
-    print(case)
 
     if case == unwanted_reset:
         reset = True
@@ -352,7 +354,6 @@ def handle_ttn_webhook():
             wb_index = 100
 
     if case == normal_flow:
-
         if reset == True:
             if wb_index < 100:
                 wb_index = 100
@@ -386,7 +387,7 @@ def handle_ttn_webhook():
                 device_id,))
         mysql.connection.commit()
 
-        print(reset)
+
 
     # By the time the device is turned on, the difference between tc_metabolic and p_metabolic will be less than zero
     if (tc_metabolic - p_metabolic) < 0:
