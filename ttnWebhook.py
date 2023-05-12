@@ -29,10 +29,10 @@ def execute_query(cur, mysql, query, params=None, commit=False):
     return True
 
 
-def fetch_previous_metabolic(cur, device_id):
+def fetch_previous_metabolic(mysql, cur, device_id):
     query = '''SELECT tc_metabolic, tc_timestamp, tc_temperature FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1'''
     params = (device_id,)
-    execute_query(cur, None, query, params)
+    execute_query(cur, mysql, query, params)
     return cur.fetchall()
 
 
@@ -41,34 +41,47 @@ def insert_into_exc_assist(cur, mysql, device_id):
     execute_query(cur, mysql, query, commit=True)
 
 
-def fetch_exc_assist(cur, device_id):
+def fetch_exc_assist(mysql, cur, device_id):
     query = '''SELECT new_ses, reset, init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1'''
     params = (device_id,)
-    execute_query(cur, None, query, params)
+    execute_query(cur, mysql, query, params)
     return cur.fetchall()
 
 
-def handle_normal_flow(cur, mysql, case, reset, new_ses, raw_temp, p_temperature, init_temp, device_id):
-    if case == CASE_NORMAL_FLOW:
-        if reset:
-            reset = handle_reset(cur , mysql, reset, wb_index, device_id)
-        if new_ses:
-            tc_temperature, new_ses = handle_new_session_temperature(raw_temp, p_temperature, init_temp, new_ses, device_id)
-    return reset, new_ses
+def handle_normal_flow(cur, mysql, reset, new_ses, raw_temp, p_temperature, init_temp, device_id):
 
 
-def handle_unwanted_reset(cur, mysql, reset, wb_index, device_id):
+    wb_index = handle_reset(cur , mysql, reset, wb_index, device_id)
+    tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, device_id)
+
+    return wb_index, tc_temperature
+
+
+def handle_reset(cur , mysql, reset, wb_index, device_id):
+    if reset == True:
+        if wb_index < 100:
+            wb_index = 100
+        else:
+            reset = False
+            cur.execute(
+                f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s",
+                (
+                    device_id,))
+            mysql.connection.commit()
+    return wb_index
+
+def handle_unwanted_reset(cur, mysql, wb_index, device_id):
+
+    reset = True
+    query = f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s"
+    params = (device_id,)
+    execute_query(cur, mysql, query, params, commit=True)
     if wb_index < 100:
         wb_index = 100
-    else:
-        reset = False
-        query = f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s"
-        params = (device_id,)
-        execute_query(cur, mysql, query, params, commit=True)
-    return reset
+    return wb_index
 
 
-def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, new_ses, device_id):
+def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, device_id):
     if raw_temp - p_temperature >= 0:
         tc_temperature = init_temp
     else:
@@ -76,20 +89,18 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
         query = f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s"
         params = (device_id,)
         execute_query(cur, mysql, query, params, commit=True)
-    return tc_temperature, new_ses
+    return tc_temperature
 
+def handle_new_session(cur, mysql, raw_temp, device_id):
 
-def handle_new_session(cur, mysql, case, new_ses, reset, raw_temp, device_id):
-    if case == CASE_NEW_SESSION:
-        new_ses = True
-        reset = True
-        initial_temp = raw_temp
-        tc_temperature = initial_temp
-        wb_index = 100
-        query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {initial_temp} WHERE wearable_id = %s"
-        params = (device_id,)
-        execute_query(cur, mysql, query, params, commit=True)
-    return new_ses, reset
+    new_ses = True
+    reset = True
+    tc_temperature = raw_temp
+    wb_index = 100
+    query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {tc_temperature} WHERE wearable_id = %s"
+    params = (device_id,)
+    execute_query(cur, mysql, query, params, commit=True)
+    return new_ses, reset, tc_temperature, wb_index
 
 
 def calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time):

@@ -243,12 +243,12 @@ def handle_ttn_webhook():
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), decodedPayload[1], decodedPayload[2], decodedPayload[4], decodedPayload[3]
 
     # Retrieve the latest stored value in the thermal comfort database
-    previous_metabolic = fetch_previous_metabolic(g.cur, device_id)
+    previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
 
     # Extract previous values or set defaults
     p_metabolic, p_time, p_temperature = previous_metabolic[0] if previous_metabolic else (0, 0, 0)
 
-    result = fetch_exc_assist(g.cur, device_id)
+    result = fetch_exc_assist(mysql, g.cur, device_id)
 
     if result is None:
         insert_into_exc_assist(g.cur, mysql, device_id)
@@ -259,11 +259,13 @@ def handle_ttn_webhook():
     case = check_case(tc_timestamp, p_time)
 
     if case == CASE_UNWANTED_RESET:
-        reset, wb_index = handle_unwanted_reset(g.cur, mysql, reset, wb_index)
+        wb_index = handle_unwanted_reset(g.cur, mysql, wb_index, device_id)
 
-    reset, new_ses = handle_normal_flow(g.cur, mysql, case, reset, new_ses, raw_temp, p_temperature, init_temp, device_id)
+    if case == CASE_NORMAL_FLOW:
+        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, reset, new_ses, raw_temp, p_temperature, init_temp, device_id)
 
-    new_ses, reset = handle_new_session(g.cur, mysql, case, new_ses, reset, raw_temp, device_id)
+    if case == CASE_NEW_SESSION:
+        tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id)
 
     # Calculate tc_met
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
