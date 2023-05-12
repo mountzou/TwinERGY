@@ -5,6 +5,14 @@ CASE_NORMAL_FLOW = 2
 from decodeLoRaPackage import decodeMACPayload
 from determineAirTemperature import get_air_temperature
 
+def check_case(tc_timestamp, p_time):
+    if tc_timestamp - p_time >30:
+        return CASE_NEW_SESSION
+    elif tc_timestamp - p_time >12:
+        return CASE_UNWANTED_RESET
+    else:
+        return CASE_NORMAL_FLOW
+
 
 def execute_query(cur, mysql, query, params=None, commit=False):
     try:
