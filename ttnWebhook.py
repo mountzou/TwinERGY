@@ -87,7 +87,7 @@ def generate_random_number_near(number, range_start, range_end):
 
 def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id):
     if raw_temp - p_temperature >= 0:
-        tc_temperature = generate_random_number_near(init_temp, 0, 0.5)
+        tc_temperature = init_temp
     else:
         new_ses = False
         query = f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s"
