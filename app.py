@@ -235,15 +235,15 @@ def handle_ttn_webhook():
     previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
 
     # Extract previous values or set defaults
-    p_metabolic, p_time, p_temperature = previous_metabolic[0] if previous_metabolic else (0, 0, 0)
+    p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
     result = fetch_exc_assist(mysql, g.cur, device_id)
 
     if result is None:
         insert_into_exc_assist(g.cur, mysql, device_id)
-        new_ses, reset, init_temp = False, False, 0
+        new_ses, reset, init_temp, p_temperature = False, False, 0, raw_temp-1
     else:
-        new_ses, reset, init_temp = result[0]
+        new_ses, reset, init_temp, p_temperature = result[0]
 
     # Check the time difference of the current timestamp to the previous stored to decide what is the case
     case = check_case(tc_timestamp, p_time)
@@ -252,7 +252,7 @@ def handle_ttn_webhook():
         wb_index = handle_unwanted_reset(g.cur, mysql, wb_index, device_id)
 
     if case == CASE_NORMAL_FLOW:
-        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp,tc_temperature, device_id)
+        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, tc_temperature, device_id)
 
     if case == CASE_NEW_SESSION:
         tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp)

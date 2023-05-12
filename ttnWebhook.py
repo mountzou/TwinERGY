@@ -42,7 +42,7 @@ def insert_into_exc_assist(cur, mysql, device_id):
 
 
 def fetch_exc_assist(mysql, cur, device_id):
-    query = '''SELECT new_ses, reset, init_temp FROM exc_assist WHERE wearable_id = %s LIMIT 1'''
+    query = '''SELECT new_ses, reset, init_temp, p_temperature FROM exc_assist WHERE wearable_id = %s LIMIT 1'''
     params = (device_id,)
     execute_query(cur, mysql, query, params)
     return cur.fetchall()
@@ -101,7 +101,7 @@ def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, in
     else:
         tc_temperature = init_temp
     wb_index = 100
-    query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {tc_temperature} WHERE wearable_id = %s"
+    query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {tc_temperature}, p_temperature={raw_temp} WHERE wearable_id = %s"
     params = (device_id,)
     execute_query(cur, mysql, query, params, commit=True)
     return tc_temperature, wb_index
