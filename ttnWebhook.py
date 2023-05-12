@@ -30,7 +30,7 @@ def execute_query(cur, mysql, query, params=None, commit=False):
 
 
 def fetch_previous_metabolic(mysql, cur, device_id):
-    query = '''SELECT tc_metabolic, tc_timestamp, tc_temperature FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1'''
+    query = '''SELECT tc_metabolic, tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1'''
     params = (device_id,)
     execute_query(cur, mysql, query, params)
     return cur.fetchall()
