@@ -26,7 +26,6 @@ from ttnWebhook import *
 from datetime import datetime, timedelta, time, timezone
 import time
 from urllib.parse import urlparse
-import random
 import json
 import requests
 

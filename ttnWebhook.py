@@ -2,6 +2,7 @@ CASE_NEW_SESSION = 0
 CASE_UNWANTED_RESET = 1
 CASE_NORMAL_FLOW = 2
 
+import random
 from decodeLoRaPackage import decodeMACPayload
 from determineAirTemperature import get_air_temperature
 
