@@ -10,20 +10,25 @@ from initializeUser import *
 from determineThermalComfort import *
 from determineAirTemperature import *
 from determineWellBeing import *
-from determineSimosMethod import *
-from updatePreferences import *
 
+from apiService import *
+
+# Import functions regarding the user's preferences
 from getPreferences import *
+from updatePreferences import *
+from determineSimosMethod import *
+# Import functions regarding the user's clothing insulation
 from getClothing import *
 
 from ttnWebhook import *
 
+# Import functions regarding the date and time
 from datetime import datetime, timedelta
+import time
 from urllib.parse import urlparse
 import random
 import json
 import requests
-import time
 
 import os
 from dotenv import load_dotenv
@@ -209,25 +214,9 @@ def api_tc():
 # A function that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_preferences', methods=['GET'])
 def api_preferences():
-    # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
-    g.cur.execute(
-        '''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences WHERE wearable_id = %s''',
-        (
-            session.get('deviceId', None),))
-    (electric_vehicle, tumble_drier, washing_machine, water_heater, dish_washer) = g.cur.fetchone()
+    api_response_preferences = api_Preferences(g.cur)
 
-    flexible_load_preferences = {
-        'Electric Vehicle': electric_vehicle,
-        'Tumble Drier': tumble_drier,
-        'Washing Machine': washing_machine,
-        'Water Heater': water_heater,
-        'Dish Washer': dish_washer
-    }
-
-    # Determine the importance of each household flexible load according to SIMOS revised method
-    flexible_load_weights = determineWeights(flexible_load_preferences)
-
-    return jsonify(flexible_load_weights)
+    return jsonify(api_response_preferences)
 
 
 @app.route('/ttn-webhook', methods=['POST'])
