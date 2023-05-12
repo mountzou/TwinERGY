@@ -323,7 +323,7 @@ def handle_ttn_webhook():
                 mysql.connection.commit()
 
         if new_ses == True:
-            if tc_temperature - p_temperature > 0:
+            if tc_temperature - p_temperature >= 0:
                 tc_temperature = init_temp
             else:
                 new_ses = False
