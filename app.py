@@ -259,11 +259,11 @@ def handle_ttn_webhook():
     case = check_case(tc_timestamp, p_time)
 
     if case == CASE_UNWANTED_RESET:
-        reset, wb_index = handle_unwanted_reset(reset, wb_index)
+        reset, wb_index = handle_unwanted_reset(g.cur, mysql, reset, wb_index)
 
-    reset, new_ses = handle_normal_flow(case, reset, new_ses, raw_temp, p_temperature, init_temp, device_id)
+    reset, new_ses = handle_normal_flow(g.cur, mysql, case, reset, new_ses, raw_temp, p_temperature, init_temp, device_id)
 
-    new_ses, reset = handle_new_session(case, new_ses, reset, raw_temp, device_id)
+    new_ses, reset = handle_new_session(g.cur, mysql, case, new_ses, reset, raw_temp, device_id)
 
     # Calculate tc_met
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
