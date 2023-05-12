@@ -327,6 +327,8 @@ def handle_ttn_webhook():
                 tc_temperature = init_temp
             else:
                 new_ses = False
+
+
                 g.cur.execute(
                     f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s",
                     (
@@ -335,9 +337,9 @@ def handle_ttn_webhook():
 
     if case == new_session:
         new_ses = True
-        reset = False
+        reset = True
         initial_temp = raw_temp
-
+        wb_index=100
         g.cur.execute(
             f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {initial_temp} WHERE wearable_id = %s",
             (
