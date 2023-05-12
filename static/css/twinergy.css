@@ -189,3 +189,25 @@ label {
     transform: scale(0.8);
   }
 }
+
+.swal2-confirm {
+  background-color: unset !important;
+  color: unset !important;
+  border-color: unset !important;
+  box-shadow: unset !important;
+}
+
+.swal2-styled {
+  border-style: unset !important;
+}
+
+.swal2-confirm:hover {
+  color: #fff;
+  background-color: #ffba4d;
+  border-color: #ffba4d;
+}
+
+.swal2-content {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 16px !important;
+}

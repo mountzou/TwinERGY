@@ -36,16 +36,47 @@ var liveText = document.querySelector('#live-id');
 redDot.style.backgroundColor = 'white';
 liveText.innerHTML = 'Searching..';
 
+let previousStatus = null;
+
 function checkForNewData() {
   $.getJSON('/get_device_status', function (data) {
     let currentTimestamp = Math.floor(Date.now() / 1000);
 
-    if (data[0] === 0) {
-      status = 'init';
-    } else if (-12 < currentTimestamp - data[0] && currentTimestamp - data[0] < 12) {
-      status = 'active';
+    if (data === null) {
+      console.log('Data is null!');
     } else {
-      status = 'inactive';
+      if (data[0] === 0) {
+        status = 'init';
+      } else if (-12 < currentTimestamp - data[0] && currentTimestamp - data[0] < 12) {
+          if (previousStatus !== 'active') {
+                Swal.fire({
+                      title: 'Success !',
+                      text: 'Your device is now active !',
+                      icon: 'success',
+                      customClass: {
+                        confirmButton: 'btn btn-primary'
+                      },
+                      width: '300px',
+                      height: '200px'
+                });
+          }
+          status = 'active';
+      } else {
+        status = 'inactive';
+        if (previousStatus !== 'inactive') {
+                Swal.fire({
+                      title: 'Error !',
+                      text: 'Your device is not active !',
+                      icon: 'error',
+                      customClass: {
+                        confirmButton: 'btn btn-primary'
+                      },
+                      width: '300px',
+                      height: '200px'
+                });
+        }
+      }
+      previousStatus = status;
     }
 
     switch (status) {

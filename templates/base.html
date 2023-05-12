@@ -15,6 +15,8 @@
 
     <link href="{{url_for('static', filename='css/app.css')}}" rel="stylesheet" type="text/css">
     <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/sweetalert.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/sweetalert.rtl.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Import additional .css files in the header section -->
@@ -46,6 +48,11 @@
 
     <!-- Import settings.js file with application's global settings -->
     <script src="{{url_for('static', filename='js/settings.js')}}"></script>
+
+    <script src="{{url_for('static', filename='js/sweetalert.js')}}"></script>
+    <script src="{{url_for('static', filename='vendor/sweetalert.min.js')}}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
     <!-- Import bootstrap.min.js file with Bootstrap library -->
     <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
