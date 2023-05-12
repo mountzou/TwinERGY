@@ -48,7 +48,7 @@ def fetch_exc_assist(mysql, cur, device_id):
     return cur.fetchall()
 
 
-def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, device_id):
+def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp,tc_temperature, device_id):
 
     if reset:
         wb_index = handle_reset(cur , mysql, wb_index, device_id)
