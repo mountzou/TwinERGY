@@ -146,7 +146,7 @@ def rout():
 # A function that renders the template of the 'Thermal Comofrt' page under the route '/thermal_comfort/.
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    return render_template("thermal-comfort.html")
+    return render_template("thermal-comfort.html") if g.total_daily_data else render_template("thermal-comfort-empty.html")
 
 
 # A function that renders the template of the 'Preferences' page under the route '/preferences/.
@@ -354,7 +354,7 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
 
-    tc_clo = get_clo_insulation(mysql, g.cur, userinfo['deviceId'])[0]
+    tc_clo = get_clo_insulation(mysql, g.cur, device_id)[0]
 
     tc_comfort = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
