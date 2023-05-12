@@ -48,12 +48,12 @@ def fetch_exc_assist(mysql, cur, device_id):
     return cur.fetchall()
 
 
-def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp,tc_temperature, device_id):
+def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, tc_temperature, device_id):
 
     if reset:
         wb_index = handle_reset(cur , mysql, wb_index, device_id)
     if new_ses:
-        tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp,tc_temperature, device_id)
+        tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id)
 
     return wb_index, tc_temperature
 
@@ -82,7 +82,7 @@ def handle_unwanted_reset(cur, mysql, wb_index, device_id):
     return wb_index
 
 
-def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, device_id):
+def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id):
     if raw_temp - p_temperature >= 0:
         tc_temperature = init_temp
     else:
