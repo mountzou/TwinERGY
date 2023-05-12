@@ -4,6 +4,8 @@ from flask_compress import Compress
 from keycloak import KeycloakOpenID
 
 from decodeLoRaPackage import decodeMACPayload
+from getDeviceStatus import device_status
+from initializeUser import initialize_user_clothing_insulation, initialize_user_temperature_preferences, initialize_user_thermal_comfort_preferences, initialize_user_load_preferences
 
 from determineThermalComfort import get_pmv_status, get_pmv_value, get_calibrate_clo_value, \
     get_calibrate_air_speed_value
@@ -54,48 +56,6 @@ app.secret_key = 'secret'
 def get_db_cursor():
     return mysql.connection.cursor()
 
-def getWinterClo(cur, wearable_id):
-    cur.execute('''
-        SELECT user_clo
-        FROM user_clo_winter
-        WHERE wearable_id = %s;
-    ''', (wearable_id,))
-    winter_clo = cur.fetchone()
-
-    return winter_clo
-
-
-def getSummerClo(cur, wearable_id):
-    cur.execute('''
-        SELECT user_clo
-        FROM user_clo_summer
-        WHERE wearable_id = %s;
-    ''', (wearable_id,))
-    summer_clo = cur.fetchone()
-
-    return summer_clo
-
-
-def getSpringClo(cur, wearable_id):
-    cur.execute('''
-        SELECT user_clo
-        FROM user_clo_spring
-        WHERE wearable_id = %s;
-    ''', (wearable_id,))
-    spring_clo = cur.fetchone()
-
-    return spring_clo
-
-
-def getAutumnClo(cur, wearable_id):
-    cur.execute('''
-        SELECT user_clo
-        FROM user_clo_autumn
-        WHERE wearable_id = %s;
-    ''', (wearable_id,))
-    autumn_clo = cur.fetchone()
-
-    return autumn_clo
 
 def getUseClo(connection, wearable_id):
     current_season = getSeason()
@@ -109,18 +69,6 @@ def getUseClo(connection, wearable_id):
         else:
             return getAutumnClo(cur, wearable_id)
 
-def check_and_insert_wearable_id(device_id):
-    gateway_id = '0'
-    tables = ['user_clo_winter', 'user_clo_summer', 'user_clo_autumn', 'user_clo_spring']
-    for table in tables:
-        g.cur.execute(f'''SELECT 1 FROM {table} WHERE wearable_id = %s''', (device_id,))
-        result = g.cur.fetchone()
-        if result is None:
-            user_timestamp = int(time.time())
-            g.cur.execute(f'''INSERT INTO {table} (wearable_id, gateway_id, user_clo, user_timestamp) VALUES (%s, %s, 0.6, %s)''', (
-                device_id, gateway_id, user_timestamp))
-            mysql.connection.commit()
-
 
 # A function to check for updates by the specific wearable device during the last 24 hours
 def check_for_daily_updates():
@@ -131,8 +79,10 @@ def check_for_daily_updates():
     (number_of_daily_data,) = g.cur.fetchone()
     g.total_daily_data = number_of_daily_data
 
+
 def generate_random_number_near(number, range_start, range_end):
     return random.uniform(number - range_start, number + range_end)
+
 
 @app.before_request
 def require_login():
@@ -181,8 +131,12 @@ def callback():
     session['userinfo'] = keycloak_openid.userinfo(access_token['access_token'])
     session['username'] = keycloak_openid.userinfo(access_token['access_token'])['preferred_username']
     session['deviceId'] = keycloak_openid.userinfo(access_token['access_token'])['deviceId']
+    session['gatewayId'] = keycloak_openid.userinfo(access_token['access_token'])['gatewayId']
 
-    check_and_insert_wearable_id(session['deviceId'])
+    initialize_user_clothing_insulation(mysql, g.cur, session['deviceId'], session['gatewayId'])
+    initialize_user_temperature_preferences(mysql, g.cur, session['deviceId'])
+    initialize_user_thermal_comfort_preferences(mysql, g.cur, session['deviceId'])
+    initialize_user_load_preferences(mysql, g.cur, session['deviceId'])
 
     return redirect('/')
 
@@ -284,6 +238,9 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
 
+    messages2exclude=5
+    # Time to ensure that a message did not come exactly after the previous
+    time_diff=15
 
     data = request.get_json()
 
@@ -587,7 +544,7 @@ def update_preferences_temperature():
 @app.route('/update_preferences_importance_electric_vehicle', methods=['POST'])
 def update_preferences_importance_electric_vehicle():
     importance_electric_vehicle = request.form.get('importance_electric_vehicle')
-
+    # Update the preference regarding the importance of electric vehicle
     updatePrefElectricVehicle(mysql, g.cur, importance_electric_vehicle, session.get('deviceId', None))
 
     return jsonify(success=True)
@@ -596,7 +553,7 @@ def update_preferences_importance_electric_vehicle():
 @app.route('/update_preferences_importance_washing_machine', methods=['POST'])
 def update_preferences_importance_washing_machine():
     importance_washing_machine = request.form.get('importance_washing_machine')
-
+    # Update the preference regarding the importance of washing machine
     updatePrefWashingMachine(mysql, g.cur, importance_washing_machine, session.get('deviceId', None))
 
     return jsonify(success=True)
@@ -605,7 +562,7 @@ def update_preferences_importance_washing_machine():
 @app.route('/update_preferences_importance_dish_washer', methods=['POST'])
 def update_preferences_importance_dish_washer():
     importance_dish_washer = request.form.get('importance_dish_washer')
-
+    # Update the preference regarding the importance of dish washer
     updatePrefDishWasher(mysql, g.cur, importance_dish_washer, session.get('deviceId', None))
 
     return jsonify(success=True)
@@ -614,7 +571,7 @@ def update_preferences_importance_dish_washer():
 @app.route('/update_preferences_importance_tumble_drier', methods=['POST'])
 def update_preferences_importance_tumble_drier():
     importance_tumble_drier = request.form.get('importance_tumble_drier')
-
+    # Update the preference regarding the importance of tumble drier
     updatePrefTumbleDrier(mysql, g.cur, importance_tumble_drier, session.get('deviceId', None))
 
     return jsonify(success=True)
@@ -623,7 +580,7 @@ def update_preferences_importance_tumble_drier():
 @app.route('/update_preferences_importance_water_heater', methods=['POST'])
 def update_preferences_importance_water_heater():
     importance_water_heater = request.form.get('importance_water_heater')
-
+    # Update the preference regarding the importance of water heater
     updatePrefWaterHeater(mysql, g.cur, importance_water_heater, session.get('deviceId', None))
 
     return jsonify(success=True)
@@ -690,13 +647,13 @@ def get_user_clothing():
     response = {
         'clothing_insulation': [
             {
-            'season_insulation':
-                {
-                    'winter_clo': winter_clo,
-                    'summer_clo': summer_clo,
-                    'spring_clo': spring_clo,
-                    'autumn_clo': autumn_clo
-                },
+                'season_insulation':
+                    {
+                        'winter_clo': winter_clo,
+                        'summer_clo': summer_clo,
+                        'spring_clo': spring_clo,
+                        'autumn_clo': autumn_clo
+                    },
             }
         ]
     }
@@ -706,7 +663,6 @@ def get_user_clothing():
 
 @app.route('/update_clothing_summer', methods=['POST'])
 def update_clothing_summer():
-
     g.cur.execute('''
         UPDATE user_clo_summer
         SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
@@ -715,13 +671,11 @@ def update_clothing_summer():
 
     mysql.connection.commit()
 
-
     return jsonify(success=True)
 
 
 @app.route('/update_clothing_winter', methods=['POST'])
 def update_clothing_winter():
-
     g.cur.execute('''
         UPDATE user_clo_winter
         SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
@@ -735,7 +689,6 @@ def update_clothing_winter():
 
 @app.route('/update_clothing_autumn', methods=['POST'])
 def update_clothing_autumn():
-
     g.cur.execute('''
         UPDATE user_clo_autumn
         SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
@@ -749,7 +702,6 @@ def update_clothing_autumn():
 
 @app.route('/update_clothing_spring', methods=['POST'])
 def update_clothing_spring():
-
     g.cur.execute('''
         UPDATE user_clo_spring 
         SET wearable_id = %s, gateway_id = %s, user_clo = %s, user_timestamp = %s
@@ -818,40 +770,10 @@ def current_session():
 
 @app.route('/get_device_status')
 def get_device_status():
-    with g.cur as cur:
 
-        query = """
-            SELECT tc_timestamp
-            FROM user_thermal_comfort
-            WHERE wearable_id = %s
-            ORDER BY tc_timestamp DESC
-            LIMIT 1
-        """
-
-        cur.execute(query, (session.get('userinfo', None)['deviceId'],))
-        latest_timestamp = cur.fetchone()
-
-        query = """
-            SELECT exclude_counter,time_st 
-            FROM exc_assist 
-            WHERE wearable_id = %s 
-            LIMIT 1
-        """
-
-        cur.execute(query, (session.get('userinfo', None)['deviceId'],))
-        result = cur.fetchone()
-
-    try:
-        exclude_count, exclude_time = result[0], result[1]
-        current_timestamp = int(time.time())
-        if exclude_count < 5 and current_timestamp - exclude_time < 12:
-            latest_timestamp = (0,)
-    except IndexError:
-        print('Initial')
-    except TypeError:
-        print('Initial')
-
-    return jsonify(latest_timestamp)
+    current_device_status = device_status(g.cur, session['deviceId'])
+    # Return the current device status
+    return current_device_status
 
 
 if __name__ == "__main__":

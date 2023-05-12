@@ -8,14 +8,18 @@ def decodeMACPayload(payload):
     mac_payload = base64.b64decode(payload).hex()
 
     # Get the integer part and the decimal part of the air temperature from the payload
-    integer_temperature, decimal_temperature = int(str(int(mac_payload[-8:-4], 16))[:2]), int(str(int(mac_payload[
-                                                                                                      -8:-4], 16))[2:])
-    air_temperature = integer_temperature + (decimal_temperature / 100)
+    integer_temperature = int(str(int(mac_payload[-8:-4], 16))[:2])
+    decimal_temperature = int(str(int(mac_payload[-8:-4], 16))[2:])
+
+    # Determine the value of air temperature
+    air_temperature = integer_temperature + 0.01*decimal_temperature
 
     # Get the integer part and the decimal part of the relative humidity from the payload
-    integer_humidity, decimal_humidity = int(str(int(mac_payload[-4:], 16))[:2]), int(str(int(mac_payload[-4:], 16))[
-                                                                                      2:])
-    relative_humidity = integer_humidity + (decimal_humidity / 100)
+    integer_humidity = int(str(int(mac_payload[-4:], 16))[:2])
+    decimal_humidity = int(str(int(mac_payload[-4:], 16))[2:])
+
+    # Determine the value of relative humidity
+    relative_humidity = integer_humidity + 0.01*decimal_humidity
 
     # Value of total energy expenditure in kCal
     decimal_energy_exp = int(mac_payload[34:42], 16) * 0.1
