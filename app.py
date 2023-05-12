@@ -252,6 +252,7 @@ def handle_ttn_webhook():
 
     if result is None:
         insert_into_exc_assist(g.cur, mysql, device_id)
+        new_ses, reset, init_temp = False, False, 0
     else:
         new_ses, reset, init_temp = result[0]
 
@@ -265,7 +266,7 @@ def handle_ttn_webhook():
         wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp,tc_temperature, device_id)
 
     if case == CASE_NEW_SESSION:
-        tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id)
+        tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time)
 
     # Calculate tc_met
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)

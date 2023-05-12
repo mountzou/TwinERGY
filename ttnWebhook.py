@@ -92,11 +92,12 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
         execute_query(cur, mysql, query, params, commit=True)
     return tc_temperature
 
-def handle_new_session(cur, mysql, raw_temp, device_id):
+def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time):
 
     new_ses = True
     reset = True
-    tc_temperature = raw_temp
+    if tc_timestamp - p_time > 600:
+        tc_temperature = raw_temp
     wb_index = 100
     query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {tc_temperature} WHERE wearable_id = %s"
     params = (device_id,)
