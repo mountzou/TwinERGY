@@ -26,7 +26,7 @@ def initialize_user_clothing_insulation_winter(mysql, cur, device_id, gateway_id
         insert_preferences_query = '''
             INSERT INTO user_clo_winter
             (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.68, %s)
+            VALUES (%s, %s, 0.88, %s)
         '''
         cur.execute(insert_preferences_query, (device_id, gateway_id, int(time.time())))
         mysql.connection.commit()
@@ -48,7 +48,7 @@ def initialize_user_clothing_insulation_autumn(mysql, cur, device_id, gateway_id
         insert_autumn_clothing_query = '''
             INSERT INTO user_clo_autumn
             (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.36, %s)
+            VALUES (%s, %s, 0.56, %s)
         '''
         cur.execute(insert_autumn_clothing_query, (device_id, gateway_id, int(time.time())))
         mysql.connection.commit()
@@ -70,7 +70,7 @@ def initialize_user_clothing_insulation_spring(mysql, cur, device_id, gateway_id
         insert_spring_clothing_query = '''
             INSERT INTO user_clo_spring
             (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.36, %s)
+            VALUES (%s, %s, 0.56, %s)
         '''
         cur.execute(insert_spring_clothing_query, (device_id, gateway_id, int(time.time())))
         mysql.connection.commit()
@@ -92,7 +92,7 @@ def initialize_user_clothing_insulation_summer(mysql, cur, device_id, gateway_id
         insert_summer_clothing_query = '''
             INSERT INTO user_clo_summer
             (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.23, %s)
+            VALUES (%s, %s, 0.43, %s)
         '''
         cur.execute(insert_summer_clothing_query, (device_id, gateway_id, int(time.time())))
         mysql.connection.commit()
