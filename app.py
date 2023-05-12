@@ -18,7 +18,7 @@ from updatePreferences import updateThermalComfortPreference, updateTemperatureP
     updateTimeWaterHeater
 
 from getPreferences import getThermalComfortPreferences, getTemperaturePreferences, getFlexibleLoadsPreferences
-from getClothing import getWinterClo, getSummerClo, getSpringClo, getAutumnClo, getSeason, getUseClo
+from getClothing import getWinterClo, getSummerClo, getSpringClo, getAutumnClo, get_clo_insulation
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
@@ -55,19 +55,6 @@ app.secret_key = 'secret'
 # A function that creates the cursor object to interact with the mySQL database
 def get_db_cursor():
     return mysql.connection.cursor()
-
-
-def getUseClo(connection, wearable_id):
-    current_season = getSeason()
-    with mysql.connection.cursor() as cur:
-        if current_season == "winter":
-            return getWinterClo(cur, wearable_id)
-        elif current_season == "spring":
-            return getSpringClo(cur, wearable_id)
-        elif current_season == "summer":
-            return getSummerClo(cur, wearable_id)
-        else:
-            return getAutumnClo(cur, wearable_id)
 
 
 # A function to check for updates by the specific wearable device during the last 24 hours
@@ -120,11 +107,9 @@ def login():
 # A function that implements the access token generation for an authenticated user
 @app.route('/callback')
 def callback():
-    code_token = request.args.get('code')
-
     access_token = keycloak_openid.token(
         grant_type='authorization_code',
-        code=code_token,
+        code=request.args.get('code'),
         redirect_uri=request.base_url)
 
     session['access_token'] = access_token
@@ -150,7 +135,7 @@ def logout():
     return redirect('/login')
 
 
-# A functions that implements the 'Dashboard' page under the route '/index/, 'dashboard' and '/'
+# A function that renders the template of the 'Dashboard' page under the routes '/index/, 'dashboard' and '/'
 @app.route("/")
 @app.route("/index/")
 @app.route("/dashboard/")
@@ -158,25 +143,37 @@ def rout():
     return render_template("index.html") if g.total_daily_data else render_template("index-empty.html")
 
 
+# A function that renders the template of the 'Thermal Comofrt' page under the route '/thermal_comfort/.
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
     return render_template("thermal-comfort.html")
-    # if g.total_daily_data else render_template("thermal-comfort-empty.html")
 
 
-# A functions that implements the 'Preferences' page under the route '/preferences/'
+# A function that renders the template of the 'Preferences' page under the route '/preferences/.
 @app.route("/preferences/", methods=["GET", "POST"])
 def preferences():
     return render_template("preferences.html")
 
 
-# A functions that implements the 'Clothing Insulation' page under the route '/clothing_insulation /'
+# A functions that renders the 'Clothing Insulation' page under the route '/clothing_insulation /'
 @app.route("/clothing_insulation/", methods=["GET", "POST"])
 def clothing_insulation():
     return render_template("clothing-insulation.html")
 
 
-# A functions that implements the API service that provides consumer's thermal comfort to CDMP under the route 'api_tc'
+# A functions that renders the 'Account' page under the route '/account/'
+@app.route('/account/')
+def account():
+    return render_template('account.html')
+
+
+# A functions that renders the 'Helpdesk' page under the route '/helpdesk/'
+@app.route('/helpdesk')
+def helpdesk():
+    return render_template('helpdesk.html')
+
+
+# A functions that implements the API service that provides consumer's thermal comfort to CDMP under the route '/api_tc'
 @app.route('/api_tc', methods=['GET'])
 def api_tc():
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
@@ -357,7 +354,7 @@ def handle_ttn_webhook():
         if tc_met < 1: tc_met = 1
         if tc_met > 6: tc_met = 6
 
-    tc_clo = getUseClo(g.cur, device_id)[0]
+    tc_clo = get_clo_insulation(mysql, g.cur, userinfo['deviceId'])[0]
 
     tc_comfort = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
@@ -370,18 +367,6 @@ def handle_ttn_webhook():
     g.cur.close()
 
     return jsonify({'status': 'success'}), 200
-
-
-# A functions that implements the 'Account' page under the route '/account/'
-@app.route('/account/')
-def account():
-    return render_template('account.html')
-
-
-# A functions that implements the 'Helpdesk' page under the route '/helpdesk/'
-@app.route('/helpdesk')
-def helpdesk():
-    return render_template('helpdesk.html')
 
 
 # A route that implements an asynchronous call to retrieve data related to the user's thermal comfort during the last 24 hours
@@ -405,7 +390,7 @@ def get_data_thermal_comfort():
 
     average_met = met_sum / met_count if met_count > 0 else 0
 
-    clo_insulation = getUseClo(g.cur, session['deviceId'])[0]
+    clo_insulation = get_clo_insulation(mysql, g.cur, userinfo['deviceId'])[0]
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, clo_insulation,
@@ -418,18 +403,14 @@ def get_data_thermal_comfort():
 
 @app.route('/get_user_clothing_insulation')
 def get_user_clothing_insulation():
-    tables = ['user_clo_winter', 'user_clo_summer', 'user_clo_autumn', 'user_clo_spring']
-    seasons = ['winter', 'summer', 'autumn', 'spring']
-    user_clo_dict = {}
+    summer_clo = getSummerClo(g.cur, session.get('userinfo', None)['deviceId'])[0]
+    winter_clo = getWinterClo(g.cur, session.get('userinfo', None)['deviceId'])[0]
+    autumn_clo = getAutumnClo(g.cur, session.get('userinfo', None)['deviceId'])[0]
+    spring_clo = getSpringClo(g.cur, session.get('userinfo', None)['deviceId'])[0]
 
-    for season, table in zip(seasons, tables):
-        g.cur.execute(f'''SELECT user_clo FROM {table} WHERE wearable_id = %s''', (
-            session.get('userinfo', None)['deviceId'],))
-        clo_value = g.cur.fetchone()
-        user_clo_dict[season] = clo_value[0] if clo_value else None
+    user_clo_dict = {"summer": summer_clo, "winter": winter_clo, "autumn": autumn_clo, "spring": spring_clo}
 
-    user_clo_json = json.dumps(user_clo_dict)
-    return user_clo_json
+    return json.dumps(user_clo_dict)
 
 
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
@@ -737,7 +718,7 @@ def get_data_thermal_comfort_range():
 
     thermal_comfort_list = []
 
-    clo_insulation = getUseClo(g.cur, userinfo['deviceId'])[0]
+    clo_insulation = get_clo_insulation(mysql, g.cur, userinfo['deviceId'])[0]
 
     for row in thermal_comfort_data:
         tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met = row
