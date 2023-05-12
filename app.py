@@ -70,9 +70,6 @@ def check_for_daily_updates():
     g.total_daily_data = number_of_daily_data
 
 
-def generate_random_number_near(number, range_start, range_end):
-    return random.uniform(number - range_start, number + range_end)
-
 
 @app.before_request
 def require_login():
