@@ -257,6 +257,10 @@ def handle_ttn_webhook():
     if case == CASE_NEW_SESSION:
         tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp)
 
+    query = f"UPDATE exc_assist SET p_temperature={raw_temp} WHERE wearable_id = %s"
+    params = (device_id,)
+    execute_query(g.cur, mysql, query, params, commit=True)
+
     # Calculate tc_met
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
 
