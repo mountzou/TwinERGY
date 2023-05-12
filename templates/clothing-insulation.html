@@ -9,8 +9,8 @@
       type="text/css">{% endblock html_css %}
 
 <!-- Set the breadcrumb names for the specific page -->
-{% set breadcrumb_level_one = 'Clothing Insulation' %}
-{% set breadcrumb_level_two = '' %}
+{% set breadcrumb_level_one = 'Thermal Comfort & Well-being' %}
+{% set breadcrumb_level_two = 'Clothing Insulation' %}
 
 {% block content %}
 
@@ -22,6 +22,8 @@
 
 
     <div class="row mb-32pt">
+
+        <!-- The UI card component that displays the clothing insulation of the current summer outfit -->
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
@@ -30,6 +32,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- The UI card component that displays the clothing insulation of the current winter outfit -->
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
@@ -38,6 +42,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- The UI card component that displays the clothing insulation of the current autumn outfit -->
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
@@ -46,6 +52,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- The UI card component that displays the clothing insulation of the current spring outfit -->
         <div class="col-lg-3">
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
@@ -54,98 +62,103 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     <form action="" id="clothing-form">
 
+        <!-- SUMMER OUTFIT -->
         <div class="row mt-32pt mb-32pt">
+            <!-- The title and the description of the UI slider of the summer outfit -->
             <div class="col-lg-4">
                 <div class="page-separator">
                     <div class="page-separator__text">Summer</div>
                 </div>
                 <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                    Insert your typical <code>summer outfit</code> clothing garments.
+                    Insert the clothing garments combination that reflects your typical <code>SUMMER OUTFIT</code>.
                 </p>
             </div>
+            <!-- The UI slider of the summer outfit -->
             <div class="col-lg-8 d-flex align-items-center">
                 <div class="flex" style="max-width: 100%">
-
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label" for="summer_total_clo">Typical Outfit</label>
                         <div class="col-sm-9">
                             <input id="summer_total_clo" name="summer_total_clo" type="text">
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
 
+        <!-- WINTER OUTFIT -->
         <div class="row mt-32pt mb-32pt">
+            <!-- The title and the description of the UI slider of the winter outfit -->
             <div class="col-lg-4">
                 <div class="page-separator">
                     <div class="page-separator__text">Winter</div>
                 </div>
                 <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                    Insert your typical <code>winter outfit</code> clothing garments.
+                    Insert the clothing garments combination that reflects your typical <code>WINTER OUTFIT</code>.
                 </p>
             </div>
+            <!-- The UI slider of the winter outfit -->
             <div class="col-lg-8 d-flex align-items-center">
                 <div class="flex" style="max-width: 100%">
-
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label" for="winter_total_clo">Typical Outfit</label>
                         <div class="col-sm-9">
                             <input id="winter_total_clo" name="winter_total_clo" type="text">
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
 
+        <!-- AUTUMN OUTFIT -->
         <div class="row mt-32pt mb-32pt">
+            <!-- The title and the description of the UI slider of the autumn outfit -->
             <div class="col-lg-4">
                 <div class="page-separator">
                     <div class="page-separator__text">Autumn</div>
                 </div>
                 <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                    Insert your typical <code>autumn outfit</code> clothing garments.
+                    Insert the clothing garments combination that reflects your typical <code>AUTUMN OUTFIT</code>.
                 </p>
             </div>
+            <!-- The UI slider of the autumn outfit -->
             <div class="col-lg-8 d-flex align-items-center">
                 <div class="flex" style="max-width: 100%">
-
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label" for="autumn_total_clo">Typical Outfit</label>
                         <div class="col-sm-9">
                             <input id="autumn_total_clo" name="autumn_total_clo" type="text">
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
 
+        <!-- SPRING OUTFIT -->
         <div class="row mt-32pt mb-32pt">
+            <!-- The title and the description of the UI slider of the spring outfit -->
             <div class="col-lg-4">
                 <div class="page-separator">
                     <div class="page-separator__text">Spring</div>
                 </div>
                 <p class="card-subtitle text-70 mb-16pt mb-lg-0 border-left-3 border-left-primary pl-24pt pl-md-32pt">
-                    Insert your typical <code>spring outfit</code> clothing garments.
+                    Insert the clothing garments combination that reflects your typical <code>SPRING OUTFIT</code>.
                 </p>
             </div>
             <div class="col-lg-8 d-flex align-items-center">
                 <div class="flex" style="max-width: 100%">
-
+                    <!-- The UI slider of the spring outfit -->
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label" for="spring_total_clo">Typical Outfit</label>
                         <div class="col-sm-9">
                             <input id="spring_total_clo" name="spring_total_clo" type="text">
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
