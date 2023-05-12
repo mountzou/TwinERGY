@@ -390,7 +390,7 @@ def get_data_thermal_comfort():
 
     average_met = met_sum / met_count if met_count > 0 else 0
 
-    clo_insulation = get_clo_insulation(mysql, g.cur, (session.get('deviceId', None))[0]
+    clo_insulation = get_clo_insulation(mysql, g.cur, (session.get('deviceId', None)))[0]
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, clo_insulation,
