@@ -262,7 +262,7 @@ def handle_ttn_webhook():
         wb_index = handle_unwanted_reset(g.cur, mysql, wb_index, device_id)
 
     if case == CASE_NORMAL_FLOW:
-        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, reset, new_ses, raw_temp, p_temperature, init_temp, device_id)
+        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, device_id)
 
     if case == CASE_NEW_SESSION:
         tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id)

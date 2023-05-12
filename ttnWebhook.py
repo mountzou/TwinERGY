@@ -48,26 +48,27 @@ def fetch_exc_assist(mysql, cur, device_id):
     return cur.fetchall()
 
 
-def handle_normal_flow(cur, mysql, reset, new_ses, raw_temp, p_temperature, init_temp, device_id):
+def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, device_id):
 
-
-    wb_index = handle_reset(cur , mysql, reset, wb_index, device_id)
-    tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, device_id)
+    if reset:
+        wb_index = handle_reset(cur , mysql, wb_index, device_id)
+    if new_ses:
+        tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, device_id)
 
     return wb_index, tc_temperature
 
 
-def handle_reset(cur , mysql, reset, wb_index, device_id):
-    if reset == True:
-        if wb_index < 100:
-            wb_index = 100
-        else:
-            reset = False
-            cur.execute(
-                f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s",
-                (
-                    device_id,))
-            mysql.connection.commit()
+def handle_reset(cur , mysql, wb_index, device_id):
+
+    if wb_index < 100:
+        wb_index = 100
+    else:
+        reset = False
+        cur.execute(
+            f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s",
+            (
+                device_id,))
+        mysql.connection.commit()
     return wb_index
 
 def handle_unwanted_reset(cur, mysql, wb_index, device_id):
