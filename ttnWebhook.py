@@ -53,7 +53,7 @@ def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_tempera
     if reset:
         wb_index = handle_reset(cur , mysql, wb_index, device_id)
     if new_ses:
-        tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, device_id)
+        tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp,tc_temperature, device_id)
 
     return wb_index, tc_temperature
 
