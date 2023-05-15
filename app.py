@@ -241,6 +241,7 @@ def handle_ttn_webhook():
         new_ses, reset, init_temp, p_temperature, tries = False, False, 0, raw_temp, 0
     else:
         new_ses, reset, init_temp, p_temperature, tries = result[0]
+        print("fetched:", tries)
 
     # Check the time difference of the current timestamp to the previous stored to decide what is the case
     case = check_case(tc_timestamp, p_time)
