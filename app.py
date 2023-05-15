@@ -238,9 +238,9 @@ def handle_ttn_webhook():
 
     if result is None:
         insert_into_exc_assist(g.cur, mysql, device_id)
-        new_ses, reset, init_temp, p_temperature = False, False, 0, raw_temp
+        new_ses, reset, init_temp, p_temperature, tries = False, False, 0, raw_temp, 0
     else:
-        new_ses, reset, init_temp, p_temperature = result[0]
+        new_ses, reset, init_temp, p_temperature, tries = result[0]
 
     # Check the time difference of the current timestamp to the previous stored to decide what is the case
     case = check_case(tc_timestamp, p_time)
@@ -250,7 +250,7 @@ def handle_ttn_webhook():
 
     if case == CASE_NORMAL_FLOW:
         wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature,
-                                                      init_temp, tc_temperature, device_id)
+                                                      init_temp, tc_temperature, device_id, tries)
 
     if case == CASE_NEW_SESSION:
         tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time,
