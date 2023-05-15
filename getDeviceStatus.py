@@ -17,7 +17,7 @@ def device_status(cur, device_id):
         latest_timestamp = cur.fetchone()
 
         query = """
-            SELECT exclude_counter,time_st 
+            SELECT tries,time_st 
             FROM exc_assist 
             WHERE wearable_id = %s 
             LIMIT 1
@@ -27,9 +27,9 @@ def device_status(cur, device_id):
         result = cur.fetchone()
 
     try:
-        exclude_count, exclude_time = result[0], result[1]
+        tries, exclude_time = result[0], result[1]
         current_timestamp = int(time.time())
-        if exclude_count < 5 and current_timestamp - exclude_time < 12:
+        if tries < 5 and current_timestamp - exclude_time < 12:
             latest_timestamp = (0,)
     except IndexError:
         print('Initial')
