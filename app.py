@@ -158,8 +158,9 @@ def rout():
 # A function that renders the template of the 'Thermal Comfort' page under the route '/thermal_comfort/.
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    return render_template("thermal-comfort.html") if g.total_daily_data else render_template(
-        "thermal-comfort-empty.html")
+    return render_template("thermal-comfort.html")
+        # if g.total_daily_data else render_template(
+        # "thermal-comfort-empty.html")
 
 
 # A function that renders the template of the 'Preferences' page under the route '/preferences/.
