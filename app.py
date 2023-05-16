@@ -61,10 +61,24 @@ def get_db_cursor():
 
 # A function to check for updates by the specific wearable device during the last 24 hours
 def check_for_daily_updates():
+    # Get the current datetime
+    now = datetime.now(timezone.utc)
+
+    # Create a new datetime at midnight
+    midnight = datetime(year=now.year, month=now.month, day=now.day, hour=0, minute=0, second=0, tzinfo=timezone.utc)
+
+    # Convert the datetime to a UNIX timestamp
+    timestamp = int(midnight.timestamp())
+
+    # Execute the modified query
     g.cur.execute(
-        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
+        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= %s AND wearable_id = %s''',
         (
-            session.get('deviceId', None),))
+            timestamp,
+            session.get('deviceId', None),
+        )
+    )
+
     (number_of_daily_data,) = g.cur.fetchone()
     g.total_daily_data = number_of_daily_data
 
