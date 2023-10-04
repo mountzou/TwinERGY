@@ -49,30 +49,12 @@ function checkForNewData() {
         status = 'init';
       } else if (-12 < currentTimestamp - data[0] && currentTimestamp - data[0] < 12) {
           if (previousStatus !== 'active') {
-                Swal.fire({
-                      title: 'Success !',
-                      text: 'Your device is now active !',
-                      icon: 'success',
-                      customClass: {
-                        confirmButton: 'btn btn-primary'
-                      },
-                      width: '300px',
-                      height: '200px'
-                });
+
           }
           status = 'active';
       } else {
         if (previousStatus !== 'inactive') {
-                Swal.fire({
-                      title: 'Error !',
-                      text: 'Your device is not active !',
-                      icon: 'error',
-                      customClass: {
-                        confirmButton: 'btn btn-primary'
-                      },
-                      width: '300px',
-                      height: '200px'
-                });
+
         }
         status = 'inactive';
       }
