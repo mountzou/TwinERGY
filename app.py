@@ -48,9 +48,9 @@ mysql = MySQL(app)
 
 # Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
-    client_id='cdt-twinergy',
-    realm_name='TwinERGY',
-    client_secret_key="secret")
+                                 client_id='cdt-twinergy',
+                                 realm_name='TwinERGY',
+                                 client_secret_key="secret")
 app.secret_key = 'secret'
 
 
@@ -61,13 +61,26 @@ def get_db_cursor():
 
 # A function to check for updates by the specific wearable device during the last 24 hours
 def check_for_daily_updates():
+    # Get the current datetime
+    now = datetime.now(timezone.utc)
+
+    # Create a new datetime at midnight
+    midnight = datetime(year=now.year, month=now.month, day=now.day, hour=0, minute=0, second=0, tzinfo=timezone.utc)
+
+    # Convert the datetime to a UNIX timestamp
+    timestamp = int(midnight.timestamp())
+
+    # Execute the modified query
     g.cur.execute(
-        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 HOUR)) AND wearable_id = %s''',
+        '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= %s AND wearable_id = %s''',
         (
-            session.get('deviceId', None),))
+            timestamp,
+            session.get('deviceId', None),
+        )
+    )
+
     (number_of_daily_data,) = g.cur.fetchone()
     g.total_daily_data = number_of_daily_data
-
 
 
 @app.before_request
@@ -95,10 +108,10 @@ def before_request():
 def login():
     if urlparse(request.base_url).netloc == '127.0.0.1:5000':
         auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback",
-            scope="openid", state="af0ifjsldkj")
+                                            scope="openid", state="af0ifjsldkj")
     else:
         auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback",
-            scope="openid", state="af0ifjsldkj")
+                                            scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -142,10 +155,12 @@ def rout():
     return render_template("index.html") if g.total_daily_data else render_template("index-empty.html")
 
 
-# A function that renders the template of the 'Thermal Comofrt' page under the route '/thermal_comfort/.
+# A function that renders the template of the 'Thermal Comfort' page under the route '/thermal_comfort/.
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
-    return render_template("thermal-comfort.html") if g.total_daily_data else render_template("thermal-comfort-empty.html")
+    return render_template("thermal-comfort.html")
+        # if g.total_daily_data else render_template(
+        # "thermal-comfort-empty.html")
 
 
 # A function that renders the template of the 'Preferences' page under the route '/preferences/.
@@ -225,7 +240,8 @@ def handle_ttn_webhook():
 
     decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
     raw_temp = decodedPayload[0]
-    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), decodedPayload[1], decodedPayload[2], decodedPayload[4], decodedPayload[3]
+    tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), \
+        decodedPayload[1], decodedPayload[2], decodedPayload[4], decodedPayload[3]
 
     # Retrieve the latest stored value in the thermal comfort database
     previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
@@ -237,9 +253,9 @@ def handle_ttn_webhook():
 
     if result is None:
         insert_into_exc_assist(g.cur, mysql, device_id)
-        new_ses, reset, init_temp, p_temperature = False, False, 0, raw_temp-1
+        new_ses, reset, init_temp, p_temperature, tries = False, False, 0, raw_temp, 0
     else:
-        new_ses, reset, init_temp, p_temperature = result[0]
+        new_ses, reset, init_temp, p_temperature, tries = result[0]
 
     # Check the time difference of the current timestamp to the previous stored to decide what is the case
     case = check_case(tc_timestamp, p_time)
@@ -248,10 +264,12 @@ def handle_ttn_webhook():
         wb_index = handle_unwanted_reset(g.cur, mysql, wb_index, device_id)
 
     if case == CASE_NORMAL_FLOW:
-        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, tc_temperature, device_id)
+        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature,
+                                                      init_temp, tc_temperature, device_id, tries)
 
     if case == CASE_NEW_SESSION:
-        tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp)
+        tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time,
+                                                      init_temp)
 
     query = f"UPDATE exc_assist SET p_temperature={raw_temp} WHERE wearable_id = %s"
     params = (device_id,)
@@ -265,7 +283,8 @@ def handle_ttn_webhook():
     tc_comfort = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
     # Execute SQL INSERT statement
-    insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo, tc_comfort, tc_timestamp, device_id, gateway_id, wb_index)
+    insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
+                                     tc_comfort, tc_timestamp, device_id, gateway_id, wb_index)
 
     return jsonify({'status': 'success'}), 200
 
@@ -301,8 +320,9 @@ def get_data_thermal_comfort():
     clo_insulation = get_clo_insulation(mysql, g.cur, (session.get('deviceId', None)))[0]
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
-                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met, clo_insulation,
-                                       0.1), clo_insulation)
+                                   get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met,
+                                                 clo_insulation,
+                                                 0.1), clo_insulation)
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
 
@@ -418,7 +438,7 @@ def update_preferences_thermal_comfort():
     user_thermal_level_max = request.form.get('user_thermal_level_max')
 
     updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max,
-        session.get('deviceId', None))
+                                   session.get('deviceId', None))
     return jsonify(success=True)
 
 
@@ -452,7 +472,7 @@ def update_preferences_importance_washing_machine():
 @app.route('/update_preferences_importance_dish_washer', methods=['POST'])
 def update_preferences_importance_dish_washer():
     importance_dish_washer = request.form.get('importance_dish_washer')
-    # Update the preference regarding the importance of dish washer
+    # Update the preference regarding the importance of dishwasher
     updatePrefDishWasher(mysql, g.cur, importance_dish_washer, session.get('deviceId', None))
 
     return jsonify(success=True)
@@ -660,7 +680,6 @@ def current_session():
 
 @app.route('/get_device_status')
 def get_device_status():
-
     current_device_status = device_status(g.cur, session['deviceId'])
     # Return the current device status
     return current_device_status

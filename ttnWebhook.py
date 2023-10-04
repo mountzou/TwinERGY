@@ -38,23 +38,23 @@ def fetch_previous_metabolic(mysql, cur, device_id):
 
 
 def insert_into_exc_assist(cur, mysql, device_id):
-    query = f"INSERT INTO exc_assist (new_ses , reset , init_temp , wearable_id) VALUES ({False}, '{False}', {0}, {device_id})"
+    query = f"INSERT INTO exc_assist (new_ses , reset , init_temp , wearable_id, tries) VALUES ({False}, '{False}', {0}, {device_id}, {0})"
     execute_query(cur, mysql, query, commit=True)
 
 
 def fetch_exc_assist(mysql, cur, device_id):
-    query = '''SELECT new_ses, reset, init_temp, p_temperature FROM exc_assist WHERE wearable_id = %s LIMIT 1'''
+    query = '''SELECT new_ses, reset, init_temp, p_temperature, tries FROM exc_assist WHERE wearable_id = %s LIMIT 1'''
     params = (device_id,)
     execute_query(cur, mysql, query, params)
     return cur.fetchall()
 
 
-def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, tc_temperature, device_id):
+def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, tc_temperature, device_id, tries):
 
     if reset:
         wb_index = handle_reset(cur, mysql, wb_index, device_id)
     if new_ses:
-        tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id)
+        tc_temperature = handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id, tries)
 
     return wb_index, tc_temperature
 
@@ -85,26 +85,31 @@ def handle_unwanted_reset(cur, mysql, wb_index, device_id):
 def generate_random_number_near(number, range_start, range_end):
     return random.uniform(number - range_start, number + range_end)
 
-def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id):
+def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id, tries):
     if raw_temp - p_temperature >= 0:
         tc_temperature = generate_random_number_near(init_temp, 0, 0.5)
     else:
-        new_ses = False
-        query = f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s"
-        params = (device_id,)
-        execute_query(cur, mysql, query, params, commit=True)
+        if tries > 2:
+            new_ses = False
+            query = f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s"
+            params = (device_id,)
+            execute_query(cur, mysql, query, params, commit=True)
+        else:
+            query = f"UPDATE exc_assist SET tries = {tries + 1} WHERE wearable_id = %s"
+            params = (device_id,)
+            execute_query(cur, mysql, query, params, commit=True)
     return tc_temperature
 
 def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp):
 
     new_ses = True
     reset = True
-    if tc_timestamp - p_time > 600:
+    if tc_timestamp - p_time > 1800:
         tc_temperature = raw_temp
     else:
         tc_temperature = init_temp
     wb_index = 100
-    query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {tc_temperature}, p_temperature={raw_temp} WHERE wearable_id = %s"
+    query = f"UPDATE exc_assist SET new_ses = {new_ses}, reset = {reset}, init_temp = {tc_temperature}, p_temperature={raw_temp}, tries={0} WHERE wearable_id = %s"
     params = (device_id,)
     execute_query(cur, mysql, query, params, commit=True)
     return tc_temperature, wb_index
