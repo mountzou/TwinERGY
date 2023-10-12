@@ -195,6 +195,8 @@ def api_tc():
         '''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MINUTE));''')
     latest_data = g.cur.fetchall()
 
+    print(latest_data)
+
     def create_data_dict(data=None):
         if data is None:
             data = [0, 0, 0, 0, 0, 0, 0]

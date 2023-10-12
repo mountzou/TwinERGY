@@ -6,10 +6,11 @@ import random
 from decodeLoRaPackage import decodeMACPayload
 from determineAirTemperature import get_air_temperature
 
+
 def check_case(tc_timestamp, p_time):
-    if tc_timestamp - p_time >30:
+    if tc_timestamp - p_time > 30:
         return CASE_NEW_SESSION
-    elif tc_timestamp - p_time >12:
+    elif tc_timestamp - p_time > 12:
         return CASE_UNWANTED_RESET
     else:
         return CASE_NORMAL_FLOW
@@ -37,11 +38,16 @@ def fetch_previous_metabolic(mysql, cur, device_id):
     return cur.fetchall()
 
 
-def insert_into_exc_assist(cur, mysql, device_id,tc_timestamp):
+def insert_into_exc_assist(cur, mysql, device_id, tc_timestamp):
     print(device_id)
-    device_id = int(device_id, 16)
-    query = f"INSERT INTO exc_assist (new_ses , reset , init_temp , wearable_id, tries, time_st, p_temperature) VALUES ({0}, {0}, {0}, {device_id}, {0},{tc_timestamp},{0})"
-    execute_query(cur, mysql, query, commit=True)
+    # Ensure device_id is a string
+    device_id = str(device_id)
+    query = """
+    INSERT INTO exc_assist (new_ses, reset, init_temp, wearable_id, tries, time_st, p_temperature)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    params = (0, 0, 0, device_id, 0, tc_timestamp, 0)
+    execute_query(cur, mysql, query, params, commit=True)
 
 
 def fetch_exc_assist(mysql, cur, device_id):
@@ -52,7 +58,6 @@ def fetch_exc_assist(mysql, cur, device_id):
 
 
 def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature, init_temp, tc_temperature, device_id, tries):
-
     if reset:
         wb_index = handle_reset(cur, mysql, wb_index, device_id)
     if new_ses:
@@ -61,8 +66,7 @@ def handle_normal_flow(cur, mysql, wb_index, reset, new_ses, raw_temp, p_tempera
     return wb_index, tc_temperature
 
 
-def handle_reset(cur , mysql, wb_index, device_id):
-
+def handle_reset(cur, mysql, wb_index, device_id):
     if wb_index < 100:
         wb_index = 100
     else:
@@ -74,8 +78,8 @@ def handle_reset(cur , mysql, wb_index, device_id):
         mysql.connection.commit()
     return wb_index
 
-def handle_unwanted_reset(cur, mysql, wb_index, device_id):
 
+def handle_unwanted_reset(cur, mysql, wb_index, device_id):
     reset = True
     query = f"UPDATE exc_assist SET reset = {reset} WHERE wearable_id = %s"
     params = (device_id,)
@@ -84,8 +88,10 @@ def handle_unwanted_reset(cur, mysql, wb_index, device_id):
         wb_index = 100
     return wb_index
 
+
 def generate_random_number_near(number, range_start, range_end):
     return random.uniform(number - range_start, number + range_end)
+
 
 def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_temp, tc_temperature, device_id, tries):
     if raw_temp - p_temperature >= 0:
@@ -102,8 +108,8 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
             execute_query(cur, mysql, query, params, commit=True)
     return tc_temperature
 
-def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp):
 
+def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp):
     new_ses = True
     reset = True
     if tc_timestamp - p_time > 1800:
