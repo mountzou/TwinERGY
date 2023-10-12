@@ -38,7 +38,8 @@ def fetch_previous_metabolic(mysql, cur, device_id):
 
 
 def insert_into_exc_assist(cur, mysql, device_id):
-    query = f"INSERT INTO exc_assist (new_ses , reset , init_temp , wearable_id, tries) VALUES ({False}, '{False}', {0}, {device_id}, {0})"
+    print(device_id)
+    query = f"INSERT INTO exc_assist (new_ses , reset , init_temp , wearable_id, tries) VALUES ({0}, {0}, {0}, {device_id}, {0})"
     execute_query(cur, mysql, query, commit=True)
 
 
