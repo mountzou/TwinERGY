@@ -253,7 +253,7 @@ def handle_ttn_webhook():
 
     if result is None:
         insert_into_exc_assist(g.cur, mysql, device_id)
-        new_ses, reset, init_temp, p_temperature, tries = False, False, 0, raw_temp, 0
+        new_ses, reset, init_temp, p_temperature, tries = 0, 0, 0, raw_temp, 0
     else:
         new_ses, reset, init_temp, p_temperature, tries = result[0]
 
