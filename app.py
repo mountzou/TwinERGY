@@ -250,9 +250,10 @@ def handle_ttn_webhook():
     p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
     result = fetch_exc_assist(mysql, g.cur, device_id)
+    print(data)
     print(result)
     if not result:
-        print("inside_result_none")
+        print(device_id)
         insert_into_exc_assist(g.cur, mysql, device_id)
         new_ses, reset, init_temp, p_temperature, tries = 0, 0, 0, raw_temp, 0
     else:
