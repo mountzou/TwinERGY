@@ -226,6 +226,13 @@ function updateDashboard() {
                     onClick: function(e) {
                         e.stopPropagation();
                     }
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItems, data) {
+                            return tooltipItems.yLabel.toFixed(2) + ' °C';
+                        }
+                    }
                 }
             }
         });
@@ -263,6 +270,13 @@ function updateDashboard() {
                 legend: {
                     onClick: function(e) {
                         e.stopPropagation();
+                    }
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItems, data) {
+                            return tooltipItems.yLabel + ' met';
+                        }
                     }
                 }
             }
@@ -302,6 +316,13 @@ function updateDashboard() {
                     onClick: function(e) {
                         e.stopPropagation();
                     }
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItems, data) {
+                            return tooltipItems.yLabel.toFixed(2) + ' °C';
+                        }
+                    }
                 }
             }
         });
@@ -340,6 +361,13 @@ function updateDashboard() {
                 legend: {
                     onClick: function(e) {
                         e.stopPropagation();
+                    }
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItems, data) {
+                            return tooltipItems.yLabel + ' %';
+                        }
                     }
                 }
             }
