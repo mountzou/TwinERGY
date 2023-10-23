@@ -257,10 +257,10 @@ def handle_ttn_webhook():
     if not result:
 
         print(device_id)
-        insert_into_exc_assist(g.cur, mysql, device_id,tc_timestamp)
-        new_ses, reset, init_temp, p_temperature, tries = 0, 0, raw_temp, raw_temp, 0
+        insert_into_exc_assist(g.cur, mysql, device_id, tc_timestamp, raw_temp)
+        new_ses, reset, init_temp, p_temperature, tries, time_st = 0, 0, raw_temp, raw_temp, 0, tc_timestamp
     else:
-        new_ses, reset, init_temp, p_temperature, tries = result[0]
+        new_ses, reset, init_temp, p_temperature, tries, time_st = result[0]
 
     # Check the time difference of the current timestamp to the previous stored to decide what is the case
     case = check_case(tc_timestamp, p_time)
@@ -279,7 +279,7 @@ def handle_ttn_webhook():
         print("case new_session")
 
         tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time,
-                                                      init_temp)
+                                                      init_temp,time_st)
 
     query = f"UPDATE exc_assist SET p_temperature={raw_temp} WHERE wearable_id = %s"
     params = (device_id,)

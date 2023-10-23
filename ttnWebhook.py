@@ -38,7 +38,7 @@ def fetch_previous_metabolic(mysql, cur, device_id):
     return cur.fetchall()
 
 
-def insert_into_exc_assist(cur, mysql, device_id, tc_timestamp):
+def insert_into_exc_assist(cur, mysql, device_id, tc_timestamp,ntemp):
     print(device_id)
     # Ensure device_id is a string
     device_id = str(device_id)
@@ -46,12 +46,12 @@ def insert_into_exc_assist(cur, mysql, device_id, tc_timestamp):
     INSERT INTO exc_assist (new_ses, reset, init_temp, wearable_id, tries, time_st, p_temperature)
     VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
-    params = (0, 0, 0, device_id, 0, tc_timestamp, 0)
+    params = (0, 0, ntemp, device_id, 0, tc_timestamp, ntemp)
     execute_query(cur, mysql, query, params, commit=True)
 
 
 def fetch_exc_assist(mysql, cur, device_id):
-    query = '''SELECT new_ses, reset, init_temp, p_temperature, tries FROM exc_assist WHERE wearable_id = %s LIMIT 1'''
+    query = '''SELECT new_ses, reset, init_temp, p_temperature, tries, time_st FROM exc_assist WHERE wearable_id = %s LIMIT 1'''
     params = (device_id,)
     execute_query(cur, mysql, query, params)
     return cur.fetchall()
@@ -99,7 +99,7 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
     else:
         if tries > 2:
             new_ses = False
-            query = f"UPDATE exc_assist SET new_ses = {new_ses}, tries = {0} WHERE wearable_id = %s"
+            query = f"UPDATE exc_assist SET new_ses = {new_ses},tries={0} WHERE wearable_id = %s"
             params = (device_id,)
             execute_query(cur, mysql, query, params, commit=True)
         else:
@@ -109,14 +109,16 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
     return tc_temperature
 
 
-def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp):
+def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp, time_st):
     new_ses = True
     if tc_timestamp - p_time > 1800:
         tc_temperature = raw_temp
+        time=tc_timestamp
     else:
         tc_temperature = init_temp
+        time=time_st
     wb_index = 100
-    query = f"UPDATE exc_assist SET new_ses = {new_ses}, init_temp = {tc_temperature}, p_temperature={raw_temp}, tries={0} WHERE wearable_id = %s"
+    query = f"UPDATE exc_assist SET new_ses = {new_ses}, init_temp = {tc_temperature}, p_temperature={raw_temp}, tries={0}, time_st={time} WHERE wearable_id = %s"
     params = (device_id,)
     execute_query(cur, mysql, query, params, commit=True)
     return tc_temperature, wb_index
