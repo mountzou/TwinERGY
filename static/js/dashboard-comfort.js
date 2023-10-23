@@ -77,8 +77,8 @@ function updateDashboard() {
 
         // Update the latest temperature and humidity
         document.getElementById("latest-indoor-temperature").innerHTML = '≈ ' + latestTemperature + ' °C';
-        document.getElementById("latest-body-temperature").innerHTML = '≈ ' + latestBodyTemperature.toFixed(2) + ' °C';
-        document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
+        document.getElementById("latest-body-temperature").innerHTML = latestBodyTemperature.toFixed(2) + ' °C';
+        document.getElementById("latest-indoor-humidity").innerHTML = '≈ ' + latestHumidity + ' %';
         document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
         document.getElementById("latest-met").innerHTML = latestMet.toFixed(2) + ' met';
