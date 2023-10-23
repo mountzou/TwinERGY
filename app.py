@@ -258,7 +258,7 @@ def handle_ttn_webhook():
 
         print(device_id)
         insert_into_exc_assist(g.cur, mysql, device_id,tc_timestamp)
-        new_ses, reset, init_temp, p_temperature, tries = 0, 0, 0, raw_temp, 0
+        new_ses, reset, init_temp, p_temperature, tries = 0, 0, raw_temp, raw_temp, 0
     else:
         new_ses, reset, init_temp, p_temperature, tries = result[0]
 
@@ -266,13 +266,18 @@ def handle_ttn_webhook():
     case = check_case(tc_timestamp, p_time)
 
     if case == CASE_UNWANTED_RESET:
+        print("case unwanted reset")
         wb_index = handle_unwanted_reset(g.cur, mysql, wb_index, device_id)
 
     if case == CASE_NORMAL_FLOW:
+        print("case normal flow")
+
         wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature,
                                                       init_temp, tc_temperature, device_id, tries)
 
     if case == CASE_NEW_SESSION:
+        print("case new_session")
+
         tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time,
                                                       init_temp)
 
