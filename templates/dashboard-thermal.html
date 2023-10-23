@@ -18,7 +18,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="card card-sm">
@@ -39,9 +38,11 @@
                             <strong style="font-size:8px;">THERMAL COMFORT</strong>
                         </div>
                         <canvas class="chart-canvas position-relative z-1 chartjs-render-monitor"
-                                data-chart-legend="#attendanceDoughnutChartLegend" data-chart-line-background-color="primary;accent;gray.700;gray"
+                                data-chart-legend="#attendanceDoughnutChartLegend"
+                                data-chart-line-background-color="primary;accent;gray.700;gray"
                                 height="524"
-                                id="latest-thermal-comfort" style="display: block; height: 242px; width: 323px;" width="646">
+                                id="latest-thermal-comfort" style="display: block; height: 242px; width: 323px;"
+                                width="646">
                         </canvas>
                     </div>
                 </div>
@@ -86,11 +87,45 @@
         </div>
     </div>
 
+    <div class="page-separator">
+        <div class="page-separator__text">Metabolic Rate</div>
+    </div>
+
+    <div class="card">
+            <div class="card-header pb-2 border-0 d-flex">
+                <div class="flex">
+                    <div class="h2 mb-0" id="latest-met-rate"></div>
+                    <p class="card-title">Metabolic Rate</p>
+                </div>
+                <i class="material-icons text-50">directions_run</i>
+            </div>
+            <div class="card-body">
+                <div class="text-50 mb-16pt">
+                    <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
+                            height="500"
+                            id="daily-metabolic-rate" style="height: 180px; width: 254px;"
+                            width="508">
+                    </canvas>
+                </div>
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <div>
+                    <div class="d-flex align-items-center">
+                        <i class="material-icons text-primary mr-4pt"></i>
+                        <div class="text-70 l-updated"
+                             style="font-family:Josefin Sans; font-size:14px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
 </div>
+
 <div class="col-lg-8">
 
     <div class="page-separator">
-        <div class="page-separator__text">Daily Indoor Environmental Analysis</div>
+        <div class="page-separator__text">Indoor Environmental Analysis</div>
     </div>
 
     <div class="row">
@@ -104,11 +139,6 @@
                     <i class="material-icons text-50">device_thermostat</i>
                 </div>
                 <div class="card-body">
-                    <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                        <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;" id="daily-mean-temperature"></h3>
-                        <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">LATEST MEAN
-                            AIR TEMPERATURE</small>
-                    </div>
                     <div class="text-50 mb-16pt">
                         <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
                                 height="500"
@@ -135,21 +165,17 @@
             <div class="card ">
                 <div class="card-header pb-2 border-0 d-flex">
                     <div class="flex">
-                        <div class="h2 mb-0" id="latest-indoor-humidity"></div>
-                        <p class="card-title">Indoor Relative Humidity</p>
+                        <div class="h2 mb-0" id="latest-body-temperature"></div>
+                        <p class="card-title">Near Body Surface Temperature</p>
                     </div>
-                    <i class="material-icons text-50">opacity</i>
+                    <i class="material-icons text-50">device_thermostat</i>
                 </div>
                 <div class="card-body">
-                    <div class="text-center fullbleed d-flex align-items-center justify-content-center flex-column z-0">
-                        <h3 class="mb-0" style="font-family:Josefin Sans; font-size:24px;" id="daily-mean-humidity"></h3>
-                        <small class="text-uppercase" style="font-family:Josefin Sans; font-size:10px;">LATEST MEAN
-                            RELATIVE HUMIDITY</small>
-                    </div>
                     <div class="text-50 mb-16pt">
                         <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
                                 height="500"
-                                id="daily-humidity" style="display: block; height: 180px; width: 254px;" width="508">
+                                id="daily-body-temperature" style="display: block; height: 180px; width: 254px;"
+                                width="508">
                         </canvas>
                     </div>
                 </div>
@@ -168,6 +194,28 @@
 
         </div>
 
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card ">
+                <div class="card-header pb-2 border-0 d-flex">
+                    <div class="flex">
+                        <div class="h2 mb-0" id="latest-indoor-humidity"></div>
+                        <p class="card-title">Near Body Surface Relative Humidity</p>
+                    </div>
+                    <i class="material-icons text-50">opacity</i>
+                </div>
+                <div class="card-body">
+                    <div class="text-50 mb-16pt">
+                        <canvas class="chart-canvas js-update-chart-line js-update-chart-area chartjs-render-monitor"
+                                height="500"
+                                id="daily-humidity" style="display: block; height: 180px; width: 254px;" width="508">
+                        </canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>

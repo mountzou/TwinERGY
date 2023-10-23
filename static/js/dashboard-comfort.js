@@ -63,8 +63,10 @@ function updateDashboard() {
         let met = data.daily_thermal_comfort_data.map(x => x[4]);
         let pmv = data.daily_thermal_comfort_data.map(x => x[5]);
         let clo = data.daily_thermal_comfort_data.map(x => x[6]);
+        let t_wearable = data.daily_thermal_comfort_data.map(x => x[7]);
 
         let latestTemperature = temperature[temperature.length - 1];
+        let latestBodyTemperature = t_wearable[t_wearable.length - 1];
         let latestHumidity = humidity[humidity.length - 1];
         let latestVocIndex = voc_index[voc_index.length - 1];
         let latestVocDesc = getWellBeingDescription(voc_index[voc_index.length - 1]);
@@ -74,11 +76,13 @@ function updateDashboard() {
         let latestClo = clo[clo.length - 1];
 
         // Update the latest temperature and humidity
-        document.getElementById("latest-indoor-temperature").innerHTML = latestTemperature + ' °C';
+        document.getElementById("latest-indoor-temperature").innerHTML = '≈ ' + latestTemperature + ' °C';
+        document.getElementById("latest-body-temperature").innerHTML = '≈ ' + latestBodyTemperature.toFixed(2) + ' °C';
         document.getElementById("latest-indoor-humidity").innerHTML = latestHumidity + ' %';
         document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
         document.getElementById("latest-met").innerHTML = latestMet.toFixed(2) + ' met';
+        document.getElementById("latest-met-rate").innerHTML = latestMet.toFixed(2) + ' met';
         document.getElementById("latest-clo").innerHTML = latestClo + ' clo';
         document.getElementById("latest-PMV").innerHTML = latestPMV;
         document.getElementById("latest-PMV-desc").innerHTML = get_pmv_status(latestPMV);
@@ -96,8 +100,8 @@ function updateDashboard() {
         let mean_voc = parseFloat((sum_voc / data.daily_thermal_comfort_data.length).toFixed(2));
 
         // Update the mean temperature, humidity and VOC index
-        document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
-        document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
+//        document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
+//        document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
         document.getElementById("daily-mean-vocs").innerHTML = mean_voc+' voc.';
 
         Array.from(document.getElementsByClassName("l-updated")).forEach(element => {
@@ -105,9 +109,11 @@ function updateDashboard() {
         });
 
         var graphTargetAirTemperature = $("#daily-temperature");
+        var graphTargetBodyTemperature = $("#daily-body-temperature");
         var graphTargetHumidity = $("#daily-humidity");
         var graphTargetWB = $("#daily-VOC");
         var graphTargetThermalComfort = $("#latest-thermal-comfort");
+        var graphTargetMetabolicRate = $("#daily-metabolic-rate");
 
         var indoorTemperature = {
             labels: time,
@@ -118,6 +124,19 @@ function updateDashboard() {
                 backgroundColor: "rgb(255, 186, 77, .1)",
                 borderWidth: 3,
                 data: temperature,
+                fill: true
+            }]
+        };
+
+        var bodyTemperature = {
+            labels: time,
+            datasets: [{
+                label: "Body Temperature",
+                type: "line",
+                borderColor: "rgb(255, 186, 77)",
+                backgroundColor: "rgb(255, 186, 77, .1)",
+                borderWidth: 3,
+                data: t_wearable,
                 fill: true
             }]
         };
@@ -148,6 +167,19 @@ function updateDashboard() {
             }]
         };
 
+        var indoorMetRate = {
+            labels: time,
+            datasets: [{
+                label: "Metabolic Rate",
+                type: "line",
+                borderColor: "rgb(255, 186, 77)",
+                backgroundColor: "rgb(255, 186, 77, .1)",
+                borderWidth: 3,
+                data: met,
+                fill: true
+            }]
+        };
+
         var thermalComfort = {
             labels: ["Comfort", "Discomfort"],
             datasets: [{
@@ -170,8 +202,84 @@ function updateDashboard() {
                         ticks: {
                             padding: 12,
                             fontFamily: "Josefin Sans",
-                            suggestedMin: Math.min(...indoorTemperature.datasets[0].data) - 5, // Adjust the desired space below the chart line
-                            suggestedMax: Math.max(...indoorTemperature.datasets[0].data) + 5, // Adjust the desired space above the chart line
+                            suggestedMin: Math.min(...indoorTemperature.datasets[0].data) - 2, // Adjust the desired space below the chart line
+                            suggestedMax: Math.max(...indoorTemperature.datasets[0].data) + 2, // Adjust the desired space above the chart line
+                            beginAtZero: false,
+                            autoSkip: true,
+                            maxTicksLimit: 5,
+                            callback: function(value, index, values) {
+                                return value + " °C";
+                            },
+                        }
+                    }],
+                    xAxes: [{
+                        gridLines: {
+                            display: false,
+                            drawOnChartArea: true
+                        },
+                        ticks: {
+                            display: false,
+                        }
+                    }],
+                },
+                legend: {
+                    onClick: function(e) {
+                        e.stopPropagation();
+                    }
+                }
+            }
+        });
+
+        var graphMetRate = new Chart(graphTargetMetabolicRate, {
+            type: 'line',
+            data: indoorMetRate,
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            padding: 12,
+                            fontFamily: "Josefin Sans",
+                            suggestedMin: Math.min(...indoorMetRate.datasets[0].data), // Adjust the desired space below the chart line
+                            suggestedMax: Math.max(...indoorMetRate.datasets[0].data), // Adjust the desired space above the chart line
+                            beginAtZero: false,
+                            autoSkip: true,
+                            maxTicksLimit: 5,
+                            callback: function(value, index, values) {
+                                return value + " met";
+                            },
+                        }
+                    }],
+                    xAxes: [{
+                        gridLines: {
+                            display: false,
+                            drawOnChartArea: true
+                        },
+                        ticks: {
+                            display: false,
+                        }
+                    }],
+                },
+                legend: {
+                    onClick: function(e) {
+                        e.stopPropagation();
+                    }
+                }
+            }
+        });
+
+        var graphBodyTemperature = new Chart(graphTargetBodyTemperature, {
+            type: 'line',
+            data: bodyTemperature,
+            options: {
+                animation: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            padding: 12,
+                            fontFamily: "Josefin Sans",
+                            suggestedMin: Math.min(...indoorTemperature.datasets[0].data) - 2, // Adjust the desired space below the chart line
+                            suggestedMax: Math.max(...indoorTemperature.datasets[0].data) + 2, // Adjust the desired space above the chart line
                             beginAtZero: false,
                             autoSkip: true,
                             maxTicksLimit: 5,
@@ -208,8 +316,8 @@ function updateDashboard() {
                         ticks: {
                             padding: 12,
                             fontFamily: "Josefin Sans",
-                            suggestedMin: Math.min(...indoorHumidity.datasets[0].data) - 5, // Adjust the desired space below the chart line
-                            suggestedMax: Math.max(...indoorHumidity.datasets[0].data) + 5, // Adjust the desired space above the chart line
+                            suggestedMin: Math.min(...indoorHumidity.datasets[0].data) - 2, // Adjust the desired space below the chart line
+                            suggestedMax: Math.max(...indoorHumidity.datasets[0].data) + 2, // Adjust the desired space above the chart line
                             beginAtZero: false,
                             beginAtZero: false,
                             autoSkip: true,

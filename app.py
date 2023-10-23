@@ -327,7 +327,7 @@ def get_data_thermal_comfort():
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met,
                                                  clo_insulation,
-                                                 0.1), clo_insulation)
+                                                 0.1), clo_insulation, get_t_wearable(tc_temperature))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   reversed(thermal_comfort_data)]
 
