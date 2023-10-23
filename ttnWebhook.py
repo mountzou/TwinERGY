@@ -99,7 +99,7 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
     else:
         if tries > 2:
             new_ses = False
-            query = f"UPDATE exc_assist SET new_ses = {new_ses} WHERE wearable_id = %s"
+            query = f"UPDATE exc_assist SET new_ses = {new_ses}, tries = {0} WHERE wearable_id = %s"
             params = (device_id,)
             execute_query(cur, mysql, query, params, commit=True)
         else:
