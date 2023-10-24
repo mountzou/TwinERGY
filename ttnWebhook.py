@@ -97,7 +97,7 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
     if raw_temp - p_temperature >= 0:
         tc_temperature = generate_random_number_near(init_temp, 0, 0.5)
     else:
-        if tries > 2:
+        if tries > 5:
             new_ses = False
             query = f"UPDATE exc_assist SET new_ses = {new_ses},tries={0} WHERE wearable_id = %s"
             params = (device_id,)
