@@ -109,10 +109,9 @@ def handle_new_session_temperature(cur, mysql, raw_temp, p_temperature, init_tem
     return tc_temperature
 
 
-def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp, time_st):
+def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, init_temp, time_st, tc_temperature):
     new_ses = True
     if tc_timestamp - p_time > 1800:
-        tc_temperature = raw_temp
         time=tc_timestamp
     else:
         tc_temperature = init_temp
