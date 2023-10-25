@@ -38,7 +38,7 @@ def fetch_previous_metabolic(mysql, cur, device_id):
     return cur.fetchall()
 
 
-def insert_into_exc_assist(cur, mysql, device_id, tc_timestamp,ntemp):
+def insert_into_exc_assist(cur, mysql, device_id, tc_timestamp, ntemp):
     print(device_id)
     # Ensure device_id is a string
     device_id = str(device_id)
@@ -113,12 +113,12 @@ def handle_new_session(cur, mysql, raw_temp, device_id, tc_timestamp, p_time, in
     new_ses = True
     if tc_timestamp - p_time > 1800:
         tc_timestamp=raw_temp
-        time=tc_timestamp
+        new_time=tc_timestamp
     else:
         tc_temperature = init_temp
-        time=time_st
+        new_time=time_st
     wb_index = 100
-    query = f"UPDATE exc_assist SET new_ses = {new_ses}, init_temp = {tc_temperature}, p_temperature={raw_temp}, tries={0}, time_st={time} WHERE wearable_id = %s"
+    query = f"UPDATE exc_assist SET new_ses = {new_ses}, init_temp = {tc_temperature}, p_temperature={raw_temp}, tries={0}, time_st={new_time} WHERE wearable_id = %s"
     params = (device_id,)
     execute_query(cur, mysql, query, params, commit=True)
     return tc_temperature, wb_index
