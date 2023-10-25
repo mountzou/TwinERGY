@@ -266,6 +266,7 @@ def handle_ttn_webhook():
     if case == CASE_UNWANTED_RESET:
         print("case unwanted reset")
         wb_index = handle_unwanted_reset(g.cur, mysql, wb_index, device_id)
+        tc_temperature=p_temperature
 
     if case == CASE_NORMAL_FLOW:
         print("case normal flow")
