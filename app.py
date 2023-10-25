@@ -246,7 +246,7 @@ def handle_ttn_webhook():
     device_id = str(device_id)
     query = """
      INSERT INTO user_temperature (timestamp, wearable_id, temperature, humidity, wb_index)
-     VALUES (%s, %s, %s)
+     VALUES (%s, %s, %s, %s, %s)
      """
     params = (time.time(), device_id, raw_temp, decodedPayload[1], decodedPayload[2])
     execute_query(g.cur, mysql, query, params, commit=True)
