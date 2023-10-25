@@ -242,6 +242,14 @@ def handle_ttn_webhook():
 
     decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
     raw_temp = decodedPayload[0]
+    device_id = str(device_id)
+    query = """
+     INSERT INTO user_temperature (timestamp, wearable_id, temperature)
+     VALUES (%s, %s, %s)
+     """
+    params = (time.time(), device_id, raw_temp)
+    execute_query(g.cur, mysql, query, params, commit=True)
+
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), \
         decodedPayload[1], decodedPayload[2], decodedPayload[4], decodedPayload[3]
 
