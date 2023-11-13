@@ -240,6 +240,8 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
+    print("The original payload is:")
+    print(data)
 
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
@@ -249,7 +251,6 @@ def handle_ttn_webhook():
                                                                         decodedPayload[1], decodedPayload[2], \
                                                                         decodedPayload[4], decodedPayload[3]
 
-    # Retrieve the latest stored value in the thermal comfort database
     previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
     p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
