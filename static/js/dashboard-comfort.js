@@ -1,9 +1,3 @@
-// A function that convert the PMV index to percentage for the donut chart of dashboard
-function convertPMVToPercentage(value) {
-  var percentage = (1 - Math.abs(value) / 3) * 100;
-  return percentage.toFixed(2);
-}
-
 // A function that converts the timestamp to human readable form
 function unixToHumanReadable(unixTimestamp) {
     let date = new Date(unixTimestamp * 1000);
@@ -12,421 +6,275 @@ function unixToHumanReadable(unixTimestamp) {
 
 // A function that matches the VOC index to a literal description
 function getWellBeingDescription(value) {
-  if (0 <= value && value <= 150) {
-    return "Good";
-  } else if (151 <= value && value <= 230) {
-    return "Moderate";
-  } else if (231 <= value && value <= 300) {
-    return "Unhealthy for Sensitive Groups";
-  } else if (301 <= value && value <= 400) {
-    return "Unhealthy";
-  } else if (401 <= value && value <= 450) {
-    return "Very Unhealthy";
-  } else if (451 <= value && value <= 500) {
-    return "Hazardous";
-  } else {
-    return "Invalid input value";
-  }
+    const wellBeingRanges = [
+        { range: [0, 150], description: "Good" },
+        { range: [151, 230], description: "Moderate" },
+        { range: [231, 300], description: "Unhealthy for Sensitive Groups" },
+        { range: [301, 400], description: "Unhealthy" },
+        { range: [401, 450], description: "Very Unhealthy" },
+        { range: [451, 2000], description: "Hazardous" }
+    ];
+
+    const found = wellBeingRanges.find(({ range }) => range[0] <= value && value <= range[1]);
+    return found ? found.description : "Out of standard's range";
+}
+
+// A function that convert the PMV index to percentage for the donut chart of dashboard
+function convertPMVToPercentage(value) {
+  var percentage = (1 - Math.abs(value) / 3) * 100;
+  return percentage.toFixed(2);
 }
 
 // A function that matches the PMV index to a literal description
 function get_pmv_status(pmv) {
-  const status_dict = new Map([
-    [[-2.5, -1.5], 'Cool'],
-    [[-1.5, -0.5], 'Slightly Cool'],
-    [[-0.5, 0.5], 'Neutral'],
-    [[0.5, 1.5], 'Slightly Warm'],
-    [[1.5, 2.5], 'Warm']
-  ]);
+    const statusList = [
+        { check: val => val < -2.5, status: 'Cold' },
+        { range: [-2.5, -1.5], status: 'Cool' },
+        { range: [-1.5, -0.5], status: 'Slightly Cool' },
+        { range: [-0.5, 0.5], status: 'Neutral' },
+        { range: [0.5, 1.5], status: 'Slightly Warm' },
+        { range: [1.5, 2.5], status: 'Warm' },
+        { check: val => val > 2.5, status: 'Hot' }
+    ];
 
-  for (const [prange, status] of status_dict.entries()) {
-    if (prange[0] <= pmv && pmv < prange[1]) {
-      return status;
-    }
-  }
+    const found = statusList.find(({ range, check }) =>
+        check ? check(pmv) : range[0] <= pmv && pmv < range[1]
+    );
 
-  if (pmv < -2.5) {
-    return 'Cold';
-  } else if (pmv > 2.5) {
-    return 'Hot';
-  } else {
-    return '-';
-  }
+    return found ? found.status : '-';
 }
+
+
+// An abstract function to create line charts in the dashboard page
+function createLineChartData(label, data, time) {
+    return {
+        labels: time,
+        datasets: [{
+            label: label,
+            type: "line",
+            borderColor: "rgb(255, 186, 77)",
+            backgroundColor: "rgb(255, 186, 77, .1)",
+            borderWidth: 3,
+            data: data,
+            fill: true
+        }]
+    };
+}
+
+// An abstract function to set the configuration parameters for the line charts in the dashboard page
+function createLineChartConfig(graphTarget, data, yAxisUnit, tooltipLabelCallback) {
+    return new Chart(graphTarget, {
+        type: 'line',
+        data: data,
+        options: {
+            animation: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        padding: 12,
+                        fontFamily: "Josefin Sans",
+                        suggestedMin: Math.min(...data.datasets[0].data) - 2,
+                        suggestedMax: Math.max(...data.datasets[0].data) + 2,
+                        beginAtZero: false,
+                        autoSkip: true,
+                        maxTicksLimit: 5,
+                        callback: function(value) {
+                            return value + " " + yAxisUnit;
+                        },
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        display: false,
+                        drawOnChartArea: true
+                    },
+                    ticks: {
+                        display: false,
+                    }
+                }],
+            },
+            legend: {
+                onClick: function(e) {
+                    e.stopPropagation();
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: tooltipLabelCallback
+                }
+            }
+        }
+    });
+}
+
+function createLineChartConfigPMV(graphTarget, data, categories, tooltipLabelCallback) {
+    return new Chart(graphTarget, {
+        type: 'line',
+        data: data,
+        options: {
+            animation: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        padding: 12,
+                        fontFamily: "Josefin Sans",
+                        suggestedMin: 0,
+                        suggestedMax: 7,
+                        beginAtZero: false,
+                        autoSkip: false,
+                        maxTicksLimit: 17,
+                        callback: function(value) {
+                            return categories[value - 1];
+                        },
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        display: false,
+                        drawOnChartArea: true
+                    },
+                    ticks: {
+                        display: false,
+                    }
+                }],
+            },
+            legend: {
+                onClick: function(e) {
+                    e.stopPropagation();
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: tooltipLabelCallback
+                }
+            }
+        }
+    });
+}
+
 
 function updateDashboard() {
     $.getJSON('/get_data_thermal_comfort/', function (data) {
-        let temperature = data.daily_thermal_comfort_data.map(x => x[0]);
-        let humidity = data.daily_thermal_comfort_data.map(x => x[1]);
-        let voc_index = data.daily_thermal_comfort_data.map(x => x[3]);
-        let time = data.daily_thermal_comfort_data.map(x => unixToHumanReadable(x[2]));
-        let met = data.daily_thermal_comfort_data.map(x => x[4]);
-        let pmv = data.daily_thermal_comfort_data.map(x => x[5]);
-        let clo = data.daily_thermal_comfort_data.map(x => x[6]);
-        let t_wearable = data.daily_thermal_comfort_data.map(x => x[7]);
+        let [temperature, humidity, time, voc_index, met, pmv, clo, t_wearable, pmv_desc] = data.daily_thermal_comfort_data.reduce((acc, x) => {
+            acc[0].push(x[0]);
+            acc[1].push(x[1]);
+            acc[2].push(unixToHumanReadable(x[2]));
+            acc[3].push(x[3]);
+            acc[4].push(x[4]);
+            acc[5].push(x[5]);
+            acc[6].push(x[6]);
+            acc[7].push(x[7]);
+            acc[8].push(get_pmv_status(x[5]));
+            return acc;
+        }, [[], [], [], [], [], [], [], [], []]);
 
-        let latestTemperature = temperature[temperature.length - 1];
-        let latestBodyTemperature = t_wearable[t_wearable.length - 1];
-        let latestHumidity = humidity[humidity.length - 1];
-        let latestVocIndex = voc_index[voc_index.length - 1];
-        let latestVocDesc = getWellBeingDescription(voc_index[voc_index.length - 1]);
-        let latestTime = time[time.length - 1];
-        let latestMet = met[met.length - 1];
-        let latestPMV = pmv[pmv.length - 1];
-        let latestClo = clo[clo.length - 1];
+        let latestTemperature = temperature.at(-1);
+        let latestHumidity = humidity.at(-1);
+        let latestTime = time.at(-1);
+        let latestVocIndex = voc_index.at(-1);
+        let latestVocDesc = getWellBeingDescription(voc_index.at(-1));
+        let latestMet = met.at(-1);
+        let latestPMV = pmv.at(-1);
+        let latestClo = clo.at(-1);
+        let latestTWearable = t_wearable.at(-1);
 
         // Update the latest temperature and humidity
-        document.getElementById("latest-indoor-temperature").innerHTML = '≈ ' + latestTemperature + ' °C';
-        document.getElementById("latest-body-temperature").innerHTML = latestBodyTemperature.toFixed(2) + ' °C';
-        document.getElementById("latest-indoor-humidity").innerHTML = '≈ ' + latestHumidity + ' %';
-        document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
+        document.getElementById("latest-temperature").innerHTML = '≈ ' + latestTemperature + ' °C';
+        document.getElementById("latest-humidity").innerHTML = '≈ ' + latestHumidity + ' %';
+//        document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
-        document.getElementById("latest-met").innerHTML = latestMet.toFixed(2) + ' met';
-        document.getElementById("latest-met-rate").innerHTML = latestMet.toFixed(2) + ' met';
-        document.getElementById("latest-clo").innerHTML = latestClo + ' clo';
-        document.getElementById("latest-PMV").innerHTML = latestPMV;
-        document.getElementById("latest-PMV-desc").innerHTML = get_pmv_status(latestPMV);
-
-        let sum_tem = 0, sum_voc = 0, sum_hum = 0;
-
-        data.daily_thermal_comfort_data.reduce((accumulator, currentValue) => {
-            sum_tem += currentValue[0];
-            sum_voc += currentValue[3];
-            sum_hum += currentValue[1];
-        }, 0);
-
-        let mean_temp = parseFloat((sum_tem / data.daily_thermal_comfort_data.length).toFixed(2));
-        let mean_hum = parseFloat((sum_hum / data.daily_thermal_comfort_data.length).toFixed(2));
-        let mean_voc = parseFloat((sum_voc / data.daily_thermal_comfort_data.length).toFixed(2));
-
-        // Update the mean temperature, humidity and VOC index
-//        document.getElementById("daily-mean-temperature").innerHTML = mean_temp+' °C';
-//        document.getElementById("daily-mean-humidity").innerHTML = mean_hum+' %';
-        document.getElementById("daily-mean-vocs").innerHTML = mean_voc+' voc.';
+        document.getElementById("latest-met").innerHTML = latestMet + ' met';
+        document.getElementById("latest-pmv").innerHTML = latestPMV;
+//        document.getElementById("daily-mean-vocs").innerHTML = 20+' voc.';
 
         Array.from(document.getElementsByClassName("l-updated")).forEach(element => {
             element.innerHTML = 'Latest update at ' + latestTime;;
         });
 
-        var graphTargetAirTemperature = $("#daily-temperature");
-        var graphTargetBodyTemperature = $("#daily-body-temperature");
-        var graphTargetHumidity = $("#daily-humidity");
-        var graphTargetWB = $("#daily-VOC");
-        var graphTargetThermalComfort = $("#latest-thermal-comfort");
-        var graphTargetMetabolicRate = $("#daily-metabolic-rate");
+        var graphTargetTemperature = $("#session-temperature");
+        var graphTargetHumidity = $("#session-humidity");
+        var graphTargetMetabolic = $("#session-metabolic");
+        var graphTargetPMV = $("#session-thermal-comfort");
+        var graphTargetVOC = $("#session-VOC");
 
-        var indoorTemperature = {
-            labels: time,
-            datasets: [{
-                label: "Air Temperature",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
-                data: temperature,
-                fill: true
-            }]
+        const fangerScaleMapping = {
+            'Cold': 1,
+            'Cool': 2,
+            'Slightly Cool': 3,
+            'Neutral': 4,
+            'Slightly Warm': 5,
+            'Warm': 6,
+            'Hot': 7
         };
 
-        var bodyTemperature = {
-            labels: time,
-            datasets: [{
-                label: "Body Temperature",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
-                data: t_wearable,
-                fill: true
-            }]
-        };
+        // ---------------------
+        // START OF SECTION: IMPLEMENTATION OF THE DASHBOARD LINE CHARTS
+        // ---------------------
 
-        var indoorHumidity = {
-            labels: time,
-            datasets: [{
-                label: "Relative Humidity",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
-                data: humidity,
-                fill: true
-            }]
-        };
+        // Implement the line chart in dashboard for the PMV
+        const fangerScaleCategories = Object.keys(fangerScaleMapping);
+        const numericalData = pmv_desc.map(item => fangerScaleMapping[item]);
 
-        var indoorWB = {
-            labels: time,
-            datasets: [{
-                label: "VOC Index",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
-                data: voc_index,
-                fill: true
-            }]
-        };
+        // Create the chart data
+        var dataThermalComfort = createLineChartData("Thermal Comfort", numericalData, time);
+        const thermalComfortTooltipCallback = (tooltipItems) => fangerScaleCategories[tooltipItems.yLabel - 1];
 
-        var indoorMetRate = {
-            labels: time,
-            datasets: [{
-                label: "Metabolic Rate",
-                type: "line",
-                borderColor: "rgb(255, 186, 77)",
-                backgroundColor: "rgb(255, 186, 77, .1)",
-                borderWidth: 3,
-                data: met,
-                fill: true
-            }]
-        };
+        // Create the chart
+        var graphTargetPMV = createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback);
 
-        var thermalComfort = {
-            labels: ["Comfort", "Discomfort"],
-            datasets: [{
-                label: "Thermal Comfort",
-                data: [convertPMVToPercentage(latestPMV), (100-convertPMVToPercentage(latestPMV)).toFixed(2)],
-                backgroundColor: [
-                    "#ffba4d",
-                    "#EEEEEE",
-                ]
-            }]
-        };
+        // Implement the line chart in dashboard for the air temperature
+        var dataTemperature = createLineChartData("Air Temperature", temperature, time);
+        const temperatureTooltipCallback = (tooltipItems) => tooltipItems.yLabel.toFixed(2) + " °C";
+        var graphTemperature = createLineChartConfig(graphTargetTemperature, dataTemperature, "°C", temperatureTooltipCallback);
 
-        var graphTemperature = new Chart(graphTargetAirTemperature, {
-            type: 'line',
-            data: indoorTemperature,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            suggestedMin: Math.min(...indoorTemperature.datasets[0].data) - 2, // Adjust the desired space below the chart line
-                            suggestedMax: Math.max(...indoorTemperature.datasets[0].data) + 2, // Adjust the desired space above the chart line
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " °C";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltips: {
-                    callbacks: {
-                        label: function(tooltipItems, data) {
-                            return tooltipItems.yLabel.toFixed(2) + ' °C';
-                        }
-                    }
-                }
-            }
-        });
+        // Implement the line chart in dashboard for the relative humidity
+        var dataHumidity = createLineChartData("Relative Humidity", humidity, time);
+        const humidityTooltipCallback = (tooltipItems) => tooltipItems.yLabel + " %";
+        var graphHumidity = createLineChartConfig(graphTargetHumidity, dataHumidity, "%", humidityTooltipCallback);
 
-        var graphMetRate = new Chart(graphTargetMetabolicRate, {
-            type: 'line',
-            data: indoorMetRate,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            suggestedMin: Math.min(...indoorMetRate.datasets[0].data), // Adjust the desired space below the chart line
-                            suggestedMax: Math.max(...indoorMetRate.datasets[0].data), // Adjust the desired space above the chart line
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " met";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltips: {
-                    callbacks: {
-                        label: function(tooltipItems, data) {
-                            return tooltipItems.yLabel + ' met';
-                        }
-                    }
-                }
-            }
-        });
+        // Implement the line chart in dashboard for the metabolic rate
+        var dataMet = createLineChartData("Metabolic Rate", met, time);
+        const metRateTooltipCallback = (tooltipItems) => tooltipItems.yLabel + " met";
+        var graphMetRate = createLineChartConfig(graphTargetMetabolic, dataMet, "met", metRateTooltipCallback);
 
-        var graphBodyTemperature = new Chart(graphTargetBodyTemperature, {
-            type: 'line',
-            data: bodyTemperature,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            suggestedMin: Math.min(...indoorTemperature.datasets[0].data) - 2, // Adjust the desired space below the chart line
-                            suggestedMax: Math.max(...indoorTemperature.datasets[0].data) + 2, // Adjust the desired space above the chart line
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " °C";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltips: {
-                    callbacks: {
-                        label: function(tooltipItems, data) {
-                            return tooltipItems.yLabel.toFixed(2) + ' °C';
-                        }
-                    }
-                }
-            }
-        });
+        // Implement the line chart in dashboard for the VOC index
+        var dataVOC = createLineChartData("VOC Index", voc_index, time);
+        const vocTooltipCallback = (tooltipItems, data) => data.datasets[tooltipItems.datasetIndex].label + ': ' + tooltipItems.yLabel;
+        var graphVOC = createLineChartConfig(graphTargetVOC, dataVOC, "voc.", vocTooltipCallback);
 
-        var graphHumidity = new Chart(graphTargetHumidity, {
-            type: 'line',
-            data: indoorHumidity,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            suggestedMin: Math.min(...indoorHumidity.datasets[0].data) - 2, // Adjust the desired space below the chart line
-                            suggestedMax: Math.max(...indoorHumidity.datasets[0].data) + 2, // Adjust the desired space above the chart line
-                            beginAtZero: false,
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " %";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltips: {
-                    callbacks: {
-                        label: function(tooltipItems, data) {
-                            return tooltipItems.yLabel + ' %';
-                        }
-                    }
-                }
-            }
-        });
+        // ---------------------
+        // END OF SECTION: IMPLEMENTATION OF THE DASHBOARD LINE CHARTS
+        // ---------------------
 
-        var barGraph = new Chart(graphTargetThermalComfort, {
-            type: 'doughnut',
-            data: thermalComfort,
-            options: {
-                elements: {
-                    arc: {
-                        roundedCornersFor: 0
-                    }
-                }
-            }
-        });
+        var canvases = document.getElementsByClassName("chart-calibration");
+        var loadingTexts = document.getElementsByClassName("text-calibration");
 
-        var graphWB = new Chart(graphTargetWB, {
-            type: 'line',
-            data: indoorWB,
-            options: {
-                animation: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            padding: 12,
-                            fontFamily: "Josefin Sans",
-                            beginAtZero: false,
-                            autoSkip: true,
-                            maxTicksLimit: 5,
-                            callback: function(value, index, values) {
-                                return value + " voc.";
-                            },
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            display: false,
-                            drawOnChartArea: true
-                        },
-                        ticks: {
-                            display: false,
-                        }
-                    }],
-                },
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltips: {
-                    callbacks: {
-                        label: function(tooltipItems, data) {
-                            return data.datasets[tooltipItems.datasetIndex].label +': ' + tooltipItems.yLabel;
-                        }
-                    }
-                }
-            }
-        });
+        function showLoading() {
+            // Apply the blur to each canvas element
+            Array.from(canvases).forEach(canvas => {
+                canvas.classList.add("blur");
+            });
+
+            // Display each loading text
+            Array.from(loadingTexts).forEach(loadingText => {
+                loadingText.style.display = "block";
+            });
+        }
+
+        // Function to hide loading
+        function hideLoading() {
+            // Remove the blur from each canvas element
+            Array.from(canvases).forEach(canvas => {
+                canvas.classList.remove("blur");
+            });
+
+            // Hide each loading text
+            Array.from(loadingTexts).forEach(loadingText => {
+                loadingText.style.display = "none";
+            });
+        }
+
+//        showLoading();
 
     });
 }

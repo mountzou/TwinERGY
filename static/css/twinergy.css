@@ -1,6 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Yantramanav&display=swap');
 @import url('https://fonts.googleapis.com/css?family=Exo+2:600&display=swap');
+
+[dir=ltr] .h1, [dir=ltr] h1 {
+    font-size: 2.25rem;
+    color: #272c34;
+    background-color: #fec062;
+    padding: 2px;
+    border: none;
+    width: fit-content;
+    margin: auto;
+}
+
+
+p {
+    font-family: 'Yantramanav';
+}
+
+[dir=ltr] .small, [dir=ltr] small {
+    font-family: 'Yantramanav';
+    font-size: 0.95rem;
+}
+
+[dir=ltr] .breadcrumb {
+    justify-content: center;
+}
+
+[dir=ltr] .bg-primary {
+    background-color: #fec163 !important;
+}
+
+[dir=ltr] .table tbody td {
+    font-family: 'Yantramanav';
+    font-size: 0.95rem;
+    font-weight: 500;
+}
 
 label {
   font-family: 'Josefin Sans', sans-serif;
@@ -72,9 +106,9 @@ label {
 }
 
 [dir="ltr"] .lead {
+    font-size: 1.05rem;
   text-align: justify;
   line-height: 1.8;
-  font-weight: 500;
 }
 
 [dir="ltr"] .page-separator::before {
@@ -210,4 +244,48 @@ label {
 .swal2-content {
   font-family: 'Josefin Sans', sans-serif;
   font-size: 16px !important;
+}
+
+.full-width-content {
+    max-width: 100%;
+}
+
+[dir="ltr"] .measure-lead-max {
+    max-width: 716px;
+}
+
+.mt-mb-8pt {
+    margin-top: 8pt !important;
+    margin-bottom: 8pt !important;
+}
+
+.mt-mb-32pt {
+    margin-top: 32pt;
+    margin-bottom: 32pt;
+}
+
+.l-updated {
+    font-family:Josefin Sans;
+    font-size:15px;
+}
+
+canvas {
+    z-index: 1 !important;
+}
+
+.navbar-text-100 {
+    padding-top: 10px;
+    line-height: 1em;
+}
+
+.text-calibration {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+.blur {
+    filter: blur(5px);
 }

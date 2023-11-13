@@ -1,31 +1,48 @@
+<!-- Extend the 'base.html' template for HTML page theming -->
 {% extends "base.html" %}
 
 <!-- Add the title for the specific page -->
 {% block title %}Dashboard{% endblock title %}
 
-<!-- Set the breadcrumb levels for the specific page -->
-{% set breadcrumb_level_one = 'Dashboard' %}
-{% set breadcrumb_level_two = '' %}
+<!-- Import macros from the 'macros.html' template -->
+{% from 'macros.html' import create_component_section %}
 
+<!-- Add the main content of the dashboard page -->
 {% block content %}
-<div class="pt-32pt">
-    <div class="container page__container d-flex flex-column flex-md-row align-items-center text-center text-sm-left">
-        {% include 'breadcrumb.html' %}
-    </div>
-    <div class="container page__container">
-        <div class="page-section">
-            {% include 'dashboard-alert.html' %}
-            <div class="row mb-lg-8pt">
-                {% include 'dashboard-thermal.html' %}
-            </div>
-            <div class="row mb-lg-8pt">
-                {% include 'dashboard-well-being.html' %}
-            </div>
-            <div class="row mb-lg-8pt">
+    <div class="container">
 
+        <!-- Add a section for the breadcrumb in the dashboard page -->
+        <div class="page-section">
+            {% with b1="Dashboard", b2="" %}
+                {% include "breadcrumb.html" %}
+            {% endwith %}
+        </div>
+
+        {% include 'dashboard-alert.html' %}
+
+    </div>
+
+    {{ create_component_section('Thermal Comfort', 'Track your overall thermal comfort level from the latest active session of the wearable device.', 'Check the specific environmental and physiological parameters affected your thermal comfort status.') }}
+
+
+    <div class="container">
+        <!-- Add a section for the thermal comfort analysis in the dashboard page -->
+        <div class="page-section">
+            <div class="row">
+                {% include 'dashboard-thermal.html' %}
             </div>
         </div>
     </div>
-</div>
+
+    {{ create_component_section('Well-being Status', 'Track the overall air quality as captured from the latest active session of the wearable device.', 'Check the TVOC index within your indoor environment.') }}
+
+    <div class="container">
+        <!-- Add a section for the well-being status analysis in the dashboard page -->
+        <div class="page-section">
+            <div class="row">
+                {% include 'dashboard-well-being.html' %}
+            </div>
+        </div>
+    </div>
 
 {% endblock content %}

@@ -3,6 +3,7 @@ from collections import defaultdict
 
 
 def determineWeights(preferences):
+
     res = defaultdict(list)
     for key, val in sorted(preferences.items()):
         res[val].append(key)
@@ -47,9 +48,18 @@ def determineWeights(preferences):
                          "Electric Vehicle": "Electric Vehicle", "Dish Washer": "Dish Washer",
                          "Water Heater": "Water Heater"}
 
+    normalized_weights_index = 0
+
     for i, subset in enumerate(subsets):
         if subset[0] != 'w':
-            for appliance in subset:
-                weight_array[appliance_mapping[appliance]].append(round(normalized_weights[i], 2))
+            if normalized_weights_index < len(normalized_weights):
+                weight = round(normalized_weights[normalized_weights_index], 2)
+                for appliance in subset:
+                    weight_array[appliance_mapping[appliance]].append(weight)
+                normalized_weights_index += 1
+            else:
+                print(f"Missing weight for subset at index: {i}")
+        else:
+            print(f"Skipping 'w' at index: {i}")
 
     return weight_array

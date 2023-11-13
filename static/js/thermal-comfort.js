@@ -24,27 +24,21 @@ function unixToHumanReadableWithoutTime(unixTimestamp) {
 
 // A function that matches the PMV index to a literal description
 function get_pmv_status(pmv) {
-  const status_dict = new Map([
-    [[-2.5, -1.5], 'Cool'],
-    [[-1.5, -0.5], 'Slightly Cool'],
-    [[-0.5, 0.5], 'Neutral'],
-    [[0.5, 1.5], 'Slightly Warm'],
-    [[1.5, 2.5], 'Warm']
-  ]);
+    const statusList = [
+        { check: val => val < -2.5, status: 'Cold' },
+        { range: [-2.5, -1.5], status: 'Cool' },
+        { range: [-1.5, -0.5], status: 'Slightly Cool' },
+        { range: [-0.5, 0.5], status: 'Neutral' },
+        { range: [0.5, 1.5], status: 'Slightly Warm' },
+        { range: [1.5, 2.5], status: 'Warm' },
+        { check: val => val > 2.5, status: 'Hot' }
+    ];
 
-  for (const [prange, status] of status_dict.entries()) {
-    if (prange[0] <= pmv && pmv < prange[1]) {
-      return status;
-    }
-  }
+    const found = statusList.find(({ range, check }) =>
+        check ? check(pmv) : range[0] <= pmv && pmv < range[1]
+    );
 
-  if (pmv < -2.5) {
-    return 'Cold';
-  } else if (pmv > 2.5) {
-    return 'Hot';
-  } else {
-    return '-';
-  }
+    return found ? found.status : '-';
 }
 
 // A function that implements the Yaxis callback for thermal comfort
@@ -260,7 +254,7 @@ function updateThermalComfort(start_date, end_date) {
                         fontColor: "#1e2727",
                         content: 'End of '+unixToHumanReadableWithoutTime(timee[i]),
                         enabled: true,
-                        position: (labelCounter % 2 === 0) ? 'top' : 'bottom', // Alternate between 'top' and 'bottom' based on the labelCounter
+                        position: (labelCounter % 2 === 0) ? 'top' : 'bottom',
                         backgroundColor: 'rgba(0, 0, 0, 0)',
                     },
                 });

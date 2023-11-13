@@ -1,5 +1,6 @@
 from determineSimosMethod import *
 
+
 def api_Preferences(cur):
     # Execute SQL query to retrieve consumer's preferences regarding the household flexible loads from the UPAT db
     cur.execute('''SELECT user_ev_pref, user_ht_pref, user_wm_pref, user_wh_pref, user_dw_pref FROM user_flex_load_preferences''')

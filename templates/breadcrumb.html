@@ -1,16 +1,14 @@
-<div class="flex d-flex flex-column flex-sm-row align-items-center mb-24pt mb-md-0">
+<h1 class="mb-0">Consumer Digital Twin</h1>
 
-    <div class="mb-24pt mb-sm-0 mr-sm-24pt">
-        <h2 class="mb-0">Consumer Digital Twin</h2>
-        <ol class="breadcrumb p-0 m-0">
-            <li class="breadcrumb-item"><a href="/dashboard/">Home</a></li>
-            {% if breadcrumb_level_two == '' %}
-                <li class="breadcrumb-item active">{{ breadcrumb_level_one }}</li>
-            {% else %}
-                <li class="breadcrumb-item">{{ breadcrumb_level_one }}</li>
-                <li class="breadcrumb-item active">{{ breadcrumb_level_two }}</li>
-            {% endif %}
-        </ol>
-    </div>
+<ol class="breadcrumb p-2">
+    <li class="breadcrumb-item">
+        <a href="/">Home</a>
+    </li>
+    <li class="breadcrumb-item {{ 'active' if not b2 else '' }}">
+        {{ b1 }}
+    </li>
+    {% if b2 %}
+        <li class="breadcrumb-item active">{{ b2 }}</li>
+    {% endif %}
 
-</div>
+</ol>

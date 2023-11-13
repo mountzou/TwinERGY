@@ -10,6 +10,7 @@ from initializeUser import *
 from determineThermalComfort import *
 from determineAirTemperature import *
 from determineWellBeing import *
+from filter_thermal_comfort import *
 
 from apiService import *
 
@@ -28,6 +29,7 @@ import time
 from urllib.parse import urlparse
 import json
 import requests
+import pandas as pd
 
 import os
 from dotenv import load_dotenv
@@ -48,9 +50,9 @@ mysql = MySQL(app)
 
 # Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
-                                 client_id='cdt-twinergy',
-                                 realm_name='TwinERGY',
-                                 client_secret_key="secret")
+    client_id='cdt-twinergy',
+    realm_name='TwinERGY',
+    client_secret_key="secret")
 app.secret_key = 'secret'
 
 
@@ -108,10 +110,10 @@ def before_request():
 def login():
     if urlparse(request.base_url).netloc == '127.0.0.1:5000':
         auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback",
-                                            scope="openid", state="af0ifjsldkj")
+            scope="openid", state="af0ifjsldkj")
     else:
         auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback",
-                                            scope="openid", state="af0ifjsldkj")
+            scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -159,14 +161,21 @@ def rout():
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
     return render_template("thermal-comfort.html")
-        # if g.total_daily_data else render_template(
-        # "thermal-comfort-empty.html")
+    # if g.total_daily_data else render_template(
+    # "thermal-comfort-empty.html")
 
 
 # A function that renders the template of the 'Preferences' page under the route '/preferences/.
 @app.route("/preferences/", methods=["GET", "POST"])
 def preferences():
-    return render_template("preferences.html")
+    appliances = [
+        {'name': 'Electric Vehicle', 'id': 'electric_vehicle'},
+        {'name': 'Washing Machine', 'id': 'washing_machine'},
+        {'name': 'Dish Washer', 'id': 'dish_washer'},
+        {'name': 'Tumble Drier', 'id': 'tumble_drier'},
+        {'name': 'Water Heater', 'id': 'water_heater'}
+    ]
+    return render_template("preferences.html", appliances=appliances)
 
 
 # A functions that renders the 'Clothing Insulation' page under the route '/clothing_insulation /'
@@ -194,8 +203,6 @@ def api_tc():
     g.cur.execute(
         '''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MINUTE));''')
     latest_data = g.cur.fetchall()
-
-    print(latest_data)
 
     def create_data_dict(data=None):
         if data is None:
@@ -227,90 +234,52 @@ def api_tc():
 # A function that implements the API service that provides consumer's preferences to CDMP under the route 'api_preferences'
 @app.route('/api_preferences', methods=['GET'])
 def api_preferences():
-    api_response_preferences = api_Preferences(g.cur)
-
-    return jsonify(api_response_preferences)
+    return jsonify(api_Preferences(g.cur))
 
 
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
 
-    # Decode incoming LoRa message
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
     decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
-    raw_temp = decodedPayload[0]
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), \
-        decodedPayload[1], decodedPayload[2], decodedPayload[4], decodedPayload[3]
+                                                                        decodedPayload[1], decodedPayload[2], \
+                                                                        decodedPayload[4], decodedPayload[3]
 
     # Retrieve the latest stored value in the thermal comfort database
     previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
-
-    # Extract previous values or set defaults
     p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
-    result = fetch_exc_assist(mysql, g.cur, device_id)
-    print(data)
-    print(result)
-    if not result:
+    is_new_session = tc_metabolic < p_metabolic
 
-        print(device_id)
-        insert_into_exc_assist(g.cur, mysql, device_id,tc_timestamp)
-        new_ses, reset, init_temp, p_temperature, tries = 0, 0, raw_temp, raw_temp, 0
-    else:
-        new_ses, reset, init_temp, p_temperature, tries = result[0]
+    current_datetime = datetime.utcfromtimestamp(tc_timestamp)
+    previous_datetime = datetime.utcfromtimestamp(p_time)
 
-    # Check the time difference of the current timestamp to the previous stored to decide what is the case
-    case = check_case(tc_timestamp, p_time)
+    time_difference = (current_datetime - previous_datetime).total_seconds() / 60
 
-    if case == CASE_UNWANTED_RESET:
-        print("case unwanted reset")
-        wb_index = handle_unwanted_reset(g.cur, mysql, wb_index, device_id)
+    if is_new_session and time_difference < 15:
+        return jsonify({'status': 'data skipped'}), 200
 
-    if case == CASE_NORMAL_FLOW:
-        print("case normal flow")
-
-        wb_index, tc_temperature = handle_normal_flow(g.cur, mysql, wb_index, reset, new_ses, raw_temp, p_temperature,
-                                                      init_temp, tc_temperature, device_id, tries)
-
-    if case == CASE_NEW_SESSION:
-        print("case new_session")
-
-        tc_temperature, wb_index = handle_new_session(g.cur, mysql, raw_temp, device_id, tc_timestamp, p_time,
-                                                      init_temp)
-
-    query = f"UPDATE exc_assist SET p_temperature={raw_temp} WHERE wearable_id = %s"
-    params = (device_id,)
-    execute_query(g.cur, mysql, query, params, commit=True)
-
-    # Calculate tc_met
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
-
     tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
+    tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
-    tc_comfort = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
-
-    # Execute SQL INSERT statement
     insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
-                                     tc_comfort, tc_timestamp, device_id, gateway_id, wb_index)
+        tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
 
     return jsonify({'status': 'success'}), 200
 
 
-# A route that implements an asynchronous call to retrieve data related to the user's thermal comfort during the last 24 hours
+# Retrieve user's thermal comfort data from the latest active session of the wearable device
 @app.route('/get_data_thermal_comfort/')
 def get_data_thermal_comfort():
-    # Get the current date
-    now = datetime.now()
+    # Define the timestamp of the current day, i.e., from 00:00:01 and on.
+    today = datetime.combine(datetime.now(timezone.utc).date(), datetime.min.time(), tzinfo=timezone.utc)
 
-    # Create a new datetime at midnight
-    midnight = datetime(year=now.year, month=now.month, day=now.day, hour=0, minute=0, second=0, tzinfo=timezone.utc)
-
-    # Convert the datetime to a UNIX timestamp
-    timestamp = int(midnight.timestamp())
-
+    # Execute SQL query to retrieve the current day's thermal comfort parameters for the specific wearable device
     query = """
         SELECT tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met
         FROM user_thermal_comfort
@@ -319,22 +288,25 @@ def get_data_thermal_comfort():
         ORDER BY tc_timestamp DESC
     """
     with g.cur as cur:
-        cur.execute(query, (timestamp, session.get('deviceId', None)))
+        cur.execute(query, (int(today.timestamp()), session.get('deviceId', None)))
         thermal_comfort_data = cur.fetchall()
 
-    met_data = [tc_met for _, _, _, _, tc_met in thermal_comfort_data[:10]]
-    met_sum, met_count = sum(met_data), len(met_data)
+    # Create a dataframe with the retrieved thermal comfort data to filter the latest active session of the wearable device
+    df = pd.DataFrame(thermal_comfort_data, columns=['tc_temperature', 'tc_humidity', 'tc_timestamp', 'wb_index',
+                                                     'tc_met'])
+    tc_latest_active_session = filter_thermal_comfort_dashboard(df)
 
-    average_met = met_sum / met_count if met_count > 0 else 0
+    met_data = [tc_met for _, _, _, _, tc_met in tc_latest_active_session[:10]]
+    average_met = sum(met_data) / len(met_data) if sum(met_data) > 0 else 0
 
     clo_insulation = get_clo_insulation(mysql, g.cur, (session.get('deviceId', None)))[0]
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met,
-                                                 clo_insulation,
-                                                 0.1), clo_insulation, get_t_wearable(tc_temperature))
+                                       clo_insulation,
+                                       0.1), clo_insulation, get_t_wearable(tc_temperature))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
-                                  reversed(thermal_comfort_data)]
+                                  tc_latest_active_session]
 
     return jsonify({'daily_thermal_comfort_data': daily_thermal_comfort_data})
 
@@ -446,114 +418,34 @@ def get_preferences_weights():
 def update_preferences_thermal_comfort():
     user_thermal_level_min = request.form.get('user_thermal_level_min')
     user_thermal_level_max = request.form.get('user_thermal_level_max')
-
+    # Update the preference regarding the user's thermal comfort
     updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max,
-                                   session.get('deviceId', None))
+        session.get('deviceId', None))
+
     return jsonify(success=True)
 
 
 @app.route('/update_preferences_temperature', methods=['POST'])
 def update_preferences_temperature():
-    user_temp_min = request.form.get('user_temp_min')
-    user_temp_max = request.form.get('user_temp_max')
-
+    user_temp_min, user_temp_max = map(request.form.get, ('user_temp_min', 'user_temp_max'))
+    # Update the preference regarding the indoor air temperature
     updateTemperaturePreference(mysql, g.cur, user_temp_min, user_temp_max, session.get('deviceId', None))
-    return jsonify(success=True)
-
-
-@app.route('/update_preferences_importance_electric_vehicle', methods=['POST'])
-def update_preferences_importance_electric_vehicle():
-    importance_electric_vehicle = request.form.get('importance_electric_vehicle')
-    # Update the preference regarding the importance of electric vehicle
-    updatePrefElectricVehicle(mysql, g.cur, importance_electric_vehicle, session.get('deviceId', None))
 
     return jsonify(success=True)
 
 
-@app.route('/update_preferences_importance_washing_machine', methods=['POST'])
-def update_preferences_importance_washing_machine():
-    importance_washing_machine = request.form.get('importance_washing_machine')
-    # Update the preference regarding the importance of washing machine
-    updatePrefWashingMachine(mysql, g.cur, importance_washing_machine, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_preferences_importance_dish_washer', methods=['POST'])
-def update_preferences_importance_dish_washer():
-    importance_dish_washer = request.form.get('importance_dish_washer')
-    # Update the preference regarding the importance of dishwasher
-    updatePrefDishWasher(mysql, g.cur, importance_dish_washer, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_preferences_importance_tumble_drier', methods=['POST'])
-def update_preferences_importance_tumble_drier():
-    importance_tumble_drier = request.form.get('importance_tumble_drier')
-    # Update the preference regarding the importance of tumble drier
-    updatePrefTumbleDrier(mysql, g.cur, importance_tumble_drier, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_preferences_importance_water_heater', methods=['POST'])
-def update_preferences_importance_water_heater():
-    importance_water_heater = request.form.get('importance_water_heater')
-    # Update the preference regarding the importance of water heater
-    updatePrefWaterHeater(mysql, g.cur, importance_water_heater, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_range_electric_vehicle', methods=['POST'])
-def update_range_electric_vehicle():
-    fromElectricVehicle = request.form.get('fromElectricVehicle')
-    toElectricVehicle = request.form.get('toElectricVehicle')
-
-    updateTimeElectricVehicle(mysql, g.cur, fromElectricVehicle, toElectricVehicle, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_range_washing_machine', methods=['POST'])
-def update_range_washing_machine():
-    fromWashingMachine = request.form.get('fromWashingMachine')
-    toWashingMachine = request.form.get('toWashingMachine')
-
-    updateTimeWashingMachine(mysql, g.cur, fromWashingMachine, toWashingMachine, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_range_dish_washer', methods=['POST'])
-def update_range_dish_washer():
-    fromDishWasher = request.form.get('fromDishWasher')
-    toDishWasher = request.form.get('toDishWasher')
-
-    updateTimeDishWasher(mysql, g.cur, fromDishWasher, toDishWasher, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_range_tumble_drier', methods=['POST'])
-def update_range_tumble_drier():
-    fromTumbleDrier = request.form.get('fromTumbleDrier')
-    toTumbleDrier = request.form.get('toTumbleDrier')
-
-    updateTimeTumbleDrier(mysql, g.cur, fromTumbleDrier, toTumbleDrier, session.get('deviceId', None))
-
-    return jsonify(success=True)
-
-
-@app.route('/update_range_water_heater', methods=['POST'])
-def update_range_water_heater():
-    fromWaterHeater = request.form.get('fromWaterHeater')
-    toWaterHeater = request.form.get('toWaterHeater')
-
-    updateTimeWaterHeater(mysql, g.cur, fromWaterHeater, toWaterHeater, session.get('deviceId', None))
-
-    return jsonify(success=True)
+@app.route('/update/<appliance>/<update_type>', methods=['POST'])
+def update_appliance_preferences(appliance, update_type):
+    wearable_id = session.get('deviceId', None)
+    if update_type == 'preference':
+        importance = request.form.get(f'importance_{appliance}')
+        return updatePreference(mysql, g.cur, appliance, importance, wearable_id)
+    elif update_type == 'time_range':
+        from_time = request.form.get(f'from{appliance.capitalize()}')
+        to_time = request.form.get(f'to{appliance.capitalize()}')
+        return updateTimeRange(mysql, g.cur, appliance, from_time, to_time, wearable_id)
+    else:
+        return jsonify(success=False, message='Invalid update type')
 
 
 # A route that implements an asynchronous call to retrieve data related to the thermal comfort
@@ -691,8 +583,8 @@ def current_session():
 @app.route('/get_device_status')
 def get_device_status():
     current_device_status = device_status(g.cur, session['deviceId'])
-    # Return the current device status
-    return current_device_status
+    # Return the number of the latest recordings from the specific wearable device in JSON format
+    return jsonify({'device_status': current_device_status})
 
 
 if __name__ == "__main__":

@@ -4,36 +4,14 @@ from flask import jsonify
 
 def device_status(cur, device_id):
     with cur as cur:
-
-        query = """
-            SELECT tc_timestamp
+        # Execute an SQL query that retrieves the number of latest recordings for the specific wearable device
+        query_get_number_of_latest_recording = """
+            SELECT COUNT(*)
             FROM user_thermal_comfort
-            WHERE wearable_id = %s
-            ORDER BY tc_timestamp DESC
-            LIMIT 1
+            WHERE wearable_id = %s AND tc_timestamp > %s
         """
 
-        cur.execute(query, (device_id,))
-        latest_timestamp = cur.fetchone()
+        cur.execute(query_get_number_of_latest_recording, (device_id, int(time.time()) - 20))
+        number_of_latest_recordings = cur.fetchone()[0]
 
-        query = """
-            SELECT tries,time_st 
-            FROM exc_assist 
-            WHERE wearable_id = %s 
-            LIMIT 1
-        """
-
-        cur.execute(query, (device_id,))
-        result = cur.fetchone()
-
-    try:
-        tries, exclude_time = result[0], result[1]
-        current_timestamp = int(time.time())
-        if tries < 5 and current_timestamp - exclude_time < 12:
-            latest_timestamp = (0,)
-    except IndexError:
-        print('Initial')
-    except TypeError:
-        print('Initial')
-
-    return jsonify(latest_timestamp)
+    return number_of_latest_recordings

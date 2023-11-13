@@ -1,0 +1,97 @@
+{% macro create_page_separator(title) %}
+<div class="page-separator">
+    <div class="page-separator__text">{{ title }}</div>
+</div>
+{% endmacro %}
+
+{% macro create_line_chart_dashboard(title, icon, canvas_id, latest_id) %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header border-0 d-flex">
+                <div class="flex">
+                    <div class="h2 mb-0" id="{{ latest_id }}">-</div>
+                    <p class="card-title">{{ title }}</p>
+                </div>
+                <i class="material-icons">{{ icon }}</i>
+            </div>
+            <div class="card-body">
+                <canvas id="{{ canvas_id }}" style="display: block; height: 240px; width: 254px;"></canvas>
+            </div>
+            <div class="card-footer d-flex flex-column align-items-center justify-content-center">
+                <div class="l-updated">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro create_status_card_dashboard(icon, card_id) %}
+<div class="card">
+    <div class="card-header p-0 nav border-0">
+        <div class="row no-gutters flex" role="tablist">
+            <div class="col-auto">
+                <div class="p-card-header d-flex align-items-center">
+                    <div class="h2 mb-0 mr-3"><i class="material-icons text-primary mr-4pt">{{ icon }}</i></div>
+                    <div class="flex">
+                        <h2 class="h2 mb-0 ml11" id="{{ card_id }}">-</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro create_component_section(title, description1, description2) %}
+<section>
+    <div class="mdk-box bg-primary mdk-box--bg-gradient-primary2 js-mdk-box mb-0" data-domfactory-upgraded="mdk-box">
+        <div class="mdk-box__content">
+            <div class="py-32pt text-center text-sm-center">
+                <div class="container d-flex flex-column justify-content-center align-items-center">
+                    <h1 class="text-black mb-8pt">{{ title }}</h1>
+                    <p class="lead text-black text-center measure-lead-max mb-0">{{ description1 }}</p>
+                    <p class="lead text-black text-center measure-lead-max mb-0">{{ description2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endmacro %}
+
+{% macro create_component_account(title, subtitle, table_headers, table_data_ids) %}
+<div class="row pb-2">
+    <div class="col-lg-4">
+        <div class="page-separator">
+            <div class="page-separator__text">{{ title }}</div>
+        </div>
+        <p class="card-subtitle text-70 mb-16pt mb-lg-0">
+            {{ subtitle }}
+        </p>
+    </div>
+    <div class="col-lg-8 d-flex align-items-center">
+        <div class="flex" style="max-width: 100%">
+            <div class="card">
+                <div class="card-body">
+                    <table class="table" style="margin-bottom: 0rem;">
+                        <thead>
+                        <tr>
+                            {% for header in table_headers %}
+                            <th scope="col">{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            {% for data_id in table_data_ids %}
+                            <td id="{{ data_id }}"></td>
+                            {% endfor %}
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
