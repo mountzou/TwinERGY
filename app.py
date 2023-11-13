@@ -240,8 +240,7 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
-    print("The original payload is:")
-    print(data)
+    print("#############################")
 
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
@@ -254,7 +253,12 @@ def handle_ttn_webhook():
     previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
     p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
+    print("Previous metabolic:", p_metabolic)
+    print("Previous time:", p_time)
+
     is_new_session = tc_metabolic < p_metabolic
+
+    print("New session", is_new_session)
 
     current_datetime = datetime.utcfromtimestamp(tc_timestamp)
     previous_datetime = datetime.utcfromtimestamp(p_time)
@@ -262,6 +266,7 @@ def handle_ttn_webhook():
     time_difference = (current_datetime - previous_datetime).total_seconds() / 60
 
     if is_new_session and time_difference < 15:
+        print("Data skipped")
         return jsonify({'status': 'data skipped'}), 200
 
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
@@ -291,6 +296,8 @@ def get_data_thermal_comfort():
     with g.cur as cur:
         cur.execute(query, (int(today.timestamp()), session.get('deviceId', None)))
         thermal_comfort_data = cur.fetchall()
+
+    print(thermal_comfort_data)
 
     # Create a dataframe with the retrieved thermal comfort data to filter the latest active session of the wearable device
     df = pd.DataFrame(thermal_comfort_data, columns=['tc_temperature', 'tc_humidity', 'tc_timestamp', 'wb_index',
