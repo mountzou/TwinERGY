@@ -254,7 +254,7 @@ def handle_ttn_webhook():
     p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
     print("Previous metabolic:", p_metabolic)
-    print("TC metabolic:", p_metabolic)
+    print("TC metabolic:", tc_metabolic)
     print("Previous time:", p_time)
 
     is_new_session = float(tc_metabolic) < float(p_metabolic)
