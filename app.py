@@ -270,7 +270,7 @@ def handle_ttn_webhook():
 
         # Convert the new datetime back to a Unix timestamp
         new_timestamp = int(new_dt.timestamp())
-        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start) VALUES ('{device_id}', '{tc_timestamp}', '{new_timestamp}')"
+        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{new_timestamp}')"
         execute_query(g.cur, mysql, insert_sql, commit=True)
 
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
