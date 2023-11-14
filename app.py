@@ -307,8 +307,6 @@ def get_data_thermal_comfort():
         cur.execute(query, (int(today.timestamp()), session.get('deviceId', None)))
         thermal_comfort_data = cur.fetchall()
 
-    print(thermal_comfort_data)
-
     # Create a dataframe with the retrieved thermal comfort data to filter the latest active session of the wearable device
     df = pd.DataFrame(thermal_comfort_data, columns=['tc_temperature', 'tc_humidity', 'tc_timestamp', 'wb_index',
                                                      'tc_met'])
