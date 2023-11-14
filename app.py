@@ -263,7 +263,7 @@ def handle_ttn_webhook():
     print("New session", is_new_session)
 
     if is_new_session:
-        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start) VALUES ({device_id}, {tc_timestamp})"
+        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start) VALUES ('{device_id}', '{tc_timestamp}')"
         execute_query(g.cur, mysql, insert_sql, commit=True)
         return jsonify({'status': 'Data Skipped'}), 200
 
