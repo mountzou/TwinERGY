@@ -276,10 +276,11 @@ def handle_ttn_webhook():
         new_dt = dt + timedelta(minutes=2)
         session_ends = int(new_dt.timestamp())
         insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
+        execute_query(g.cur, mysql, insert_sql, commit=True)
         print("Δεν υπάρχει session")
 
-
     return jsonify({'status': 'success'}), 200
+
 
 def fetch_time_to_wait(mysql, cur, device_id):
     query = '''SELECT session_end FROM wearable_device_sessions WHERE wearable_id = %s ORDER BY session_end DESC LIMIT 1'''
