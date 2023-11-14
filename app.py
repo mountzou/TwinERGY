@@ -260,7 +260,7 @@ def handle_ttn_webhook():
     if tc_timestamp-p_time>45 or p_time==0:
         print(" tc_timestamp-p_time>45 or p_time==0")
 
-        if wear_sessions and tc_timestamp-session_start>120:
+        if wear_sessions and tc_timestamp-wear_sessions[0][1]>120:
             print("Yπάρχει wear_sessions")
 
             dt = datetime.utcfromtimestamp(tc_timestamp)
