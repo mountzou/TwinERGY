@@ -264,8 +264,13 @@ def handle_ttn_webhook():
             tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
             tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
             tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
+            query = '''SELECT tc_timestamp FROM user_thermal_comfort WHERE wearable_id = %s ORDER BY tc_timestamp DESC LIMIT 1'''
+            params = (device_id,)
+            execute_query(g.cur, mysql, query, params)
+            p_time_1 = g.cur.fetchall()
+            print(p_time_1)
             if tc_timestamp - p_time > 30:
-                print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time)
+                print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time_1[0])
                 dt = datetime.utcfromtimestamp(tc_timestamp)
                 new_dt = dt + timedelta(minutes=2)
                 session_ends = int(new_dt.timestamp())
@@ -286,6 +291,7 @@ def handle_ttn_webhook():
         new_dt = dt + timedelta(minutes=2)
         session_ends = int(new_dt.timestamp())
         insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
+        insert_into_user_thermal_comfort(g.cur, mysql, 0, 0, 0, 0, 0, 0, dt, device_id, 0, 0)
         execute_query(g.cur, mysql, insert_sql, commit=True)
 
     return jsonify({'status': 'success'}), 200
