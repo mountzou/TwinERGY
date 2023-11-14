@@ -270,7 +270,7 @@ def handle_ttn_webhook():
             p_time_1 = g.cur.fetchall()
             print(p_time_1)
             if tc_timestamp - p_time > 30:
-                print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time_1[0])
+                print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time_1[0][0])
                 dt = datetime.utcfromtimestamp(tc_timestamp)
                 new_dt = dt + timedelta(minutes=2)
                 session_ends = int(new_dt.timestamp())
