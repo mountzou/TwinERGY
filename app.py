@@ -269,7 +269,6 @@ def handle_ttn_webhook():
             query = f"UPDATE wearable_device_sessions SET session_start = {tc_timestamp}, session_end = {session_ends} WHERE wearable_id = %s"
             params = (device_id,)
             execute_query(g.cur, mysql, query, params, commit=True)
-            return jsonify({'status': 'success'}), 200
         else:
             print("Δεν υπάρχει wear_sessions")
             dt = datetime.utcfromtimestamp(tc_timestamp)
