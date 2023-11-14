@@ -243,6 +243,8 @@ def handle_ttn_webhook():
     print("#############################")
     print("Received payload for device:", data['end_device_ids']['dev_eui'])
     device_id = data['end_device_ids']['dev_eui']
+    if device_id == '0080E1150510BDEB':
+        return None
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
     decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
