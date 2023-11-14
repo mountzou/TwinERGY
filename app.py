@@ -291,7 +291,7 @@ def handle_ttn_webhook():
         new_dt = dt + timedelta(minutes=2)
         session_ends = int(new_dt.timestamp())
         insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
-        insert_into_user_thermal_comfort(g.cur, mysql, 0, 0, 0, 0, 0, 0, dt, device_id, 0, 0)
+        insert_into_user_thermal_comfort(g.cur, mysql, 0, 0, 0, 0, 0, 0, session_ends, device_id, 0, 0)
         execute_query(g.cur, mysql, insert_sql, commit=True)
 
     return jsonify({'status': 'success'}), 200
