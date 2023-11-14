@@ -263,12 +263,7 @@ def handle_ttn_webhook():
     print("New session", is_new_session)
 
     if is_new_session:
-        dt = datetime.utcfromtimestamp(tc_timestamp)
-
-        # Add 15 minutes to the datetime object
-        new_dt = dt + timedelta(minutes=15)
-
-        # Convert the new datetime back to a Unix timestamp
+        new_dt = datetime.utcfromtimestamp(tc_timestamp) + timedelta(minutes=2)
         new_timestamp = int(new_dt.timestamp())
         insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{new_timestamp}')"
         execute_query(g.cur, mysql, insert_sql, commit=True)
@@ -277,11 +272,23 @@ def handle_ttn_webhook():
     tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
     tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
+    t_wait = fetch_time_to_wait(mysql, g.cur, device_id)
+    if t_wait:
+        print(t_wait)
+    else:
+        print("den exei xrono stin vasi")
+
     insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
         tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
 
     return jsonify({'status': 'success'}), 200
 
+
+def fetch_time_to_wait(mysql, cur, device_id):
+    query = '''SELECT session_end FROM wearable_device_sessions WHERE wearable_id = %s ORDER BY session_end DESC LIMIT 1'''
+    params = (device_id,)
+    execute_query(cur, mysql, query, params)
+    return cur.fetchall()
 
 # Retrieve user's thermal comfort data from the latest active session of the wearable device
 @app.route('/get_data_thermal_comfort/')
