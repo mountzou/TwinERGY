@@ -259,15 +259,14 @@ def handle_ttn_webhook():
     # print("TC metabolic:", tc_metabolic)
     # print("Previous time:", p_time)
 
-    is_new_session = tc_metabolic < p_metabolic
+    is_new_session = tc_metabolic < previous_metabolic[0]
     print("New session", is_new_session)
 
     if is_new_session:
         insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start) VALUES ('{device_id}', '{tc_timestamp}')"
         execute_query(g.cur, mysql, insert_sql, commit=True)
-        return jsonify({'status': 'Data Skipped'}), 200
 
-    tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
+    tc_met = calculate_tc_met(tc_metabolic, previous_metabolic[0], tc_timestamp, previous_metabolic[1])
     tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
     tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
