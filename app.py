@@ -260,8 +260,8 @@ def handle_ttn_webhook():
     if tc_timestamp-p_time>45 or p_time==0:
         print(" tc_timestamp-p_time>45 or p_time==0")
 
-        if wear_sessions:
-            print(" υπάρχει wear_sessions")
+        if wear_sessions and tc_timestamp-session_start>120:
+            print("Yπάρχει wear_sessions")
 
             dt = datetime.utcfromtimestamp(tc_timestamp)
             new_dt = dt + timedelta(minutes=2)
@@ -292,11 +292,10 @@ def handle_ttn_webhook():
 
         insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
             tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
-        return jsonify({'status': 'success'}), 200
+
     else:
-        if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
-            print("Το tc_timestamp μικρότερο του session_end")
-        return jsonify({'status': 'success'}), 200
+        print("Το tc_timestamp μικρότερο του session_end")
+
 
 
     return jsonify({'status': 'success'}), 200
