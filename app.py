@@ -241,7 +241,6 @@ def api_preferences():
 def handle_ttn_webhook():
     data = request.get_json()
     print("#############################")
-
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
@@ -274,7 +273,7 @@ def handle_ttn_webhook():
 
     t_wait = fetch_time_to_wait(mysql, g.cur, device_id)
     if t_wait:
-        print(t_wait)
+        print(t_wait[0])
     else:
         print("den exei xrono stin vasi")
 
