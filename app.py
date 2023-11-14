@@ -257,10 +257,10 @@ def handle_ttn_webhook():
     # print("Previous metabolic:", p_metabolic)
     # print("TC metabolic:", tc_metabolic)
     # print("Previous time:", p_time)
-
+    print("#############################")
     is_new_session = tc_metabolic < p_metabolic
     print("New session", is_new_session)
-
+    print("#############################")
     if is_new_session:
         new_dt = datetime.utcfromtimestamp(tc_timestamp) + timedelta(minutes=2)
         new_timestamp = int(new_dt.timestamp())
@@ -270,17 +270,22 @@ def handle_ttn_webhook():
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
     tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
     tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
-
+    print("#############################")
+    print(device_id)
     t_wait = fetch_time_to_wait(mysql, g.cur, device_id)
     if t_wait:
-        print(t_wait[0])
+        if tc_timestamp < t_wait[0][0]:
+            print("Πρέπει να περιμένεις")
+            return jsonify({'status': 'success'}), 200
+        else:
+            insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
+                tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
+            print("Μπορείς να ξεκινήσεις")
     else:
         print("den exei xrono stin vasi")
 
-    insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
-        tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
-
     return jsonify({'status': 'success'}), 200
+    print("#############################")
 
 
 def fetch_time_to_wait(mysql, cur, device_id):
