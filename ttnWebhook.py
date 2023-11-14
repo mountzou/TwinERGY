@@ -127,7 +127,7 @@ def calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time):
     if (tc_metabolic - p_metabolic) < 0:
         tc_met = 1
     else:
-        tc_met = ((tc_metabolic - p_metabolic) * 40) / (tc_timestamp - p_time)
+        tc_met = ((tc_metabolic - p_metabolic) * 48) / (tc_timestamp - p_time)
         if tc_met < 1:
             tc_met = 1
         if tc_met > 6:

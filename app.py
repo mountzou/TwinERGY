@@ -254,15 +254,24 @@ def handle_ttn_webhook():
     params = (device_id,)
     execute_query(g.cur, mysql, query, params)
     wear_sessions = g.cur.fetchall()
+    previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
+    p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
-    # Αν το wearable έχει γίνει registered, θα μπαίνει πάντα εδώ
-    if wear_sessions:
-        if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
-            print("Υπάρχει wear_sessions")
+    if tc_timestamp-p_time>45 or p_time==0:
+
+        print("Δεν υπάρχει wear_sessions")
+        dt = datetime.utcfromtimestamp(tc_timestamp)
+        new_dt = dt + timedelta(minutes=2)
+        session_ends = int(new_dt.timestamp())
+        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
+        insert_into_user_thermal_comfort(g.cur, mysql, 0, 0, 0, 0, 0, 0, session_ends, device_id, 0, 0)
+        execute_query(g.cur, mysql, insert_sql, commit=True)
+    else:
+
+        print("Υπάρχει wear_sessions")
         if tc_timestamp > wear_sessions[0][2]:
             print("Το tc_timestamp μεγαλύτερο του session_end")
-            previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
-            p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
+
             tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
             tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
             tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
@@ -270,19 +279,18 @@ def handle_ttn_webhook():
             params = (device_id,)
             execute_query(g.cur, mysql, query, params)
             p_time_1 = g.cur.fetchall()
-            print(p_time_1)
-            if tc_timestamp - p_time > 30:
-                if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
-                    print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time_1[0][0])
-                    print("Τρέχον timestamp:", tc_timestamp)
-                    print("Προηγούμενο timestamp:", p_time_1[0][0])
-                dt = datetime.utcfromtimestamp(tc_timestamp)
-                new_dt = dt + timedelta(minutes=2)
-                session_ends = int(new_dt.timestamp())
-                query = f"UPDATE wearable_device_sessions SET session_start = {tc_timestamp}, session_end = {session_ends} WHERE wearable_id = %s"
-                params = (device_id,)
-                execute_query(g.cur, mysql, query, params, commit=True)
-                return jsonify({'status': 'success'}), 200
+
+
+            print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time[0][0])
+            print("Τρέχον timestamp:", tc_timestamp)
+            print("Προηγούμενο timestamp:", p_time)
+            dt = datetime.utcfromtimestamp(tc_timestamp)
+            new_dt = dt + timedelta(minutes=2)
+            session_ends = int(new_dt.timestamp())
+            query = f"UPDATE wearable_device_sessions SET session_start = {tc_timestamp}, session_end = {session_ends} WHERE wearable_id = %s"
+            params = (device_id,)
+            execute_query(g.cur, mysql, query, params, commit=True)
+            return jsonify({'status': 'success'}), 200
             insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
                 tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
             return jsonify({'status': 'success'}), 200
@@ -290,16 +298,7 @@ def handle_ttn_webhook():
             if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
                 print("Το tc_timestamp μικρότερο του session_end")
             return jsonify({'status': 'success'}), 200
-    # Θα μπεί μόνο την πρώτη φορά που δημιουργείται το session για κάθε ένα wearable
-    else:
-        if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
-            print("Δεν υπάρχει wear_sessions")
-        dt = datetime.utcfromtimestamp(tc_timestamp)
-        new_dt = dt + timedelta(minutes=2)
-        session_ends = int(new_dt.timestamp())
-        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
-        insert_into_user_thermal_comfort(g.cur, mysql, 0, 0, 0, 0, 0, 0, session_ends, device_id, 0, 0)
-        execute_query(g.cur, mysql, insert_sql, commit=True)
+
 
     return jsonify({'status': 'success'}), 200
 
