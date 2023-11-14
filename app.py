@@ -240,8 +240,9 @@ def api_preferences():
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
-    print("#############################")
-    print("Received payload for device:", data['end_device_ids']['dev_eui'])
+    if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
+        print("#############################")
+        print("Received payload for device:", data['end_device_ids']['dev_eui'])
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
@@ -256,7 +257,8 @@ def handle_ttn_webhook():
 
     # Αν το wearable έχει γίνει registered, θα μπαίνει πάντα εδώ
     if wear_sessions:
-        print("Υπάρχει wear_sessions")
+        if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
+            print("Υπάρχει wear_sessions")
         if tc_timestamp > wear_sessions[0][2]:
             print("Το tc_timestamp μεγαλύτερο του session_end")
             previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
@@ -270,9 +272,10 @@ def handle_ttn_webhook():
             p_time_1 = g.cur.fetchall()
             print(p_time_1)
             if tc_timestamp - p_time > 30:
-                print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time_1[0][0])
-                print("Τρέχον timestamp:", tc_timestamp)
-                print("Προηγούμενο timestamp:", p_time_1[0][0])
+                if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
+                    print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time_1[0][0])
+                    print("Τρέχον timestamp:", tc_timestamp)
+                    print("Προηγούμενο timestamp:", p_time_1[0][0])
                 dt = datetime.utcfromtimestamp(tc_timestamp)
                 new_dt = dt + timedelta(minutes=2)
                 session_ends = int(new_dt.timestamp())
@@ -284,11 +287,13 @@ def handle_ttn_webhook():
                 tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
             return jsonify({'status': 'success'}), 200
         else:
-            print("Το tc_timestamp μικρότερο του session_end")
+            if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
+                print("Το tc_timestamp μικρότερο του session_end")
             return jsonify({'status': 'success'}), 200
     # Θα μπεί μόνο την πρώτη φορά που δημιουργείται το session για κάθε ένα wearable
     else:
-        print("Δεν υπάρχει wear_sessions")
+        if data['end_device_ids']['dev_eui'] != '0080E1150510BDEB':
+            print("Δεν υπάρχει wear_sessions")
         dt = datetime.utcfromtimestamp(tc_timestamp)
         new_dt = dt + timedelta(minutes=2)
         session_ends = int(new_dt.timestamp())
