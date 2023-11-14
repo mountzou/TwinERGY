@@ -251,20 +251,21 @@ def handle_ttn_webhook():
                                                                         decodedPayload[4], decodedPayload[3]
 
     previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
+    print("Previous Metabolic Rate:", previous_metabolic[0])
+    print("Current Metabolic Rate:", tc_metabolic)
     p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
-    print("Previous metabolic:", p_metabolic)
-    print("TC metabolic:", tc_metabolic)
-    print("Previous time:", p_time)
+    # print("Previous metabolic:", p_metabolic)
+    # print("TC metabolic:", tc_metabolic)
+    # print("Previous time:", p_time)
 
-    is_new_session = float(tc_metabolic) < float(p_metabolic)
-
+    is_new_session = tc_metabolic < p_metabolic
     print("New session", is_new_session)
 
-    if is_new_session:
-        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start) VALUES ({device_id}, {tc_timestamp})"
-        execute_query(g.cur, mysql, insert_sql, commit=True)
-        return jsonify({'status': 'data skipped'}), 200
+    # if is_new_session:
+    #     insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start) VALUES ({device_id}, {tc_timestamp})"
+    #     execute_query(g.cur, mysql, insert_sql, commit=True)
+    #     return jsonify({'status': 'data skipped'}), 200
 
     tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
     tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
