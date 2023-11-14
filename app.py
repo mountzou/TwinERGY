@@ -241,6 +241,7 @@ def api_preferences():
 def handle_ttn_webhook():
     data = request.get_json()
     print("#############################")
+    print("Received payload for device:", data['end_device_ids']['dev_eui'])
     device_id = data['end_device_ids']['dev_eui']
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
@@ -248,51 +249,44 @@ def handle_ttn_webhook():
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), \
                                                                         decodedPayload[1], decodedPayload[2], \
                                                                         decodedPayload[4], decodedPayload[3]
+    query = '''SELECT wearable_id, session_start, session_end FROM wearable_device_sessions WHERE wearable_id = %s ORDER BY session_end DESC LIMIT 1'''
+    params = (device_id,)
+    execute_query(g.cur, mysql, query, params)
+    wear_sessions = g.cur.fetchall()
 
-    previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
-    print("Previous Metabolic Rate:", previous_metabolic[0])
-    print("Current Metabolic Rate:", tc_metabolic)
-    p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
-
-    # print("Previous metabolic:", p_metabolic)
-    # print("TC metabolic:", tc_metabolic)
-    # print("Previous time:", p_time)
-    print("#############################")
-    is_new_session = tc_metabolic < p_metabolic
-    print("New session", is_new_session)
-    print("#############################")
-    if is_new_session:
-        new_dt = datetime.utcfromtimestamp(tc_timestamp) + timedelta(minutes=2)
-        new_timestamp = int(new_dt.timestamp())
-        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{new_timestamp}')"
-        execute_query(g.cur, mysql, insert_sql, commit=True)
-
-    tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
-    tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
-    tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
-    print("#############################")
-    print(device_id)
-    t_wait = fetch_time_to_wait(mysql, g.cur, device_id)
-    if t_wait:
-        if tc_timestamp < t_wait[0][0]:
-            print("Πρέπει να περιμένεις")
+    if wear_sessions:
+        print("Υπάρχει wear_sessions")
+        if tc_timestamp > wear_sessions[0][2]:
+            print("Το tc_timestamp μεγαλύτερο του session_end")
+            previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
+            print("Previous Metabolic Rate:", previous_metabolic[0])
+            print("Current Metabolic Rate:", tc_metabolic)
+            print("Payload Timestamp:", tc_timestamp)
+            p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
+            tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
+            tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
+            tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
             return jsonify({'status': 'success'}), 200
         else:
-            insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
-                tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
-            print("Μπορείς να ξεκινήσεις")
+            print("Το tc_timestamp μικρότερο του session_end")
+            return jsonify({'status': 'success'}), 200
     else:
-        print("den exei xrono stin vasi")
+        print("Δεν υπάρχει wear_sessions")
+        dt = datetime.utcfromtimestamp(tc_timestamp)
+        new_dt = dt + timedelta(minutes=2)
+        session_ends = int(new_dt.timestamp())
+        insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
+        print("Δεν υπάρχει session")
+
 
     return jsonify({'status': 'success'}), 200
-    print("#############################")
-
 
 def fetch_time_to_wait(mysql, cur, device_id):
     query = '''SELECT session_end FROM wearable_device_sessions WHERE wearable_id = %s ORDER BY session_end DESC LIMIT 1'''
     params = (device_id,)
     execute_query(cur, mysql, query, params)
     return cur.fetchall()
+
 
 # Retrieve user's thermal comfort data from the latest active session of the wearable device
 @app.route('/get_data_thermal_comfort/')
