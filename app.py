@@ -254,6 +254,7 @@ def handle_ttn_webhook():
     execute_query(g.cur, mysql, query, params)
     wear_sessions = g.cur.fetchall()
 
+    # Αν το wearable έχει γίνει registered, θα μπαίνει πάντα εδώ
     if wear_sessions:
         print("Υπάρχει wear_sessions")
         if tc_timestamp > wear_sessions[0][2]:
@@ -263,12 +264,21 @@ def handle_ttn_webhook():
             tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
             tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
             tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
+            if tc_timestamp - p_time > 30:
+                print("Απέχουν πάνω από 30 δευτερόλεπτα:", tc_timestamp - p_time)
+                dt = datetime.utcfromtimestamp(tc_timestamp)
+                new_dt = dt + timedelta(minutes=2)
+                session_ends = int(new_dt.timestamp())
+                query = f"UPDATE wearable_device_sessions SET session_start = {tc_timestamp}, session_end = {session_ends} WHERE wearable_id = %s"
+                params = (device_id,)
+                execute_query(g.cur, mysql, query, params, commit=True)
             insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
                 tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
             return jsonify({'status': 'success'}), 200
         else:
             print("Το tc_timestamp μικρότερο του session_end")
             return jsonify({'status': 'success'}), 200
+    # Θα μπεί μόνο την πρώτη φορά που δημιουργείται το session για κάθε ένα wearable
     else:
         print("Δεν υπάρχει wear_sessions")
         dt = datetime.utcfromtimestamp(tc_timestamp)
@@ -276,7 +286,6 @@ def handle_ttn_webhook():
         session_ends = int(new_dt.timestamp())
         insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
         execute_query(g.cur, mysql, insert_sql, commit=True)
-        print("Δεν υπάρχει session")
 
     return jsonify({'status': 'success'}), 200
 
