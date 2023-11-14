@@ -272,6 +272,7 @@ def handle_ttn_webhook():
                 query = f"UPDATE wearable_device_sessions SET session_start = {tc_timestamp}, session_end = {session_ends} WHERE wearable_id = %s"
                 params = (device_id,)
                 execute_query(g.cur, mysql, query, params, commit=True)
+                return jsonify({'status': 'success'}), 200
             insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
                 tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
             return jsonify({'status': 'success'}), 200
