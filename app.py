@@ -259,13 +259,12 @@ def handle_ttn_webhook():
         if tc_timestamp > wear_sessions[0][2]:
             print("Το tc_timestamp μεγαλύτερο του session_end")
             previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
-            print("Previous Metabolic Rate:", previous_metabolic[0])
-            print("Current Metabolic Rate:", tc_metabolic)
-            print("Payload Timestamp:", tc_timestamp)
             p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
             tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
             tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
             tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
+            insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
+                tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
             return jsonify({'status': 'success'}), 200
         else:
             print("Το tc_timestamp μικρότερο του session_end")
