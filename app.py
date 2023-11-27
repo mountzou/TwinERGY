@@ -154,8 +154,7 @@ def logout():
 @app.route("/index/")
 @app.route("/dashboard/")
 def rout():
-    return render_template("index.html") if g.total_daily_data else render_template("index-empty.html")
-
+    return render_template("index.html")
 
 # A function that renders the template of the 'Thermal Comfort' page under the route '/thermal_comfort/.
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
