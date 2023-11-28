@@ -1,0 +1,15 @@
+{% from 'macros.html' import create_line_chart_dashboard, create_page_separator, create_status_card_dashboard %}
+
+<div class="col-md-12">
+
+    {{ create_page_separator("Energy Tariff") }}
+
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Add the line chart component for lem pricing -->
+            {{ create_line_chart_dashboard('Hourly Day-ahead Energy Tariff', 'euro', 'session-lem-pricing', 'latest-lem-price') }}
+        </div>
+
+    </div>
+
+</div>

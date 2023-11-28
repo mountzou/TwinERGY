@@ -156,6 +156,7 @@ def logout():
 def rout():
     return render_template("index.html")
 
+
 # A function that renders the template of the 'Thermal Comfort' page under the route '/thermal_comfort/.
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
@@ -256,10 +257,10 @@ def handle_ttn_webhook():
     previous_metabolic = fetch_previous_metabolic(mysql, g.cur, device_id)
     p_metabolic, p_time = previous_metabolic[0] if previous_metabolic else (0, 0)
 
-    if tc_timestamp-p_time>45 or p_time==0:
+    if tc_timestamp - p_time > 45 or p_time == 0:
         print(" tc_timestamp-p_time>45 or p_time==0")
 
-        if wear_sessions and tc_timestamp-wear_sessions[0][1]>120:
+        if wear_sessions and tc_timestamp - wear_sessions[0][1] > 120:
             print("Yπάρχει wear_sessions")
 
             dt = datetime.utcfromtimestamp(tc_timestamp)
@@ -276,7 +277,6 @@ def handle_ttn_webhook():
             insert_sql = f"INSERT INTO wearable_device_sessions (wearable_id, session_start, session_end) VALUES ('{device_id}', '{tc_timestamp}', '{session_ends}')"
             insert_into_user_thermal_comfort(g.cur, mysql, 0, 0, 0, 0, 0, 0, session_ends, device_id, 0, 0)
             execute_query(g.cur, mysql, insert_sql, commit=True)
-
 
     if tc_timestamp > wear_sessions[0][2]:
 
@@ -295,8 +295,6 @@ def handle_ttn_webhook():
     else:
         print("Το tc_timestamp μικρότερο του session_end")
 
-
-
     return jsonify({'status': 'success'}), 200
 
 
@@ -306,6 +304,46 @@ def fetch_time_to_wait(mysql, cur, device_id):
     execute_query(cur, mysql, query, params)
     return cur.fetchall()
 
+
+@app.route('/get_data_lem_pricing/')
+def get_data_lem_pricing():
+    url = "https://lem.dev.twinergy.transactiveenergymodule.com/api/v1/lem/all_lem_price"
+    user_city = session.get("userinfo", {}).get("pilotId")
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+
+        data = response.json()
+
+        if not data.get("success"):
+            raise ValueError("Request unsuccessful")
+
+        lem_data = data.get("data", [])
+
+        latest_date = max([datetime.strptime(entry["timestamp"], "%d/%m/%Y") for entry in lem_data])
+        latest_date_str = latest_date.strftime("%d/%m/%Y")
+
+        added_entries = set()
+
+        latest_day_data = []
+        for entry in lem_data:
+            if entry["timestamp"] == latest_date_str and user_city in entry:
+                key = (entry["timestamp"], entry["hour_index"])
+                if key not in added_entries:
+                    latest_day_data.append({
+                        "timestamp": entry["timestamp"],
+                        "hour_index": entry["hour_index"],
+                        "price": entry[user_city]  # Use a unified key for price
+                    })
+                    added_entries.add(key)
+
+        return jsonify(latest_day_data)
+
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 500
 
 # Retrieve user's thermal comfort data from the latest active session of the wearable device
 @app.route('/get_data_thermal_comfort/')

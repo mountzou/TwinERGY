@@ -73,8 +73,8 @@ function createLineChartConfig(graphTarget, data, yAxisUnit, tooltipLabelCallbac
                     ticks: {
                         padding: 12,
                         fontFamily: "Josefin Sans",
-                        suggestedMin: Math.min(...data.datasets[0].data) - 2,
-                        suggestedMax: Math.max(...data.datasets[0].data) + 2,
+                        suggestedMin: Math.min(...data.datasets[0].data) - 0.5,
+                        suggestedMax: Math.max(...data.datasets[0].data) + 0.5,
                         beginAtZero: false,
                         autoSkip: true,
                         maxTicksLimit: 5,

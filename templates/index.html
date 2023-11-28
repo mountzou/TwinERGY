@@ -34,6 +34,17 @@
         </div>
     </div>
 
+    {{ create_component_section('Energy Pricing', 'Track the hourly energy tariff in the day-ahead market.') }}
+
+    <div class="container">
+        <!-- Add a section for the well-being status analysis in the dashboard page -->
+        <div class="page-section">
+            <div class="row">
+                {% include 'dashboard-lem-pricing.html' %}
+            </div>
+        </div>
+    </div>
+
     {{ create_component_section('Well-being Status', 'Track the overall air quality as captured from the latest active session of the wearable device.', 'Check the TVOC index within your indoor environment.') }}
 
     <div class="container">
