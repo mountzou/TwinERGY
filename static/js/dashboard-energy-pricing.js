@@ -57,11 +57,9 @@ function updateDashboardPricing() {
         var graphTargetLEMPricing = $("#session-lem-pricing");
         document.getElementById("latest-lem-price").innerHTML = prices.at(-1) + ' €';
 
-        console.log(prices);
-
         var dataLEM = createLineChartData("LEM", prices, hours);
-        const temperatureTooltipCallback = (tooltipItems) => tooltipItems.yLabel.toFixed(2) + " €";
-        var graphLEM = createLineChartConfigLEMPricing(graphTargetLEMPricing, dataLEM, "€", temperatureTooltipCallback);
+        const energyPriceTooltipCallback = (tooltipItems) => tooltipItems.yLabel.toFixed(2) + " €" + " / Hour: " + tooltipItems.index + ":00";
+        var graphLEM = createLineChartConfigLEMPricing(graphTargetLEMPricing, dataLEM, "€", energyPriceTooltipCallback);
 
     });
 }
