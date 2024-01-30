@@ -281,4 +281,4 @@ function updateDashboard() {
 
 updateDashboard();
 
-setInterval(updateDashboard, 8000);
+//setInterval(updateDashboard, 8000);

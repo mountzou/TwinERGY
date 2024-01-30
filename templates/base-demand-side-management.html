@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+
+    <title> {% block title %}{% endblock title %} | Consumer Digital Twin </title>
+
+    <meta name="description" content="The Consumer Digital Twin platform developed for TwinERGY project.">
+    <meta name="keywords" content="twinergy, twin-ergy, TwinERGY EU, Consumer Digital Twin">
+    <meta name="author" content="Dept. of Electrical & Computer Engineering, University of Patras">
+
+    <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon">
+
+    <link href="{{url_for('static', filename='css/app.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/sweetalert.css')}}" rel="stylesheet" type="text/css">
+    <link href="{{url_for('static', filename='css/sweetalert.rtl.css')}}" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Import additional .css files in the header section -->
+    {% block html_css %}{% endblock html_css %}
+
+</head>
+<body class="layout-sticky-subnav layout-default">
+
+    <div class="mdk-header-layout js-mdk-header-layout">
+        <div class="mdk-header-layout__content page-content ">
+            {% include 'navbar.html' %}
+            {% block content %}{% endblock content %}
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <!-- Import jquery.min.js with jQuery library -->
+    <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
+
+    <!-- Import dom-factory.js file with application's dom factory -->
+    <script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
+
+    <!-- Import popper.min.js file with Popper library -->
+    <script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
+
+    <!-- Import app.js file with application's main settings -->
+    <script src="{{url_for('static', filename='js/app.js')}}"></script>
+
+    <!-- Import settings.js file with application's global settings -->
+    <script src="{{url_for('static', filename='js/settings.js')}}"></script>
+
+    <script src="{{url_for('static', filename='js/sweetalert.js')}}"></script>
+    <script src="{{url_for('static', filename='vendor/sweetalert.min.js')}}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <!-- Import bootstrap.min.js file with Bootstrap library -->
+    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
+
+    <!-- Import Chart.min.js files with Chart JS library -->
+    <script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
+    <script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
+
+    <!-- Import moment.min.js files with Moment JS library -->
+    <script src="{{url_for('static', filename='vendor/moment.min.js')}}"></script>
+
+    <!-- Import a .js script to retrieve session variables -->
+    <script src="{{url_for('static', filename='js/session.js')}}"></script>
+    <!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
+    <script src="{{url_for('static', filename='js/demand-side-management.js')}}"></script>
+
+
+</body>
+</html>

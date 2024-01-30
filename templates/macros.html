@@ -4,6 +4,38 @@
 </div>
 {% endmacro %}
 
+{% macro power_input(label, id, min, max, step) %}
+<div class="col-md-4">
+    <div class="form-group">
+        <label for="{{ id }}">{{ label }} Power (kW)</label>
+        <div class="input-group">
+            <input type="number" class="form-control" id="{{ id }}" step="{{ step }}" min="{{ min }}" max="{{ max }}" placeholder="Enter power in kW">
+            <div class="input-group-append">
+                <span class="input-group-text">kW</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro duration_input(label, name) %}
+<div class="col-md-4">
+    <div class="form-group">
+        <label>{{ label }} Duration</label>
+        <div class="d-flex align-items-center">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="{{ name }}" id="{{ name }}1" value="1">
+                <label class="form-check-label" for="{{ name }}1">1 hour</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="{{ name }}" id="{{ name }}2" value="2">
+                <label class="form-check-label" for="{{ name }}2">2 hours</label>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
 {% macro create_line_chart_dashboard(title, icon, canvas_id, latest_id) %}
 <div class="row">
     <div class="col-md-12">

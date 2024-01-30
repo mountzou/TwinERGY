@@ -1,0 +1,297 @@
+{% extends "base-account.html" %}
+
+<!-- Add the title for the specific page -->
+{% block title %}Account{% endblock title %}
+
+{% from 'macros.html' import power_input, duration_input %}
+
+<!-- Add the main content of the dashboard page -->
+{% block content %}
+<div class="container">
+
+    <!-- Add a section for the breadcrumb in the account page -->
+    <div class="page-section">
+        {% with b1="User", b2="Household Appliances" %}
+        {% include "breadcrumb.html" %}
+        {% endwith %}
+    </div>
+
+    <div class="container page__container">
+        <div class="page-section">
+            <form id="household-loads-information">
+                <div class="page-separator">
+                    <div class="page-separator__text">Time-flexible Loads</div>
+                </div>
+                <div class="row pt-2 pb-2">
+                    {{ power_input('Washing Machine', 'washingMachinePower', '0.5', '2.0', '0.1') }}
+                    {{ power_input('Dish Washer', 'dishWasherPower', '0.5', '2.0', '0.1') }}
+                    {{ power_input('Tumble Drier', 'tumbleDrierPower', '0.5', '2.0', '0.1') }}
+                </div>
+                <div class="row pt-2 pb-2">
+                    {{ duration_input('Washing Machine', 'washingMachineDuration') }}
+                    {{ duration_input('Dish Washer', 'dishWasherDuration') }}
+                    {{ duration_input('Tumble Drier', 'tumbleDrierDuration') }}
+                </div>
+
+                <div class="page-separator">
+                    <div class="page-separator__text">Phase-flexible Loads</div>
+                </div>
+                <div class="row pt-2 pb-2">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="electricVehiclePower1">Electric Vehicle Power - Level 1</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="electricVehiclePower1" step="0.01" min="1"
+                                       max="1.95" value="1.38"
+                                       placeholder="Enter power in kWh" oninput="updateMaxEVPower()">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="electricVehiclePower2">Electric Vehicle Power - Level 2</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="electricVehiclePower2" step="0.01" min="2"
+                                       max="2.95" value="2.3"
+                                       placeholder="Enter power in kWh" oninput="updateMaxEVPower()">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="electricVehiclePower3">Electric Vehicle Power - Level 3</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="electricVehiclePower3" step="0.01" min="3"
+                                       max="3.95" value="3.68"
+                                       placeholder="Enter power in kWh" oninput="updateMaxEVPower()">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="maxElectricVehiclePower">MAX Electric Vehicle Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="maxElectricVehiclePower" disabled>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row pt-2 pb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="electricWaterHeaterPower1">Electric Water Heater Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="electricWaterHeaterPower1" step="0.1"
+                                       min="0.5" max="2" value="1.5" placeholder="Enter power in kW"
+                                       oninput="updateMaxPower()">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="maxElectricWaterHeaterPower">MAX Electric Water Heater Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="maxElectricWaterHeaterPower" value="4.5"
+                                       disabled>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="page-separator">
+                    <div class="page-separator__text">Thermostatic Load</div>
+                </div>
+                <div class="row pt-2 pb-2">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="acPower">AC Nominal Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="acPower" step="0.1" min="0.8" max="2.0"
+                                       placeholder="Enter power in kW" oninput="updateACPowerPercentages()">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AC Power 25% Input -->
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="acPower25">25% AC Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="acPower25" disabled>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AC Power 50% Input -->
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="acPower50">50% AC Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="acPower50" disabled>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AC Power 75% Input -->
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="acPower75">75% AC Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="acPower75" disabled>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AC Power 100% Input -->
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="acPower100">100% AC Power</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="acPower100" disabled>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kW</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateMaxPower() {
+        var power1 = parseFloat(document.getElementById('electricWaterHeaterPower1').value);
+        var maxPower = (power1 * 3).toFixed(1);
+        document.getElementById('maxElectricWaterHeaterPower').value = maxPower;
+    }
+    function updateMaxEVPower() {
+        var power1 = parseFloat(document.getElementById('electricVehiclePower1').value) || 0;
+        var power2 = parseFloat(document.getElementById('electricVehiclePower2').value) || 0;
+        var power3 = parseFloat(document.getElementById('electricVehiclePower3').value) || 0;
+        var maxPower = (power1 + power2 + power3).toFixed(2);
+        document.getElementById('maxElectricVehiclePower').value = maxPower;
+    }
+    function updateACPowerPercentages() {
+        var acPower = parseFloat(document.getElementById('acPower').value) || 0;
+        document.getElementById('acPower25').value = (acPower * 0.25).toFixed(1);
+        document.getElementById('acPower50').value = (acPower * 0.50).toFixed(1);
+        document.getElementById('acPower75').value = (acPower * 0.75).toFixed(1);
+        document.getElementById('acPower100').value = (acPower * 1.00).toFixed(1);
+    }
+
+    window.onload = function() {
+    fetch('/get_account_loads')
+    .then(response => response.json())
+    .then(data => {
+        console.log(data['time_shiftable'][0][4]);
+        document.getElementById('acPower').value = data['ac_shiftable'][0][2];
+
+        document.getElementById('washingMachinePower').value = data['time_shiftable'][0][3];
+        var washingMachineDuration = data['time_shiftable'][0][4];
+        document.querySelector(`input[name="washingMachineDuration"][value="${washingMachineDuration}"]`).checked = true;
+
+        document.getElementById('dishWasherPower').value = data['time_shiftable'][1][3];
+        var dishWasherDuration = data['time_shiftable'][1][4];
+        document.querySelector(`input[name="dishWasherDuration"][value="${dishWasherDuration}"]`).checked = true;
+
+        document.getElementById('tumbleDrierPower').value = data['time_shiftable'][2][3];
+        var tumbleDrierDuration = data['time_shiftable'][2][4];
+        document.querySelector(`input[name="tumbleDrierDuration"][value="${tumbleDrierDuration}"]`).checked = true;
+
+        document.getElementById('electricVehiclePower1').value = data['phase_shiftable'][0][3];
+        document.getElementById('electricVehiclePower2').value = data['phase_shiftable'][0][4];
+        document.getElementById('electricVehiclePower3').value = data['phase_shiftable'][0][5];
+        document.getElementById('maxElectricVehiclePower').value = data['phase_shiftable'][0][6];
+
+        document.getElementById('electricWaterHeaterPower1').value = data['phase_shiftable'][1][3];
+
+        updateMaxEVPower();
+        updateMaxPower();
+        updateACPowerPercentages();
+    })
+    .catch(error => {
+        console.error('Error fetching initial data:', error);
+    });
+};
+
+</script>
+
+<script>
+document.getElementById('household-loads-information').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var formData = {
+        'washingMachinePower': document.getElementById('washingMachinePower').value,
+        'dishWasherPower': document.getElementById('dishWasherPower').value,
+        'tumbleDrierPower': document.getElementById('tumbleDrierPower').value,
+        'washingMachineDuration': document.querySelector('input[name="washingMachineDuration"]:checked').value,
+        'dishWasherDuration': document.querySelector('input[name="dishWasherDuration"]:checked').value,
+        'tumbleDrierDuration': document.querySelector('input[name="tumbleDrierDuration"]:checked').value,
+        'electricVehiclePower1': document.getElementById('electricVehiclePower1').value,
+        'electricVehiclePower2': document.getElementById('electricVehiclePower2').value,
+        'electricVehiclePower3': document.getElementById('electricVehiclePower3').value,
+        'maxElectricVehiclePower': document.getElementById('maxElectricVehiclePower').value,
+        'electricWaterHeaterPower1': document.getElementById('electricWaterHeaterPower1').value,
+        'maxElectricWaterHeaterPower': document.getElementById('maxElectricWaterHeaterPower').value,
+        'acPower': document.getElementById('acPower').value,
+        'acPower25': document.getElementById('acPower25').value,
+        'acPower50': document.getElementById('acPower50').value,
+        'acPower75': document.getElementById('acPower75').value,
+        'acPower100': document.getElementById('acPower100').value
+    };
+
+    fetch('/update_account_loads', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+});
+
+</script>
+
+
+{% endblock content %}

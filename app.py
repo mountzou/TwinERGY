@@ -12,6 +12,8 @@ from determineAirTemperature import *
 from determineWellBeing import *
 from filter_thermal_comfort import *
 
+from demandSideManagement import *
+
 from apiService import *
 
 # Import functions regarding the user's preferences
@@ -30,6 +32,11 @@ from urllib.parse import urlparse
 import json
 import requests
 import pandas as pd
+import random as rand
+import numpy as np
+from multiprocessing import cpu_count
+
+from pulp import *
 
 import os
 from dotenv import load_dotenv
@@ -345,6 +352,7 @@ def get_data_lem_pricing():
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 500
 
+
 # Retrieve user's thermal comfort data from the latest active session of the wearable device
 @app.route('/get_data_thermal_comfort/')
 def get_data_thermal_comfort():
@@ -657,6 +665,163 @@ def get_device_status():
     current_device_status = device_status(g.cur, session['deviceId'])
     # Return the number of the latest recordings from the specific wearable device in JSON format
     return jsonify({'device_status': current_device_status})
+
+
+@app.route('/demand_side_management/')
+def demand_side_management():
+    min_temp, max_temp = getTemperaturePreferences(g.cur, session.get('deviceId', None))
+    min_comfort, max_comfort = getThermalComfortPreferences(g.cur, session.get('deviceId', None))
+
+    preferences_flexible_loads = get_data_preferences().get_json()
+
+    operation_times = {}
+
+    for load, times in preferences_flexible_loads['preferences'][0].items():
+        from_key, to_key = f'{load}_from', f'{load}_to'
+        if from_key in times and to_key in times:
+            operation_times[load] = (times[from_key], times[to_key])
+
+    operation_times_json = jsonify(operation_times).data.decode('utf-8')
+
+    T_start_j, T_end_j = dsm_time_flexible_loads_slots(json.loads(operation_times_json))
+    T_start_k, T_end_k = dsm_phase_flexible_loads_const_slots(json.loads(operation_times_json))
+    T_start_m, T_end_m = dsm_phase_flexible_loads_diff_slots(json.loads(operation_times_json))
+
+    pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
+    pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
+
+    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, pi_i)
+    optimal_schedule_json = jsonify(optimal_schedule).data.decode('utf-8')
+
+    return render_template('demand-side-management.html',
+        operation_times=operation_times,
+        operation_times_json=operation_times_json,
+        optimal_schedule_json=optimal_schedule_json,
+        prices=pi_i,
+        min_temp=min_temp,
+        max_temp=max_temp,
+        min_comfort=min_comfort,
+        max_comfort=max_comfort)
+
+
+@app.route('/account_loads/')
+def account_loads():
+    return render_template('account-loads.html')
+
+
+@app.route('/update_account_loads', methods=['POST'])
+def update_account_loads():
+    data = request.json
+    wearable_id = session.get('deviceId', None)
+
+    # Accessing each field in the JSON data
+    washing_machine_power = data.get('washingMachinePower')
+    dish_washer_power = data.get('dishWasherPower')
+    tumble_drier_power = data.get('tumbleDrierPower')
+    washing_machine_duration = data.get('washingMachineDuration')
+    dish_washer_duration = data.get('dishWasherDuration')
+    tumble_drier_duration = data.get('tumbleDrierDuration')
+
+    electric_vehicle_power1 = data.get('electricVehiclePower1')
+    electric_vehicle_power2 = data.get('electricVehiclePower2')
+    electric_vehicle_power3 = data.get('electricVehiclePower3')
+    max_electric_vehicle_power = data.get('maxElectricVehiclePower')
+
+    electric_water_heater_power1 = data.get('electricWaterHeaterPower1')
+    max_electric_water_heater_power = data.get('maxElectricWaterHeaterPower')
+
+    ac_power = data.get('acPower')
+    ac_power_25 = data.get('acPower25')
+    ac_power_50 = data.get('acPower50')
+    ac_power_75 = data.get('acPower75')
+    ac_power_100 = data.get('acPower100')
+
+    load_information = {
+        'Time-flexible Loads': {
+            'Washing Machine': {
+                'Power': washing_machine_power,
+                'Duration': washing_machine_duration
+            },
+            'Dish Washer': {
+                'Power': dish_washer_power,
+                'Duration': dish_washer_duration
+            },
+            'Tumble Drier': {
+                'Power': tumble_drier_power,
+                'Duration': tumble_drier_duration
+            }
+        },
+        'Phase-flexible Loads': {
+            'Electric Vehicle': {
+                'Power 1': electric_vehicle_power1,
+                'Power 2': electric_vehicle_power2,
+                'Power 3': electric_vehicle_power3,
+                'Max Power': max_electric_vehicle_power
+            },
+            'Electric Water Heater': {
+                'Power 1': electric_water_heater_power1,
+                'Max Power': max_electric_water_heater_power
+            }
+        },
+        'Thermostatic Load': {
+            'AC Power': {
+                'Power': ac_power,
+                '25% Power': ac_power_25,
+                '50% Power': ac_power_50,
+                '75% Power': ac_power_75,
+                '100% Power': ac_power_100
+            }
+        }
+    }
+
+    insert_load_time_wm = f"INSERT INTO load_flexible_time (wearable_id, appliance_type, power, duration, update_timestamp) VALUES ('{wearable_id}', 'WM', '{washing_machine_power}', '{washing_machine_duration}', '{int(datetime.now().timestamp())}')"
+    execute_query(g.cur, mysql, insert_load_time_wm, commit=True)
+    insert_load_time_dw = f"INSERT INTO load_flexible_time (wearable_id, appliance_type, power, duration, update_timestamp) VALUES ('{wearable_id}', 'DW', '{dish_washer_power}', '{dish_washer_duration}', '{int(datetime.now().timestamp())}')"
+    execute_query(g.cur, mysql, insert_load_time_dw, commit=True)
+    insert_load_time_td = f"INSERT INTO load_flexible_time (wearable_id, appliance_type, power, duration, update_timestamp) VALUES ('{wearable_id}', 'TD', '{tumble_drier_power}', '{tumble_drier_duration}', '{int(datetime.now().timestamp())}')"
+    execute_query(g.cur, mysql, insert_load_time_td, commit=True)
+
+    insert_load_ac = f"INSERT INTO load_flexible_ac (wearable_id, ac_power, ac_power_25, ac_power_50, ac_power_75, ac_power_100, update_timestamp) VALUES ('{wearable_id}', '{ac_power}', '{ac_power_25}', '{ac_power_50}', '{ac_power_75}', '{ac_power_100}', '{int(datetime.now().timestamp())}')"
+    execute_query(g.cur, mysql, insert_load_ac, commit=True)
+    insert_load_phase_ev = f"INSERT INTO load_flexible_phase (wearable_id, appliance_type, power1, power2, power3, max_power, update_timestamp) VALUES ('{wearable_id}', 'EV', '{electric_vehicle_power1}', '{electric_vehicle_power2}', '{electric_vehicle_power3}', '{max_electric_vehicle_power}', '{int(datetime.now().timestamp())}')"
+    execute_query(g.cur, mysql, insert_load_phase_ev, commit=True)
+    insert_load_phase_ewh = f"INSERT INTO load_flexible_phase (wearable_id, appliance_type, power1, power2, power3, max_power, update_timestamp) VALUES ('{wearable_id}', 'EWH', '{electric_water_heater_power1}', 0, 0, '{max_electric_water_heater_power}', '{int(datetime.now().timestamp())}')"
+    execute_query(g.cur, mysql, insert_load_phase_ewh, commit=True)
+
+    return jsonify({'status': 'success', 'message': 'Data processed successfully'})
+
+
+@app.route('/get_account_loads', methods=['GET'])
+def get_account_loads():
+    wearable_id = session.get('deviceId', None)
+
+    query_time_shiftable = """
+        (SELECT * FROM load_flexible_time WHERE wearable_id = %s AND appliance_type = 'WM' ORDER BY update_timestamp DESC LIMIT 1)
+        UNION ALL
+        (SELECT * FROM load_flexible_time WHERE wearable_id = %s AND appliance_type = 'DW' ORDER BY update_timestamp DESC LIMIT 1)
+        UNION ALL
+        (SELECT * FROM load_flexible_time WHERE wearable_id = %s AND appliance_type = 'TD' ORDER BY update_timestamp DESC LIMIT 1);
+    """
+
+    query_phase_shiftable = """
+        (SELECT * FROM load_flexible_phase WHERE wearable_id = %s AND appliance_type = 'EV' ORDER BY update_timestamp DESC LIMIT 1)
+        UNION ALL
+        (SELECT * FROM load_flexible_phase WHERE wearable_id = %s AND appliance_type = 'EWH' ORDER BY update_timestamp DESC LIMIT 1)
+    """
+
+    query_ac = """
+        (SELECT * FROM load_flexible_ac WHERE wearable_id = %s ORDER BY update_timestamp DESC LIMIT 1)
+    """
+
+    with g.cur as cur:
+        cur.execute(query_time_shiftable, (wearable_id, wearable_id, wearable_id))
+        time_shiftable = cur.fetchall()
+        cur.execute(query_phase_shiftable, (wearable_id, wearable_id))
+        phase_shiftable = cur.fetchall()
+        cur.execute(query_ac, (wearable_id,))
+        ac_shiftable = cur.fetchall()
+
+    return jsonify({'phase_shiftable': phase_shiftable, 'time_shiftable': time_shiftable, 'ac_shiftable': ac_shiftable})
 
 
 if __name__ == "__main__":
