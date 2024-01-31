@@ -294,3 +294,23 @@ canvas {
     background-color: #ffba4e;
     font-weight: 600;
 }
+
+[dir=ltr] .modal-backdrop.show {
+    opacity: 0;
+}
+
+[dir=ltr] .modal-backdrop {
+    position: relative;
+}
+
+[dir=ltr] .modal-title {
+    margin-bottom: 0;
+    line-height: 1.2;
+    font-size: 18px;
+    text-transform: capitalize;
+}
+
+[dir=ltr] .modal-content {
+    width: 85%;
+    border-radius: 0.8rem;
+}

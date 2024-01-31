@@ -21,7 +21,6 @@ function getSessionData() {
 }
 
 getSessionData().then((sessionData) => {
-console.log(sessionData);
     document.getElementById("account-fullname").innerHTML = sessionData['userinfo']['name'];
     document.getElementById("account-email").innerHTML = sessionData['userinfo']['email'];
     document.getElementById("account-username").innerHTML = sessionData['userinfo']['preferred_username'];

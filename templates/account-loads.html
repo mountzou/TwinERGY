@@ -18,6 +18,7 @@
 
     <div class="container page__container">
         <div class="page-section">
+            <!-- Bootstrap Modal for Success Message -->
             <form id="household-loads-information">
                 <div class="page-separator">
                     <div class="page-separator__text">Time-flexible Loads</div>
@@ -192,6 +193,22 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Success</h5>
+            </div>
+            <div class="modal-body">
+                <p class="lead text-black text-center">Your load configuration has been successfully updated !</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     function updateMaxPower() {
@@ -218,7 +235,6 @@
     fetch('/get_account_loads')
     .then(response => response.json())
     .then(data => {
-        console.log(data['time_shiftable'][0][4]);
         document.getElementById('acPower').value = data['ac_shiftable'][0][2];
 
         document.getElementById('washingMachinePower').value = data['time_shiftable'][0][3];
@@ -248,6 +264,8 @@
         console.error('Error fetching initial data:', error);
     });
 };
+
+
 
 </script>
 
@@ -284,10 +302,15 @@ document.getElementById('household-loads-information').addEventListener('submit'
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Success:', data);
+        if(data.status === 'success') {
+            $('#successModal').modal('show');
+        } else {
+            console.error('Server did not process data successfully:', data);
+        }
     })
     .catch((error) => {
         console.error('Error:', error);
+        // Handle any errors that occurred during the fetch operation
     });
 });
 
