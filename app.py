@@ -160,8 +160,13 @@ def logout():
 @app.route("/")
 @app.route("/index/")
 @app.route("/dashboard/")
-def rout():
-    return render_template("index.html")
+def index():
+    tc = get_data_thermal_comfort().json
+
+    if not tc.get('daily_thermal_comfort_data'):
+        return render_template("index-empty.html")
+    else:
+        return render_template("index.html")
 
 
 # A function that renders the template of the 'Thermal Comfort' page under the route '/thermal_comfort/.
