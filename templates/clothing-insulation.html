@@ -1,25 +1,18 @@
 {% extends "base-clothing-insulation.html" %}
 
 <!-- Add the title for the specific html page -->
-{% block title %}Preferences{% endblock title %}
-
-<!-- Import any external .css files for the specific page -->
-{% block html_css %}
-<link href="{{url_for('static', filename='css/ion-rangeslider.css')}}" rel="stylesheet"
-      type="text/css">{% endblock html_css %}
-
-<!-- Set the breadcrumb names for the specific page -->
-{% set breadcrumb_level_one = 'Thermal Comfort & Well-being' %}
-{% set breadcrumb_level_two = 'Clothing Insulation' %}
+{% block title %}Clothing Insulation{% endblock title %}
 
 {% block content %}
 
-<div class="container page__container d-flex flex-column flex-md-row align-items-center pt-32pt">
-    {% include 'breadcrumb.html' %}
-</div>
-
 <div class="container page__container page-section">
 
+    <!-- Add a section for the breadcrumb in the account page -->
+    <div class="page-section">
+        {% with b1="Thermal Comfort", b2="Clothing Insulation" %}
+        {% include "breadcrumb.html" %}
+        {% endwith %}
+    </div>
 
     <div class="row mb-32pt">
 
@@ -28,7 +21,8 @@
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
                     <h4 class="h2 mb-0" id="summer-clo">- clo.</h4>
-                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">sunny</i> Summer Outfit</div>
+                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">sunny</i> Summer Outfit
+                    </div>
                 </div>
             </div>
         </div>
@@ -38,7 +32,8 @@
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
                     <h4 class="h2 mb-0" id="winter-clo">- clo.</h4>
-                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">ac_unit</i> Winter Outfit</div>
+                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">ac_unit</i> Winter Outfit
+                    </div>
                 </div>
             </div>
         </div>
@@ -48,7 +43,8 @@
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
                     <h4 class="h2 mb-0" id="autumn-clo">- clo.</h4>
-                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">eco</i> Autumn Outfit</div>
+                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">eco</i> Autumn Outfit
+                    </div>
                 </div>
             </div>
         </div>
@@ -58,7 +54,8 @@
             <div class="card border-1 border-left-3 border-left-primary text-center mb-lg-0">
                 <div class="card-body">
                     <h4 class="h2 mb-0" id="spring-clo">- clo.</h4>
-                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">park</i> Spring Outfit</div>
+                    <div class="outfit-text"><i class="material-icons icon-16pt text-12 mb-1">park</i> Spring Outfit
+                    </div>
                 </div>
             </div>
         </div>
