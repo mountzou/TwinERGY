@@ -3,7 +3,6 @@ from pulp import *
 import numpy as np
 from multiprocessing import cpu_count
 
-from app import get_account_loads
 
 def DSM_get_tariffs(prices_json):
     tariffs = {}
@@ -47,7 +46,7 @@ def dsm_phase_flexible_loads_diff_slots(operation_time):
 
 def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, pi_i):
     T, I = 1, range(1, 25)
-
+    from app import get_account_loads
     loads_info = get_account_loads().get_json()
 
     dj = {1: int(loads_info['time_shiftable'][0][4]), 2: int(loads_info['time_shiftable'][1][4]), 3: int(loads_info['time_shiftable'][2][4])}
