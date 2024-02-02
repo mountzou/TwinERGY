@@ -30,7 +30,6 @@ function getDeviceStatus() {
         return response.json();
     })
     .then(data => {
-        console.log('Device Status:', data.device_status);
         data.device_status > 0 ? wearable_device_on() : wearable_device_off();
     })
     .catch(error => {
@@ -55,6 +54,7 @@ function updateSessionInformation(sessionData) {
     document.getElementById("building-id").innerHTML = sessionData['userinfo']['dwellingId'] + ', ' + sessionData['userinfo']['pilotId'].charAt(0).toUpperCase() + sessionData['userinfo']['pilotId'].slice(1);
     document.getElementById("wearable-id").innerHTML = sessionData['userinfo']['deviceId'];
     document.getElementById("username-id").innerHTML = 'Welcome, ' + sessionData['userinfo']['preferred_username'];
+    if (document.getElementById("message-wearable-id")) document.getElementById("message-wearable-id").innerHTML = sessionData['userinfo']['deviceId'];
 }
 
 /* Insert the building ID, wearable ID, username to the corresponding components */

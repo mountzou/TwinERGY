@@ -21,47 +21,56 @@
     {% block html_css %}{% endblock html_css %}
 
 </head>
-<body class="layout-sticky-subnav layout-default">
+<body class="layout-sticky-subnav layout-default blur-active">
 
-    <div class="mdk-header-layout js-mdk-header-layout">
-        <div class="mdk-header-layout__content page-content ">
-            {% include 'navbar.html' %}
-            {% block content %}{% endblock content %}
-        </div>
+<div class="mdk-header-layout js-mdk-header-layout">
+    <div class="mdk-header-layout__content page-content ">
+        {% include 'navbar.html' %}
+        {% block content %}{% endblock content %}
     </div>
+</div>
 
-    {% include 'footer.html' %}
+{% include 'footer.html' %}
 
-    <!-- Import jquery.min.js with jQuery library -->
-    <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
+<div id="page-overlay"
+     class="position-fixed vh-100 vw-100 top-0 start-0 d-flex justify-content-center align-items-center"
+     style="background: rgba(255, 255, 255, 0.8); z-index: 1050;">
+    <div style="font-size:20px; margin-right: 30px;"><strong>Waiting CDT to load</strong></div>
 
-    <!-- Import dom-factory.js file with application's dom factory -->
-    <script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
+    <div class="spinner-grow text-primary" style="width: 1.5rem; height: 1.5rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
 
-    <!-- Import popper.min.js file with Popper library -->
-    <script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
+<!-- Import jquery.min.js with jQuery library -->
+<script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
 
-    <!-- Import app.js file with application's main settings -->
-    <script src="{{url_for('static', filename='js/app.js')}}"></script>
+<!-- Import dom-factory.js file with application's dom factory -->
+<script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
 
-    <!-- Import settings.js file with application's global settings -->
-    <script src="{{url_for('static', filename='js/settings.js')}}"></script>
+<!-- Import popper.min.js file with Popper library -->
+<script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
 
-    <!-- Import bootstrap.min.js file with Bootstrap library -->
-    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
+<!-- Import app.js file with application's main settings -->
+<script src="{{url_for('static', filename='js/app.js')}}"></script>
 
-    <!-- Import Chart.min.js files with Chart JS library -->
-    <script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
-    <script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
-    <script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
+<!-- Import bootstrap.min.js file with Bootstrap library -->
+<script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
-    <!-- Import moment.min.js files with Moment JS library -->
-    <script src="{{url_for('static', filename='vendor/moment.min.js')}}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const overlay = document.getElementById('page-overlay');
+        if (overlay) overlay.remove();
+        document.body.classList.remove('blur-active');
+    }, 900);
+});
+</script>
 
-    <!-- Import a .js script to retrieve session variables -->
-    <script src="{{url_for('static', filename='js/session.js')}}"></script>
-    <!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
-    <script src="{{url_for('static', filename='js/account.js')}}"></script>
+<!-- Import a .js script to retrieve session variables -->
+<script src="{{url_for('static', filename='js/session.js')}}"></script>
+<!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
+<script src="{{url_for('static', filename='js/account.js')}}"></script>
 
 </body>
 </html>

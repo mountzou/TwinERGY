@@ -202,12 +202,6 @@ def account():
     return render_template('account.html')
 
 
-# A functions that renders the 'Helpdesk' page under the route '/helpdesk/'
-@app.route('/helpdesk')
-def helpdesk():
-    return render_template('helpdesk.html')
-
-
 # A functions that implements the API service that provides consumer's thermal comfort to CDMP under the route '/api_tc'
 @app.route('/api_tc', methods=['GET'])
 def api_tc():

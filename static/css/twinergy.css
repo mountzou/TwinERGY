@@ -314,3 +314,15 @@ canvas {
     width: 85%;
     border-radius: 0.8rem;
 }
+
+[dir=ltr] .dropdown-item {
+    font-weight: 600;
+}
+
+[dir=ltr] .navbar-expand .navbar-nav .dropdown-menu {
+    border-radius: 8px;
+}
+
+body.blur-active > :not(#page-overlay) {
+    filter: blur(25px);
+}

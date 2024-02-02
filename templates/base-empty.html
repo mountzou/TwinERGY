@@ -15,8 +15,6 @@
 
     <link href="{{url_for('static', filename='css/app.css')}}" rel="stylesheet" type="text/css">
     <link href="{{url_for('static', filename='css/twinergy.css')}}" rel="stylesheet" type="text/css">
-    <link href="{{url_for('static', filename='css/sweetalert.css')}}" rel="stylesheet" type="text/css">
-    <link href="{{url_for('static', filename='css/sweetalert.rtl.css')}}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Import additional .css files in the header section -->
@@ -59,11 +57,6 @@
 <!-- Import settings.js file with application's global settings -->
 <script src="{{url_for('static', filename='js/settings.js')}}"></script>
 
-<script src="{{url_for('static', filename='js/sweetalert.js')}}"></script>
-<script src="{{url_for('static', filename='vendor/sweetalert.min.js')}}"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-
 <!-- Import bootstrap.min.js file with Bootstrap library -->
 <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
@@ -78,20 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
-<!-- Import Chart.min.js files with Chart JS library -->
-<script src="{{url_for('static', filename='vendor/Chart.min.js')}}"></script>
-<script src="{{url_for('static', filename='js/chartjs.js')}}"></script>
-<script src="{{url_for('static', filename='js/chartjs-rounded-bar.js')}}"></script>
-
 <!-- Import moment.min.js files with Moment JS library -->
 <script src="{{url_for('static', filename='vendor/moment.min.js')}}"></script>
 
 <!-- Import a .js script to retrieve session variables -->
 <script src="{{url_for('static', filename='js/session.js')}}"></script>
-<!-- Import a .js script to create the charts related to thermal comfort on the dashboard page -->
-<script src="{{url_for('static', filename='js/dashboard-comfort.js')}}"></script>
-
-<script src="{{url_for('static', filename='js/dashboard-energy-pricing.js')}}"></script>
 
 </body>
 </html>
