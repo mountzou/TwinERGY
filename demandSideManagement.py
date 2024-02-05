@@ -1,7 +1,30 @@
-import random as rand
 from pulp import *
 from multiprocessing import cpu_count
 from datetime import datetime
+
+from determineThermalComfort import get_pmv_value
+
+
+def find_temp_for_desired_pmv(target_pmv, clo, rh=50, met=1.1, vr=0, wme=0, tolerance=0.01, max_iterations=100):
+    lower_bound = 10
+    upper_bound = 35
+    iteration = 0
+
+    while iteration < max_iterations:
+        tr_guess = (lower_bound + upper_bound) / 2
+        tdb = tr_guess * 0.935
+        calculated_pmv = get_pmv_value(tr_guess, tdb, rh, met, clo, vr, wme)
+
+        if abs(calculated_pmv - target_pmv) <= tolerance:
+            return round(tr_guess, 2)
+        elif calculated_pmv < target_pmv:
+            lower_bound = tr_guess
+        else:
+            upper_bound = tr_guess
+
+        iteration += 1
+
+    raise ValueError(f"Could not find a solution within tolerance after {max_iterations} iterations.")
 
 
 def get_outdoor_temperature(cur, city):
@@ -19,6 +42,26 @@ def get_outdoor_temperature(cur, city):
     hourly_temperatures = {hour: value for hour, value in enumerate(temperature_float_values, start=1)}
 
     return hourly_temperatures
+
+
+def outdoor_temp_to_indoor_temp(outdoor_temp):
+    th_in_init = 20
+    th_in = {0: th_in_init}
+    thg_in = {}
+    pmv_values = {}
+
+    alpha, beta = 0.8569, 0.1431
+    rh, met, clo, vr = 50, 1, 1.2, 0
+
+    for t in range(1, 25):
+        th_in[t] = alpha * th_in[t - 1] + beta * outdoor_temp[t]
+
+        thg_in[t] = 0.935 * th_in[t]
+
+        pmv = get_pmv_value(th_in[t], thg_in[t], rh, met, clo, vr, wme=0)
+        pmv_values[t] = round(pmv, 2)
+
+    return th_in, thg_in, pmv_values
 
 
 def DSM_get_tariffs(prices_json):
@@ -61,7 +104,7 @@ def dsm_phase_flexible_loads_diff_slots(operation_time):
     return [T_start_m, T_end_m]
 
 
-def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, pi_i):
+def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, clo, pi_i):
     T, I = 1, range(1, 25)
     from app import get_account_loads
     loads_info = get_account_loads().get_json()
@@ -71,11 +114,13 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
     fjr = {1: {1: float(loads_info['time_shiftable'][0][3])}, 2: {1: float(loads_info['time_shiftable'][1][3])},
            3: {1: float(loads_info['time_shiftable'][2][3])}}
 
-    b_i = {i: rand.uniform(0.2, 1.8) for i in I}
+    b_i = {i: 0.4 for i in I}
     p_cont_i = {i: 10.5 for i in I}
-    th_min, th_max = min_temp, max_temp
+    th_min, th_max = find_temp_for_desired_pmv(-2, clo), find_temp_for_desired_pmv(-1, clo)
     th_in_init, th_ext_init = 22, out_temperatures[1]
     th_ext = out_temperatures
+    ind = outdoor_temp_to_indoor_temp(th_ext)
+    print(ind)
     P_AC_nom = float(loads_info['ac_shiftable'][0][2])
     Q_k, E_k = {1: float(loads_info['phase_shiftable'][1][3])}, {1: float(loads_info['phase_shiftable'][1][6])}
     M, K, J = range(1, 2), range(1, 2), range(1, 4)
@@ -191,8 +236,7 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
     for t in I:
         '''Constraint 21'''
         if t > 1:
-            prob += th_in[t] == alpha * th_in[t - 1] + 0.1431 * th_ext[t - 1] + gamma * p_AC[t], f"TempModel_{t}"
-            print(th_in[t] == alpha * th_in[t - 1] + 0.1431 * th_ext[t - 1] + gamma * p_AC[t])
+            prob += th_in[t] == alpha * th_in[t - 1] + beta * th_ext[t - 1] + gamma * p_AC[t], f"TempModel_{t}"
         elif t == 1:
             prob += th_in[t] == alpha * th_in_init + beta * th_ext_init + gamma * p_AC[t], f"TempModel_{t}"
 
@@ -219,7 +263,7 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
     solver = pulp.PULP_CBC_CMD(threads=cpu_count())
 
     prob.solve(solver)
-    # After solving, extract decision variables
+
     results = {
         "Time-Shiftable Loads": [],
         "Power Constant Loads": [],
@@ -248,5 +292,4 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
     for t in I:
         results["Air Conditioning Power and Temperature"].append((t, p_AC[t].varValue, th_in[t].varValue))
 
-    # Here you could return results or process them further as needed
     return results

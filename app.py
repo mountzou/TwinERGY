@@ -286,14 +286,9 @@ def handle_ttn_webhook():
 
     if tc_timestamp > wear_sessions[0][2]:
 
-        print("Το tc_timestamp μεγαλύτερο του session_end")
-
         tc_met = calculate_tc_met(tc_metabolic, p_metabolic, tc_timestamp, p_time)
         tc_clo = get_clo_insulation(g.cur, mysql, device_id)[0]
         tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
-
-        print("Τρέχον timestamp:", tc_timestamp)
-        print("Προηγούμενο timestamp:", p_time)
 
         insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
             tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
@@ -672,6 +667,8 @@ def demand_side_management():
     min_comfort, max_comfort = getThermalComfortPreferences(g.cur, session.get('deviceId', None))
 
     out_temperatures = get_outdoor_temperature(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
+    clo_insulation = get_clo_insulation(g.cur, mysql, session.get('deviceId', None))[0]
+    metabolic_rate = 1
 
     preferences_flexible_loads = get_data_preferences().get_json()
 
@@ -691,7 +688,7 @@ def demand_side_management():
     pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
     pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
 
-    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, pi_i)
+    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, clo_insulation, pi_i)
     optimal_schedule_json = jsonify(optimal_schedule).data.decode('utf-8')
 
     return render_template('demand-side-management.html',
