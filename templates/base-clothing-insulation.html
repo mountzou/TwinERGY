@@ -7,7 +7,7 @@
 
     <title>{% block title %}{% endblock title %} | Consumer Digital Twin</title>
 
-    <meta name="description" content="The Consumer Digital Twin platform developed for TwinERGY project.">
+    <meta name="description" content="The Consumer Digital Twin platform developed for TwinERGY EU project.">
     <meta name="keywords" content="twinergy, twin-ergy, TwinERGY EU, Consumer Digital Twin">
     <meta name="author" content="Dept. of Electrical & Computer Engineering, University of Patras">
 
@@ -17,55 +17,67 @@
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/twinergy.css')}}">
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/ion-rangeslider.css')}}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Import additional .css files in the header section -->
-    {% block html_css %}{% endblock html_css %}
 
 </head>
-<body class="layout-sticky-subnav layout-default">
+<body class="layout-sticky-subnav layout-default blur-active">
 
-    <div class="mdk-header-layout js-mdk-header-layout">
-        <div class="mdk-header-layout__content page-content ">
-            {% include 'navbar.html' %}
+<div class="mdk-header-layout js-mdk-header-layout">
+    <div class="mdk-header-layout__content page-content ">
+        {% include 'navbar.html' %}
 
-            {% block content %}
+        {% block content %}
 
-            {% endblock content %}
-        </div>
+        {% endblock content %}
     </div>
+</div>
 
-    {% include 'footer.html' %}
-       <!-- jQuery -->
-    <script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
+{% include 'footer.html' %}
 
-    <!-- Import dom-factory.js file with application's dom factory -->
-    <script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
+<div id="page-overlay"
+     class="position-fixed vh-100 vw-100 top-0 start-0 d-flex justify-content-center align-items-center"
+     style="background: rgba(255, 255, 255, 0.8); z-index: 1050;">
+    <div style="font-size:20px; margin-right: 30px;"><strong>Waiting CDT to load</strong></div>
 
-    <!-- Range Slider -->
-    <script src="{{url_for('static', filename='vendor/ion.rangeSlider.min.js')}}"></script>
-    <script src="{{url_for('static', filename='js/ion-rangeslider.js')}}"></script>
+    <div class="spinner-grow text-primary" style="width: 1.5rem; height: 1.5rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
 
-    <!-- Bootstrap -->
-    <script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
-    <script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const overlay = document.getElementById('page-overlay');
+        if (overlay) overlay.remove();
+        document.body.classList.remove('blur-active');
+    }, 900);
+});
+</script>
 
-    <!-- Perfect Scrollbar -->
-    <script src="{{url_for('static', filename='vendor/perfect-scrollbar.min.js')}}"></script>
+<!-- jQuery -->
+<script src="{{url_for('static', filename='vendor/jquery.min.js')}}"></script>
 
-    <!-- App JS -->
-    <script src="{{url_for('static', filename='js/app.js')}}"></script>
-     <!-- Import settings.js file with application's global settings -->
-    <script src="{{url_for('static', filename='js/settings.js')}}"></script>
+<!-- Import dom-factory.js file with application's dom factory -->
+<script src="{{url_for('static', filename='vendor/dom-factory.js')}}"></script>
 
-    <script src="{{url_for('static', filename='vendor/moment.min.js')}}"></script>
+<!-- Range Slider -->
+<script src="{{url_for('static', filename='vendor/ion.rangeSlider.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/ion-rangeslider.js')}}"></script>
 
-    <!-- Chart JS -->
-    <script src="../static/vendor/Chart.min.js"></script>
+<!-- Bootstrap -->
+<script src="{{url_for('static', filename='vendor/popper.min.js')}}"></script>
+<script src="{{url_for('static', filename='vendor/bootstrap.min.js')}}"></script>
 
-    <!-- Import a .js script to retrieve session variables -->
-    <script src="{{url_for('static', filename='js/session.js')}}"></script>
+<!-- Perfect Scrollbar -->
+<script src="{{url_for('static', filename='vendor/perfect-scrollbar.min.js')}}"></script>
 
-    <!-- Import a .js script to retrieve user's clothing insulation -->
-    <script src="{{url_for('static', filename='js/clothing.js')}}"></script>
+<!-- App JS -->
+<script src="{{url_for('static', filename='js/app.js')}}"></script>
+
+<!-- Import a .js script to retrieve session variables -->
+<script src="{{url_for('static', filename='js/session.js')}}"></script>
+
+<!-- Import a .js script to retrieve user's clothing insulation -->
+<script src="{{url_for('static', filename='js/clothing.js')}}"></script>
 
 </body>
 </html>

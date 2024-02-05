@@ -671,6 +671,8 @@ def demand_side_management():
     min_temp, max_temp = getTemperaturePreferences(g.cur, session.get('deviceId', None))
     min_comfort, max_comfort = getThermalComfortPreferences(g.cur, session.get('deviceId', None))
 
+    out_temperatures = get_outdoor_temperature(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
+
     preferences_flexible_loads = get_data_preferences().get_json()
 
     operation_times = {}
@@ -689,7 +691,7 @@ def demand_side_management():
     pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
     pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
 
-    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, pi_i)
+    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, pi_i)
     optimal_schedule_json = jsonify(optimal_schedule).data.decode('utf-8')
 
     return render_template('demand-side-management.html',

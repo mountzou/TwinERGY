@@ -1,7 +1,24 @@
 import random as rand
 from pulp import *
-import numpy as np
 from multiprocessing import cpu_count
+from datetime import datetime
+
+
+def get_outdoor_temperature(cur, city):
+    today = datetime.now().strftime('%Y-%m-%d')
+    cur.execute('''
+        SELECT *
+        FROM user_outdoor_temperature
+        WHERE town_name = %s
+        AND date_recorded =%s
+        ORDER BY date_recorded DESC
+        LIMIT 1;
+    ''', (city, today,))
+    temperature_preferences = cur.fetchone()
+    temperature_float_values = [float(value) for value in list(temperature_preferences[3:])]
+    hourly_temperatures = {hour: value for hour, value in enumerate(temperature_float_values, start=1)}
+
+    return hourly_temperatures
 
 
 def DSM_get_tariffs(prices_json):
@@ -44,24 +61,27 @@ def dsm_phase_flexible_loads_diff_slots(operation_time):
     return [T_start_m, T_end_m]
 
 
-def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, pi_i):
+def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, pi_i):
     T, I = 1, range(1, 25)
     from app import get_account_loads
     loads_info = get_account_loads().get_json()
 
-    dj = {1: int(loads_info['time_shiftable'][0][4]), 2: int(loads_info['time_shiftable'][1][4]), 3: int(loads_info['time_shiftable'][2][4])}
-    fjr = {1: {1: float(loads_info['time_shiftable'][0][3])}, 2: {1: float(loads_info['time_shiftable'][1][3])}, 3: {1: float(loads_info['time_shiftable'][2][3])}}
+    dj = {1: int(loads_info['time_shiftable'][0][4]), 2: int(loads_info['time_shiftable'][1][4]),
+          3: int(loads_info['time_shiftable'][2][4])}
+    fjr = {1: {1: float(loads_info['time_shiftable'][0][3])}, 2: {1: float(loads_info['time_shiftable'][1][3])},
+           3: {1: float(loads_info['time_shiftable'][2][3])}}
 
     b_i = {i: rand.uniform(0.2, 1.8) for i in I}
     p_cont_i = {i: 10.5 for i in I}
     th_min, th_max = min_temp, max_temp
-    th_in_init, th_ext_init = 22, 13
-    th_ext = {i: round(rand.randint(12, 13), 2) for i in range(1, len(I) + 1)}
+    th_in_init, th_ext_init = 22, out_temperatures[1]
+    th_ext = out_temperatures
     P_AC_nom = float(loads_info['ac_shiftable'][0][2])
     Q_k, E_k = {1: float(loads_info['phase_shiftable'][1][3])}, {1: float(loads_info['phase_shiftable'][1][6])}
     M, K, J = range(1, 2), range(1, 2), range(1, 4)
     S = 3
-    Q_m_s = {(1, 1): float(loads_info['phase_shiftable'][0][3]), (1, 2): float(loads_info['phase_shiftable'][0][4]), (1, 3): float(loads_info['phase_shiftable'][0][5])}
+    Q_m_s = {(1, 1): float(loads_info['phase_shiftable'][0][3]), (1, 2): float(loads_info['phase_shiftable'][0][4]),
+             (1, 3): float(loads_info['phase_shiftable'][0][5])}
     G_m = {1: float(loads_info['phase_shiftable'][0][6])}
     prob = LpProblem("Demand_Side_Management", LpMinimize)
     p_j = LpVariable.dicts("p", ((j, t) for t in I for j in range(1, len(J) + 1)), lowBound=0)
@@ -178,7 +198,8 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
 
         '''Constraint 22'''
         prob += p_AC[t] == (
-                0.2 * delta_t[t, 1] + 0.4 * delta_t[t, 2] + 0.6 * delta_t[t, 3] + 0.8 * delta_t[t, 4] + delta_t[t, 5]) * P_AC_nom, f"PowerModel_{t}"
+                0.2 * delta_t[t, 1] + 0.4 * delta_t[t, 2] + 0.6 * delta_t[t, 3] + 0.8 * delta_t[t, 4] + delta_t[
+            t, 5]) * P_AC_nom, f"PowerModel_{t}"
         '''Constraint 23'''
         prob += lpSum(delta_t[t, s] for s in range(1, 6)) <= 1, f"ACLevelSelection_{t}"
         '''Constraint 24'''
@@ -188,12 +209,12 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
 
     for t in I:
         prob += (
-            b_i[t] +
-            lpSum(p_j[j, t] for j in J) +
-            lpSum(q_kt[k, t] for k in K) +
-            lpSum(y_mt[m, t] for m in M) +
-            p_AC[t]
-        ) <= p_cont_i[t], f"Power_Limit_Constraint_{t}"
+                        b_i[t] +
+                        lpSum(p_j[j, t] for j in J) +
+                        lpSum(q_kt[k, t] for k in K) +
+                        lpSum(y_mt[m, t] for m in M) +
+                        p_AC[t]
+                ) <= p_cont_i[t], f"Power_Limit_Constraint_{t}"
 
     solver = pulp.PULP_CBC_CMD(threads=cpu_count())
 
