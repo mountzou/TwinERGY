@@ -666,14 +666,14 @@ def demand_side_management():
     min_temp, max_temp = getTemperaturePreferences(g.cur, session.get('deviceId', None))
     min_comfort, max_comfort = getThermalComfortPreferences(g.cur, session.get('deviceId', None))
 
-    pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
-    pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
+
 
     out_temperatures = get_outdoor_temperature(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
     tariff = get_electricity_tariffs(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
     print(tariff)
-    pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
-    pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
+    # pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
+    # pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
+    pi_i=tariff
 
     clo_insulation = get_clo_insulation(g.cur, mysql, session.get('deviceId', None))[0]
     metabolic_rate = 1
@@ -693,8 +693,6 @@ def demand_side_management():
     T_start_k, T_end_k = dsm_phase_flexible_loads_const_slots(json.loads(operation_times_json))
     T_start_m, T_end_m = dsm_phase_flexible_loads_diff_slots(json.loads(operation_times_json))
 
-    pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
-    pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
 
     optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, clo_insulation, pi_i)
     optimal_schedule_json = jsonify(optimal_schedule).data.decode('utf-8')
