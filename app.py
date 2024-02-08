@@ -666,7 +666,15 @@ def demand_side_management():
     min_temp, max_temp = getTemperaturePreferences(g.cur, session.get('deviceId', None))
     min_comfort, max_comfort = getThermalComfortPreferences(g.cur, session.get('deviceId', None))
 
+    pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
+    pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
+
     out_temperatures = get_outdoor_temperature(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
+    tariff = get_electricity_tariffs(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
+    print(tariff)
+    pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
+    pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
+
     clo_insulation = get_clo_insulation(g.cur, mysql, session.get('deviceId', None))[0]
     metabolic_rate = 1
 

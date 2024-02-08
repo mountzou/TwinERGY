@@ -44,6 +44,23 @@ def get_outdoor_temperature(cur, city):
     return hourly_temperatures
 
 
+def get_electricity_tariffs(cur, city):
+    today = datetime.now().strftime('%Y-%m-%d')
+    cur.execute('''
+        SELECT *
+        FROM user_tariffs
+        WHERE city = %s
+        AND date_recorded =%s
+        ORDER BY date_recorded DESC
+        LIMIT 1;
+    ''', (city, today,))
+    tariffs = cur.fetchone()
+    tariffs_float_values = [float(value) for value in list(temperature_preferences[3:])]
+    hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
+
+    return hourly_tariffs
+
+
 def outdoor_temp_to_indoor_temp(outdoor_temp):
     th_in_init = 20
     th_in = {0: th_in_init}
