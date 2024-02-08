@@ -55,7 +55,7 @@ def get_electricity_tariffs(cur, city):
         LIMIT 1;
     ''', (city, today,))
     tariffs = cur.fetchone()
-    tariffs_float_values = [float(value) for value in list(temperature_preferences[3:])]
+    tariffs_float_values = [float(value) for value in list(tariffs[3:])]
     hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
 
     return hourly_tariffs
