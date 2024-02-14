@@ -38,7 +38,7 @@ def get_outdoor_temperature(cur, city):
         LIMIT 1;
     ''', (city, today,))
     temperature_preferences = cur.fetchone()
-    temperature_float_values = [float(value)/1000 for value in list(temperature_preferences[3:])]
+    temperature_float_values = [float(value) for value in list(temperature_preferences[3:])]
     hourly_temperatures = {hour: value for hour, value in enumerate(temperature_float_values, start=1)}
 
     return hourly_temperatures
@@ -62,7 +62,7 @@ def get_electricity_tariffs(cur, city):
 
         # Check if tariffs is not None and has data
         if tariffs is not None and len(tariffs) > 0:
-            tariffs_float_values = [float(value) for value in list(tariffs[3:])]
+            tariffs_float_values = [float(value)/1000 for value in list(tariffs[3:])]
             hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
             return hourly_tariffs
         else:
