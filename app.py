@@ -670,7 +670,6 @@ def demand_side_management():
 
     out_temperatures = get_outdoor_temperature(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
     tariff = get_electricity_tariffs(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
-    print(tariff)
     # pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
     # pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
     pi_i=tariff
