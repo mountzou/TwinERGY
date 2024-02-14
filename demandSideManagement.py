@@ -48,7 +48,6 @@ def get_outdoor_temperature(cur, city):
 def get_electricity_tariffs(cur, city):
     today = datetime.now()
     tariffs = None
-
     while tariffs is None or len(tariffs) == 0:
         date_str = today.strftime('%Y-%m-%d')
         cur.execute('''
