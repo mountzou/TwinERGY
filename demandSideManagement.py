@@ -1,6 +1,6 @@
 from pulp import *
 from multiprocessing import cpu_count
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from determineThermalComfort import get_pmv_value
 
