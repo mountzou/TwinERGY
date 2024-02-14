@@ -44,21 +44,37 @@ def get_outdoor_temperature(cur, city):
     return hourly_temperatures
 
 
-def get_electricity_tariffs(cur, city):
-    today = datetime.now().strftime('%Y-%m-%d')
-    cur.execute('''
-        SELECT *
-        FROM user_tariffs
-        WHERE city = %s
-        AND date_recorded =%s
-        ORDER BY date_recorded DESC
-        LIMIT 1;
-    ''', (city, today,))
-    tariffs = cur.fetchone()
-    tariffs_float_values = [float(value) for value in list(tariffs[3:])]
-    hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
 
-    return hourly_tariffs
+def get_electricity_tariffs(cur, city):
+    today = datetime.now()
+    tariffs = None
+
+    while tariffs is None or len(tariffs) == 0:
+        date_str = today.strftime('%Y-%m-%d')
+        cur.execute('''
+            SELECT *
+            FROM user_tariffs
+            WHERE city = %s
+            AND date_recorded = %s
+            ORDER BY date_recorded DESC
+            LIMIT 1;
+        ''', (city, date_str,))
+        tariffs = cur.fetchone()
+
+        # Check if tariffs is not None and has data
+        if tariffs is not None and len(tariffs) > 0:
+            tariffs_float_values = [float(value) for value in list(tariffs[3:])]
+            hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
+            return hourly_tariffs
+        else:
+            # Decrement the date by one day and try again
+            today -= timedelta(days=1)
+            # You may want to add a condition to break the loop after a certain number of attempts
+            # to prevent an infinite loop in case there are no records at all.
+
+    # Handle the case where no tariffs are found after exiting the loop
+    print("No tariffs found for the given city in the recent period.")
+    return None
 
 
 def outdoor_temp_to_indoor_temp(outdoor_temp):
