@@ -693,7 +693,7 @@ def demand_side_management():
     T_start_m, T_end_m = dsm_phase_flexible_loads_diff_slots(json.loads(operation_times_json))
 
 
-    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, clo_insulation, pi_i)
+    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_comfort, max_comfort, out_temperatures, clo_insulation, pi_i)
     optimal_schedule_json = jsonify(optimal_schedule).data.decode('utf-8')
 
     return render_template('demand-side-management.html',

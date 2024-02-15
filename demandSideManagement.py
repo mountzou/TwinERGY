@@ -136,7 +136,7 @@ def dsm_phase_flexible_loads_diff_slots(operation_time):
     return [T_start_m, T_end_m]
 
 
-def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_temp, max_temp, out_temperatures, clo, pi_i):
+def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_comfort, max_comfort, out_temperatures, clo, pi_i):
     T, I = 1, range(1, 25)
     from app import get_account_loads
     loads_info = get_account_loads().get_json()
@@ -148,7 +148,8 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
 
     b_i = {i: 0.4 for i in I}
     p_cont_i = {i: 10.5 for i in I}
-    th_min, th_max = find_temp_for_desired_pmv(-2, clo), find_temp_for_desired_pmv(-1, clo)
+    th_min, th_max = find_temp_for_desired_pmv(min_comfort, clo), find_temp_for_desired_pmv(max_comfort, clo)
+    print(th_min, th_max)
     th_in_init, th_ext_init = 22, out_temperatures[1]
     th_ext = out_temperatures
     ind = outdoor_temp_to_indoor_temp(th_ext)
@@ -186,7 +187,7 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
             lpSum([pi_i[t] * (b_i[t] + lpSum(p_j[j, t] for j in J) + p_AC[t]) for t in I]) +
             lpSum([pi_i[t] * q_kt[k, t] for k in K for t in I]) +
             lpSum([pi_i[t] * y_mt[m, t] for m in M for t in I]) +
-            lpSum([0.2 * v_t[t] for t in I])
+            lpSum([0.001 * v_t[t] for t in I])
     )
 
     prob += objective_function, "Total Cost"
