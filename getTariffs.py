@@ -3,9 +3,6 @@ from urllib.parse import quote
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
-import pandas as pd
-from flask_mysqldb import MySQL
-
 
 def getTariffENTSOE(city):
     base_url = "https://web-api.tp.entsoe.eu/api"
@@ -16,8 +13,7 @@ def getTariffENTSOE(city):
         'Italy': ("10Y1001A1001A74G", "10Y1001A1001A74G"),
     }
 
-    today = datetime.now()
-    periodStart, periodEnd = today.strftime("%Y%m%d0000"), today.strftime("%Y%m%d2300")
+    periodStart, periodEnd = datetime.now().strftime("%Y%m%d0000"), datetime.now().strftime("%Y%m%d2300")
 
     if city in domain_codes:
         in_Domain, out_Domain = domain_codes[city]

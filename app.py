@@ -15,6 +15,7 @@ from filter_thermal_comfort import *
 from demandSideManagement import *
 
 from getTariffs import *
+from getOutdoorTemperature import *
 
 from apiService import *
 
@@ -97,10 +98,10 @@ def check_for_daily_updates():
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'get_tariffs']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'get_tariffs', 'get_outdoor_temperature']
 
     # Define the relative paths that bypass the authentication mechanism
-    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path =='/get_tariffs':
+    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path =='/get_tariffs' or request.path == '/get_outdoor_temperature':
         return None
 
     # Redirect non-authenticated user to the 'login' rout
@@ -852,6 +853,26 @@ def get_tariffs():
         execute_query(g.cur, mysql, sql, values, commit=True)
 
     return "Tariffs added successfully."
+
+
+@app.route('/get_outdoor_temperature')
+def get_outdoor_temperature():
+    sql = """
+    INSERT INTO user_outdoor_temperature (town_name, date_recorded, hour_0, hour_1, hour_2, hour_3, hour_4, hour_5, hour_6, hour_7, hour_8, hour_9, hour_10, hour_11, hour_12, hour_13, hour_14, hour_15, hour_16, hour_17, hour_18, hour_19, hour_20, hour_21, hour_22, hour_23) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+
+    temp = get_outdoorTemperature()
+
+    date_recorded = datetime.now().strftime("%Y-%m-%d")
+
+    for full_city_name, temps in temp.items():
+        city_name = full_city_name.split(',')[0].strip()
+        hourly_temps = [temps[f"{hour:02d}:00"] for hour in range(24)]
+        values = [city_name, date_recorded] + hourly_temps
+        execute_query(g.cur, mysql, sql, values, commit=True)
+
+    return "Outdoor temperatures added successfully."
 
 if __name__ == "__main__":
     app.run(debug=True)
