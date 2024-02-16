@@ -831,22 +831,27 @@ def get_account_loads():
 
 @app.route('/get_tariffs')
 def get_tariffs():
-    tariffs = getTariffENTSOE()
-
-    date_recorded = tariffs[0]['Timestamp'].split('T')[0]
-
-    prices = [tariff['Price'] for tariff in sorted(tariffs, key=lambda x: x['Position'])]
-
     sql = """
     INSERT INTO user_tariffs (city, date_recorded, hour_0, hour_1, hour_2, hour_3, hour_4, hour_5, hour_6, hour_7, hour_8, hour_9, hour_10, hour_11, hour_12, hour_13, hour_14, hour_15, hour_16, hour_17, hour_18, hour_19, hour_20, hour_21, hour_22, hour_23) 
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
-    values = ("TEST2", date_recorded, *prices)
+    tariffs_athens = getTariffENTSOE('Greece')
+    tariffs_benetutti = getTariffENTSOE('Italy')
 
-    execute_query(g.cur, mysql, sql, values, commit=True)
+    if tariffs_athens != "error":
+        date_recorded = tariffs_athens[0]['Timestamp'].split('T')[0]
+        prices = [tariff['Price'] for tariff in sorted(tariffs_athens, key=lambda x: x['Position'])]
+        values = ("TEST2", date_recorded, *prices)
+        execute_query(g.cur, mysql, sql, values, commit=True)
 
-    return "hallo"
+    if tariffs_benetutti != "error":
+        date_recorded = tariffs_benetutti[0]['Timestamp'].split('T')[0]
+        prices = [tariff['Price'] for tariff in sorted(tariffs_benetutti, key=lambda x: x['Position'])]
+        values = ("TEST3", date_recorded, *prices)
+        execute_query(g.cur, mysql, sql, values, commit=True)
+
+    return "Tariffs added successfully."
 
 if __name__ == "__main__":
     app.run(debug=True)
