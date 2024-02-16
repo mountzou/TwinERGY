@@ -855,8 +855,8 @@ def get_tariffs():
     return "Tariffs added successfully."
 
 
-@app.route('/get_outdoor_temperature')
-def get_outdoor_temperature():
+@app.route('/insert_outdoor_temperature')
+def insert_outdoor_temperature():
     sql = """
     INSERT INTO user_outdoor_temperature (town_name, date_recorded, hour_0, hour_1, hour_2, hour_3, hour_4, hour_5, hour_6, hour_7, hour_8, hour_9, hour_10, hour_11, hour_12, hour_13, hour_14, hour_15, hour_16, hour_17, hour_18, hour_19, hour_20, hour_21, hour_22, hour_23) 
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
