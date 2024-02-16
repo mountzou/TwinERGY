@@ -842,13 +842,13 @@ def get_tariffs():
     if tariffs_athens != "error":
         date_recorded = tariffs_athens[0]['Timestamp'].split('T')[0]
         prices = [tariff['Price'] for tariff in sorted(tariffs_athens, key=lambda x: x['Position'])]
-        values = ("TEST2", date_recorded, *prices)
+        values = ("Athens", date_recorded, *prices)
         execute_query(g.cur, mysql, sql, values, commit=True)
 
     if tariffs_benetutti != "error":
         date_recorded = tariffs_benetutti[0]['Timestamp'].split('T')[0]
         prices = [tariff['Price'] for tariff in sorted(tariffs_benetutti, key=lambda x: x['Position'])]
-        values = ("TEST3", date_recorded, *prices)
+        values = ("Benetutti", date_recorded, *prices)
         execute_query(g.cur, mysql, sql, values, commit=True)
 
     return "Tariffs added successfully."
