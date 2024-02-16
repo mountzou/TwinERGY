@@ -229,7 +229,7 @@ const operationChart = new Chart(ctx, {
                 label: function(tooltipItem, data) {
                     const label = data.labels[tooltipItem.index];
                     const [startTime, endTime] = Object.values(operationData)[tooltipItem.index];
-                    return `Early Start: ${startTime}:00 - Late Start: ${endTime}:00`;
+                    return `Earliest Start: ${startTime}:00 - Latest Finish: ${endTime}:00`;
                 }
             }
         }
