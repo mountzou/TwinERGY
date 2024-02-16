@@ -187,7 +187,7 @@ def dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k
             lpSum([pi_i[t] * (b_i[t] + lpSum(p_j[j, t] for j in J) + p_AC[t]) for t in I]) +
             lpSum([pi_i[t] * q_kt[k, t] for k in K for t in I]) +
             lpSum([pi_i[t] * y_mt[m, t] for m in M for t in I]) +
-            lpSum([0.001 * v_t[t] for t in I])
+            lpSum([0.2 * v_t[t] for t in I])
     )
 
     prob += objective_function, "Total Cost"
