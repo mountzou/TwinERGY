@@ -30,7 +30,7 @@ from ttnWebhook import *
 
 # Import functions regarding the date and time
 from datetime import datetime, timedelta, time, timezone
-import time
+
 import base64
 
 from urllib.parse import urlparse
@@ -258,7 +258,8 @@ def handle_webhk():
     # gateway_id = pd.steps["trigger"]["event"]["body"]["uplink_message"]['rx_metadata'][0]['gateway_ids']['gateway_id']
     device_id = data["end_device_ids"]["dev_eui"]
 
-    unix_timestamp = int(time.time())
+    current_time = datetime.now(timezone.utc)
+    unix_timestamp = int(current_time.timestamp())
 
     timestamp = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
 
