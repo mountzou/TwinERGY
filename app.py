@@ -98,7 +98,7 @@ def check_for_daily_updates():
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'get_tariffs', 'get_outdoor_temperature']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook','webhk', 'get_tariffs', 'get_outdoor_temperature']
 
     # Define the relative paths that bypass the authentication mechanism
     if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path =='/get_tariffs' or request.path == '/get_outdoor_temperature':
