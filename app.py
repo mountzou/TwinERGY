@@ -246,6 +246,124 @@ def api_preferences():
     return jsonify(api_Preferences(g.cur))
 
 
+@app.route('/webhk', methods=['POST'])
+def handler():
+    data = request.get_json()
+    mac_payload = base64.b64decode(data["uplink_message"]["frm_payload"]).hex()
+
+    gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
+    # gateway_id = pd.steps["trigger"]["event"]["body"]["uplink_message"]['rx_metadata'][0]['gateway_ids']['gateway_id']
+    device_id = data["end_device_ids"]["dev_eui"]
+
+    unix_timestamp = int(time.time())
+
+    timestamp = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
+
+    temperature_raw = int(mac_payload[-8:-4], 16)
+
+    integer_part_tem = int(str(temperature_raw)[:2])
+    decimal_part_tem = int(str(temperature_raw)[2:])
+
+    temperature = integer_part_tem + (decimal_part_tem / 100)
+
+    relative_humidity_raw = int(mac_payload[-4:], 16)
+
+    integer_part_hum = int(str(relative_humidity_raw)[:2])
+    decimal_part_hum = int(str(relative_humidity_raw)[2:])
+
+    relative_humidity = integer_part_hum + (decimal_part_hum / 100)
+
+    gas_eval = int(mac_payload[-14:-12], 16)
+
+    temp_co2 = int(mac_payload[13:16], 16)
+    integer_part_co2 = int(str(temp_co2)[:2])
+    decimal_part_co2 = int(str(temp_co2)[2:])
+
+    co2 = (integer_part_co2 + (decimal_part_co2 / 100)) * 10
+    if co2 < 400:
+        co2 = round(co2 * 10, 2)
+
+    print(co2)
+
+    pm1_concentration = int(mac_payload[25:28], 16)
+    pm25_concentration = int(mac_payload[29:32], 16)
+    pm4_concentration = int(mac_payload[33:36], 16)
+    pm10_concentration = int(mac_payload[37:40], 16)
+    pm05_nconcentration = int(mac_payload[41:44], 16)
+    pm1_nconcentration = int(mac_payload[45:48], 16)
+    pm25_nconcentration = int(mac_payload[49:52], 16)
+    pm4_nconcentration = int(mac_payload[53:56], 16)
+    pm10_nconcentration = int(mac_payload[57:60], 16)
+    typical_particle = int(mac_payload[61:64], 16)
+
+    url = "https://script.google.com/macros/s/AKfycbzxTm-_PNSkPRocRp4Xh3BHm9R0ZsbSXLQ5rARTAZRQlmeAgTF5hjERSy_sFfydktbi/exec"
+    # data_to_sheet = {
+    #     "device": device_id,
+    #     "timestamp": unix_timestamp,
+    #     "dtime": timestamp,
+    #     "mac_payload": mac_payload,
+    #     "temperature": temperature,
+    #     "humidity": relative_humidity,
+    #     "gas_index": gas_eval,
+    #     "Co2": co2,
+    #     "PM1_concentration": pm1_concentration,
+    #     "PM25_concentration": pm25_concentration,
+    #     "PM4_concentration": pm4_concentration,
+    #     "PM10_concentration": pm10_concentration,
+    #     "PM05_nconcentration": pm05_nconcentration,
+    #     "PM1_nconcentration": pm1_nconcentration,
+    #     "PM25_nconcentration": pm25_nconcentration,
+    #     "PM4_nconcentration": pm4_nconcentration,
+    #     "PM10_nconcentration": pm10_nconcentration,
+    #     "Typical": typical_particle
+    # }
+    data_to_sheet = {
+        "column1": device_id,
+        "column2": unix_timestamp,
+        "column3": timestamp,
+        "column4": mac_payload,
+        "column5": temperature,
+        "column6": relative_humidity,
+        "column7": gas_eval,
+        "column8": co2,
+        "column9": pm1_concentration,
+        "column10": pm25_concentration,
+        "column11": pm4_concentration,
+        "column12": pm10_concentration,
+        "column13": pm05_nconcentration,
+        "column14": pm1_nconcentration,
+        "column15": pm25_nconcentration,
+        "column16": pm4_nconcentration,
+        "column17": pm10_nconcentration,
+        "column18": typical_particle
+    }
+
+    response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
+    print(response.text)
+
+    return {"payload": {
+        "device": device_id,
+        "timestamp": unix_timestamp,
+        "dtime": timestamp,
+        "mac_payload": mac_payload,
+        "temperature": temperature,
+        "humidity": relative_humidity,
+        "gas_index": gas_eval,
+        "Co2": co2,
+        "PM1_concentration": pm1_concentration,
+        "PM25_concentration": pm25_concentration,
+        "PM4_concentration": pm4_concentration,
+        "PM10_concentration": pm10_concentration,
+        "PM05_nconcentration": pm05_nconcentration,
+        "PM1_nconcentration": pm1_nconcentration,
+        "PM25_nconcentration": pm25_nconcentration,
+        "PM4_nconcentration": pm4_nconcentration,
+        "PM10_nconcentration": pm10_nconcentration,
+        "Typical": typical_particle
+
+    }}
+
+
 @app.route('/ttn-webhook', methods=['POST'])
 def handle_ttn_webhook():
     data = request.get_json()
