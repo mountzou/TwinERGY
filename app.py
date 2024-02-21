@@ -248,6 +248,7 @@ def api_preferences():
 
 @app.route('/webhk', methods=['POST'])
 def handler():
+    print("INTO NEW WEBHOOK")
     data = request.get_json()
     mac_payload = base64.b64decode(data["uplink_message"]["frm_payload"]).hex()
 
@@ -341,27 +342,7 @@ def handler():
     response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
     print(response.text)
 
-    return {"payload": {
-        "device": device_id,
-        "timestamp": unix_timestamp,
-        "dtime": timestamp,
-        "mac_payload": mac_payload,
-        "temperature": temperature,
-        "humidity": relative_humidity,
-        "gas_index": gas_eval,
-        "Co2": co2,
-        "PM1_concentration": pm1_concentration,
-        "PM25_concentration": pm25_concentration,
-        "PM4_concentration": pm4_concentration,
-        "PM10_concentration": pm10_concentration,
-        "PM05_nconcentration": pm05_nconcentration,
-        "PM1_nconcentration": pm1_nconcentration,
-        "PM25_nconcentration": pm25_nconcentration,
-        "PM4_nconcentration": pm4_nconcentration,
-        "PM10_nconcentration": pm10_nconcentration,
-        "Typical": typical_particle
-
-    }}
+    return jsonify({'status': 'success'}), 200
 
 
 @app.route('/ttn-webhook', methods=['POST'])
