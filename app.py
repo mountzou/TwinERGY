@@ -31,6 +31,8 @@ from ttnWebhook import *
 # Import functions regarding the date and time
 from datetime import datetime, timedelta, time, timezone
 import time
+import base64
+
 from urllib.parse import urlparse
 import json
 import requests
