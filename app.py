@@ -98,7 +98,7 @@ def check_for_daily_updates():
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook','webhk', 'get_tariffs', 'get_outdoor_temperature']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'webhk', 'get_tariffs', 'get_outdoor_temperature']
 
     # Define the relative paths that bypass the authentication mechanism
     if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path =='/get_tariffs' or request.path == '/get_outdoor_temperature':
@@ -247,7 +247,7 @@ def api_preferences():
 
 
 @app.route('/webhk', methods=['POST'])
-def handler():
+def handle_webhk():
     print("INTO NEW WEBHOOK")
     data = request.get_json()
     mac_payload = base64.b64decode(data["uplink_message"]["frm_payload"]).hex()
@@ -321,23 +321,24 @@ def handler():
     data_to_sheet = {
         "column1": device_id,
         "column2": unix_timestamp,
-        "column3": timestamp,
-        "column4": mac_payload,
-        "column5": temperature,
-        "column6": relative_humidity,
-        "column7": gas_eval,
-        "column8": co2,
-        "column9": pm1_concentration,
-        "column10": pm25_concentration,
-        "column11": pm4_concentration,
-        "column12": pm10_concentration,
-        "column13": pm05_nconcentration,
-        "column14": pm1_nconcentration,
-        "column15": pm25_nconcentration,
-        "column16": pm4_nconcentration,
-        "column17": pm10_nconcentration,
-        "column18": typical_particle
     }
+    #     "column3": timestamp,
+    #     "column4": mac_payload,
+    #     "column5": temperature,
+    #     "column6": relative_humidity,
+    #     "column7": gas_eval,
+    #     "column8": co2,
+    #     "column9": pm1_concentration,
+    #     "column10": pm25_concentration,
+    #     "column11": pm4_concentration,
+    #     "column12": pm10_concentration,
+    #     "column13": pm05_nconcentration,
+    #     "column14": pm1_nconcentration,
+    #     "column15": pm25_nconcentration,
+    #     "column16": pm4_nconcentration,
+    #     "column17": pm10_nconcentration,
+    #     "column18": typical_particle
+    # }
 
     response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
     print(response.text)
