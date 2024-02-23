@@ -254,7 +254,6 @@ def handle_webhk():
     mac_payload = base64.b64decode(data["uplink_message"]["frm_payload"]).hex()
 
     gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
-    # gateway_id = pd.steps["trigger"]["event"]["body"]["uplink_message"]['rx_metadata'][0]['gateway_ids']['gateway_id']
     device_id = data["end_device_ids"]["dev_eui"]
 
     current_time = datetime.now(timezone.utc)
@@ -280,7 +279,7 @@ def handle_webhk():
     nox_eval = int(mac_payload[-16:-14], 16)
 
     print("NOX VALUES")
-    print(nox_eval)
+    print(mac_payload)
 
     temp_co2 = int(mac_payload[13:16], 16)
     integer_part_co2 = int(str(temp_co2)[:2])
