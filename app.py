@@ -278,9 +278,6 @@ def handle_webhk():
     gas_eval = int(mac_payload[-16:-12], 16)
     nox_eval = int(mac_payload[-20:-16], 16)
 
-    print("NOX VALUES")
-    print(mac_payload[-14:-12])
-    print(mac_payload[-16:-14])
 
     temp_co2 = int(mac_payload[13:16], 16)
     integer_part_co2 = int(str(temp_co2)[:2])
@@ -304,6 +301,7 @@ def handle_webhk():
     if device_id=="0080E1150510BDE6" or device_id=="0080E1150533F233":
         url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec"
     else:
+        nox_eval=0
         url = "https://script.google.com/macros/s/AKfycbzxTm-_PNSkPRocRp4Xh3BHm9R0ZsbSXLQ5rARTAZRQlmeAgTF5hjERSy_sFfydktbi/exec"
 
 
