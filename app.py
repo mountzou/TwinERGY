@@ -279,6 +279,9 @@ def handle_webhk():
     gas_eval = int(mac_payload[-14:-12], 16)
     nox_eval = int(mac_payload[-16:-14], 16)
 
+    print("NOX VALUES")
+    print(nox_eval)
+
     temp_co2 = int(mac_payload[13:16], 16)
     integer_part_co2 = int(str(temp_co2)[:2])
     decimal_part_co2 = int(str(temp_co2)[2:])
