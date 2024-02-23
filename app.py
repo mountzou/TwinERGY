@@ -299,7 +299,7 @@ def handle_webhk():
     pm10_nconcentration = int(mac_payload[57:60], 16)
     typical_particle = int(mac_payload[61:64], 16)
 
-    url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec
+    url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec"
 
 
     data_to_sheet = {
