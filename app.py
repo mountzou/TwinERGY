@@ -277,6 +277,7 @@ def handle_webhk():
     relative_humidity = integer_part_hum + (decimal_part_hum / 100)
 
     gas_eval = int(mac_payload[-14:-12], 16)
+    nox_eval = int(mac_payload[-16:-14], 16)
 
     temp_co2 = int(mac_payload[13:16], 16)
     integer_part_co2 = int(str(temp_co2)[:2])
@@ -286,7 +287,6 @@ def handle_webhk():
     if co2 < 400:
         co2 = round(co2 * 10, 2)
 
-    print(co2)
 
     pm1_concentration = int(mac_payload[25:28], 16)
     pm25_concentration = int(mac_payload[29:32], 16)
@@ -307,18 +307,19 @@ def handle_webhk():
         "column3": temperature,
         "column4": relative_humidity,
         "column5": gas_eval,
-        "column6": co2,
-        "column7": pm1_concentration,
-        "column8": pm25_concentration,
-        "column9": pm4_concentration,
-        "column10": pm10_concentration,
-        "column11": pm05_nconcentration,
-        "column12": pm1_nconcentration,
-        "column13": pm25_nconcentration,
-        "column14": pm4_nconcentration,
-        "column15": pm10_nconcentration,
-        "column16": typical_particle,
-        "column17": timestamp,
+        "column6": nox_eval,
+        "column7": co2,
+        "column8": pm1_concentration,
+        "column9": pm25_concentration,
+        "column10": pm4_concentration,
+        "column11": pm10_concentration,
+        "column12": pm05_nconcentration,
+        "column13": pm1_nconcentration,
+        "column14": pm25_nconcentration,
+        "column15": pm4_nconcentration,
+        "column16": pm10_nconcentration,
+        "column17": typical_particle,
+        "column18": timestamp,
     }
 
     response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
