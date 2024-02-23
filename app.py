@@ -298,8 +298,10 @@ def handle_webhk():
     pm4_nconcentration = int(mac_payload[53:56], 16)
     pm10_nconcentration = int(mac_payload[57:60], 16)
     typical_particle = int(mac_payload[61:64], 16)
-
-    url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec"
+    if device_id=="0080E1150510BDE6" or device_id=="0080E1150533F233":
+        url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec"
+    else:
+        url = "https://script.google.com/macros/s/AKfycbzxTm-_PNSkPRocRp4Xh3BHm9R0ZsbSXLQ5rARTAZRQlmeAgTF5hjERSy_sFfydktbi/exec"
 
 
     data_to_sheet = {
