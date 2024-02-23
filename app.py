@@ -275,8 +275,8 @@ def handle_webhk():
 
     relative_humidity = integer_part_hum + (decimal_part_hum / 100)
 
-    gas_eval = int(mac_payload[-14:-12], 16)
-    nox_eval = int(mac_payload[-16:-14], 16)
+    gas_eval = int(mac_payload[-16:-12], 16)
+    nox_eval = int(mac_payload[-20:-16], 16)
 
     print("NOX VALUES")
     print(mac_payload[-14:-12])
