@@ -275,6 +275,13 @@ def handle_webhk():
 
     relative_humidity = integer_part_hum + (decimal_part_hum / 100)
 
+    battery_raw = int(mac_payload[5:8], 16)
+
+    integer_part_bat = int(str(battery_raw)[:2])
+    decimal_part_bat = int(str(battery_raw)[2:])
+
+    battery = integer_part_bat + (decimal_part_bat / 100)
+
     gas_eval = int(mac_payload[-16:-12], 16)
     nox_eval = int(mac_payload[-20:-16], 16)
 
@@ -324,6 +331,7 @@ def handle_webhk():
         "column16": pm10_nconcentration,
         "column17": typical_particle,
         "column18": timestamp,
+        "column19": battery
     }
 
     response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
