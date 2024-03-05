@@ -280,7 +280,7 @@ def handle_webhk():
     integer_part_bat = int(str(battery_raw)[:2])
     decimal_part_bat = int(str(battery_raw)[2:])
 
-    battery = integer_part_bat + (decimal_part_bat / 100)
+    battery = integer_part_bat + (decimal_part_bat / 256)
 
     gas_eval = int(mac_payload[-16:-12], 16)
     nox_eval = int(mac_payload[-20:-16], 16)
