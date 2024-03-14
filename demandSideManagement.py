@@ -38,7 +38,13 @@ def get_outdoor_temperature(cur, city):
         LIMIT 1;
     ''', (city, today,))
     temperature_preferences = cur.fetchone()
-    temperature_float_values = [float(value) for value in list(temperature_preferences[3:])]
+
+    if temperature_preferences:
+        temperature_float_values = [float(value) for value in list(temperature_preferences[3:])]
+    else:
+        temperature_float_values= [15.0545, 15.0119, 15.3921, 14.8472, 14.9228, 14.8103, 15.4283, 14.9337, 15.0132, 15.3702, 15.4196, 14.5909, 15.3296, 14.9505, 15.3372, 14.9498, 14.6904, 15.0788, 15.2552, 15.1162, 14.8791, 15.1077, 15.1772, 15.0570]
+
+
     hourly_temperatures = {hour: value for hour, value in enumerate(temperature_float_values, start=1)}
 
     return hourly_temperatures
