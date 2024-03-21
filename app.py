@@ -943,7 +943,7 @@ def get_electricity_tariffs_dash():
 
         # Check if tariffs is not None and has data
         if tariffs is not None and len(tariffs) > 0:
-            tariffs_float_values = [round(float(value)/1000,5) for value in list(tariffs[3:])]
+            tariffs_float_values = [round(float(value)/1000,3) for value in list(tariffs[3:])]
             hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
             return hourly_tariffs
         else:

@@ -185,7 +185,7 @@ function updateDashboard() {
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
         document.getElementById("latest-met").innerHTML = latestMet + ' met';
         document.getElementById("latest-pmv").innerHTML = latestPMV;
-        document.getElementById("daily-mean-vocs").innerHTML = 20+' voc.';
+//        document.getElementById("daily-mean-vocs").innerHTML = 20+' voc.';
 
         Array.from(document.getElementsByClassName("l-updated")).forEach(element => {
             element.innerHTML = 'Latest update at ' + latestTime;;
