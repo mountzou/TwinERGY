@@ -44,7 +44,7 @@ function createLineChartConfigLEMPricing(graphTarget, data, yAxisUnit, tooltipLa
 }
 
 function updateDashboardPricing() {
-    $.getJSON('/get_data_lem_pricing/', function (data) {
+    $.getJSON('/get_electricity_tariffs_dash/', function (data) {
 
         var prices = [];
         var hours = [];
@@ -53,6 +53,12 @@ function updateDashboardPricing() {
             prices.push(entry.price);
             hours.push(entry.hour);
         });
+
+        console.log(data);
+
+        console.log(prices);
+
+        console.log(hours);
 
         var graphTargetLEMPricing = $("#session-lem-pricing");
         document.getElementById("latest-lem-price").innerHTML = prices.at(-1) + ' €';

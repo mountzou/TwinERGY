@@ -924,6 +924,36 @@ def get_account_loads():
     return jsonify({'phase_shiftable': phase_shiftable, 'time_shiftable': time_shiftable, 'ac_shiftable': ac_shiftable})
 
 
+def get_electricity_tariffs_dash(city='Athens'):
+    today = datetime.now()
+    tariffs = None
+    while tariffs is None or len(tariffs) == 0:
+        date_str = today.strftime('%Y-%m-%d')
+        g.cur.execute('''
+            SELECT *
+            FROM user_tariffs
+            WHERE city = %s
+            AND date_recorded = %s
+            ORDER BY date_recorded DESC
+            LIMIT 1;
+        ''', (city, date_str,))
+        tariffs = g.cur.fetchone()
+
+        # Check if tariffs is not None and has data
+        if tariffs is not None and len(tariffs) > 0:
+            tariffs_float_values = [round(float(value)/1000,5) for value in list(tariffs[3:])]
+            hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
+            return hourly_tariffs
+        else:
+            # Decrement the date by one day and try again
+            today -= timedelta(days=1)
+            # You may want to add a condition to break the loop after a certain number of attempts
+            # to prevent an infinite loop in case there are no records at all.
+
+    # Handle the case where no tariffs are found after exiting the loop
+    print("No tariffs found for the given city in the recent period.")
+    return None
+
 @app.route('/get_tariffs')
 def get_tariffs():
     sql = """
@@ -933,6 +963,8 @@ def get_tariffs():
 
     tariffs_athens = getTariffENTSOE('Greece')
     tariffs_benetutti = getTariffENTSOE('Italy')
+
+    print()
 
     if tariffs_athens != "error":
         date_recorded = tariffs_athens[0]['Timestamp'].split('T')[0]
