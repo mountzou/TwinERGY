@@ -326,3 +326,8 @@ canvas {
 body.blur-active > :not(#page-overlay) {
     filter: blur(25px);
 }
+
+.footer_extra {
+    margin-top: 0.5rem;
+    margin-bottom: 0rem;
+}
