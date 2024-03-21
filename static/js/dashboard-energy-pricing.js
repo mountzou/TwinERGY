@@ -46,16 +46,17 @@ function createLineChartConfigLEMPricing(graphTarget, data, yAxisUnit, tooltipLa
 function updateDashboardPricing() {
     $.getJSON('/get_electricity_tariffs_dash', function (data) {
 
-        var prices = [];
-        var hours = [];
+
         console.log(data);
 
-        data.forEach(function(entry) {
-            prices.push(entry.price);
-            hours.push(entry.hour);
-        });
+//        data.forEach(function(entry) {
+//            prices.push(entry.price);
+//            hours.push(entry.hour);
+//        });
 
 
+        const prices = Object.values(data);
+        const hours = Object.keys(data).map(Number);
 
         console.log(prices);
 
