@@ -100,10 +100,10 @@ def check_for_daily_updates():
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'webhk', 'get_tariffs', 'get_outdoor_temperature']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'webhk', 'get_tariffs','get_electricity_tariffs_dash', 'get_outdoor_temperature']
 
     # Define the relative paths that bypass the authentication mechanism
-    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path =='/get_tariffs' or request.path == '/get_outdoor_temperature':
+    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path =='/get_tariffs' or request.path == '/get_outdoor_temperature' or request.path='get_electricity_tariffs_dash':
         return None
 
     # Redirect non-authenticated user to the 'login' rout
@@ -924,7 +924,8 @@ def get_account_loads():
     return jsonify({'phase_shiftable': phase_shiftable, 'time_shiftable': time_shiftable, 'ac_shiftable': ac_shiftable})
 
 
-def get_electricity_tariffs_dash(city='Athens'):
+def get_electricity_tariffs_dash():
+    city = 'Athens'
     today = datetime.now()
     tariffs = None
     while tariffs is None or len(tariffs) == 0:
