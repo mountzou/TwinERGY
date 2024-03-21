@@ -4,8 +4,9 @@
     <!-- Add the page separator component -->
     {{ create_page_separator("Thermal Comfort") }}
     <!-- Add the line chart component for metabolic rate -->
-    {{ create_line_chart_dashboard('Thermal Comfort', 'sentiment_satisfied', 'session-thermal-comfort', 'latest-pmv') }}
+    {{ create_line_chart_dashboard_w_extra('Thermal Comfort', 'sentiment_satisfied', 'session-thermal-comfort', 'latest-pmv') }}
 </div>
+
 
 <div class="col-md-8">
     <!-- Add the page separator component -->
@@ -14,7 +15,8 @@
         <div class="col-md-6 chart-container">
             <div class="chart-calibration">
                 <!-- Add the line chart component for air temperature -->
-                {{ create_line_chart_dashboard('Air Temperature', 'device_thermostat', 'session-temperature', 'latest-temperature') }}
+                {{ create_line_chart_dashboard('Air Temperature', 'device_thermostat', 'session-temperature',
+                'latest-temperature') }}
             </div>
             <div class="h1 text-calibration">Calibrating</div>
         </div>
