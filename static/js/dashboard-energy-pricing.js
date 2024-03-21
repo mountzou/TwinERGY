@@ -44,7 +44,7 @@ function createLineChartConfigLEMPricing(graphTarget, data, yAxisUnit, tooltipLa
 }
 
 function updateDashboardPricing() {
-    $.getJSON('/get_electricity_tariffs_dash/', function (data) {
+    $.getJSON('/get_electricity_tariffs_dash', function (data) {
 
         var prices = [];
         var hours = [];
