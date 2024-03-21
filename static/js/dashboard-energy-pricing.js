@@ -48,13 +48,14 @@ function updateDashboardPricing() {
 
         var prices = [];
         var hours = [];
+        console.log(data);
 
         data.forEach(function(entry) {
             prices.push(entry.price);
             hours.push(entry.hour);
         });
 
-        console.log(data);
+
 
         console.log(prices);
 
