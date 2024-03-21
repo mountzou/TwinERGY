@@ -924,6 +924,7 @@ def get_account_loads():
     return jsonify({'phase_shiftable': phase_shiftable, 'time_shiftable': time_shiftable, 'ac_shiftable': ac_shiftable})
 
 
+@app.route('/get_electricity_tariffs_dash', methods=['POST', 'GET'])
 def get_electricity_tariffs_dash():
     city = 'Athens'
     today = datetime.now()
