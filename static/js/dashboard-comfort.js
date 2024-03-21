@@ -181,7 +181,7 @@ function updateDashboard() {
         // Update the latest temperature and humidity
         document.getElementById("latest-temperature").innerHTML = '≈ ' + latestTemperature + ' °C';
         document.getElementById("latest-humidity").innerHTML = '≈ ' + latestHumidity + ' %';
-//        document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
+        document.getElementById("latest-voc-index").innerHTML = latestVocIndex + ' voc. index';
         document.getElementById("latest-voc-desc").innerHTML = latestVocDesc;
         document.getElementById("latest-met").innerHTML = latestMet + ' met';
         document.getElementById("latest-pmv").innerHTML = latestPMV;
