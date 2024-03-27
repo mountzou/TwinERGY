@@ -251,7 +251,7 @@ def api_preferences():
 @app.route('/webhk', methods=['POST'])
 def handle_webhk():
     data = request.get_json()
-    if data['end_device_ids']['dev_eui'] == '0080e1150510a98f':
+    if data['end_device_ids']['dev_eui'] == '0080E1150510A98F':
         device_id = data['end_device_ids']['dev_eui']
         gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
