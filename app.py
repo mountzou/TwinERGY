@@ -251,91 +251,127 @@ def api_preferences():
 @app.route('/webhk', methods=['POST'])
 def handle_webhk():
     data = request.get_json()
-    mac_payload = base64.b64decode(data["uplink_message"]["frm_payload"]).hex()
+    if data['end_device_ids']['dev_eui'] != '0080e1150510a98f':
+        device_id = data['end_device_ids']['dev_eui']
+        gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
-    gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
-    device_id = data["end_device_ids"]["dev_eui"]
+        decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
+        tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), \
+            decodedPayload[1], decodedPayload[2], \
+            decodedPayload[4], decodedPayload[3]
 
-    current_time = datetime.now(timezone.utc)
-    unix_timestamp = int(current_time.timestamp())
+        url = "https://script.google.com/macros/s/AKfycbxoVBJMcTO1_Oml6rlNciaPWsvaIWCw94UwLANAMwm70bv7FT_eC7pRlV6cQDzJr5W2/exec"
+        data_to_sheet = {
+            "column1": device_id,
+            "column2": tc_temperature,
+            "column3": tc_humidity,
+            "column4": wb_index,
+        }
+        #     "column5": gas_eval,
+        #     "column6": nox_eval,
+        #     "column7": co2,
+        #     "column8": pm1_concentration,
+        #     "column9": pm25_concentration,
+        #     "column10": pm4_concentration,
+        #     "column11": pm10_concentration,
+        #     "column12": pm05_nconcentration,
+        #     "column13": pm1_nconcentration,
+        #     "column14": pm25_nconcentration,
+        #     "column15": pm4_nconcentration,
+        #     "column16": pm10_nconcentration,
+        #     "column17": typical_particle,
+        #     "column18": timestamp,
+        #     "column19": battery
+        # }
 
-    timestamp = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
+        response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
 
-    temperature_raw = int(mac_payload[-8:-4], 16)
-
-    integer_part_tem = int(str(temperature_raw)[:2])
-    decimal_part_tem = int(str(temperature_raw)[2:])
-
-    temperature = integer_part_tem + (decimal_part_tem / 100)
-
-    relative_humidity_raw = int(mac_payload[-4:], 16)
-
-    integer_part_hum = int(str(relative_humidity_raw)[:2])
-    decimal_part_hum = int(str(relative_humidity_raw)[2:])
-
-    relative_humidity = integer_part_hum + (decimal_part_hum / 100)
-
-    battery_raw = int(mac_payload[5:8], 16)
-
-    integer_part_bat = int(str(battery_raw)[:2])
-    decimal_part_bat = int(str(battery_raw)[2:])
-
-    battery = integer_part_bat + (decimal_part_bat / 256)
-
-    gas_eval = int(mac_payload[-16:-12], 16)
-    nox_eval = int(mac_payload[-20:-16], 16)
-
-
-    temp_co2 = int(mac_payload[13:16], 16)
-    integer_part_co2 = int(str(temp_co2)[:2])
-    decimal_part_co2 = int(str(temp_co2)[2:])
-
-    co2 = (integer_part_co2 + (decimal_part_co2 / 100)) * 10
-    if co2 < 400:
-        co2 = round(co2 * 10, 2)
-
-
-    pm1_concentration = int(mac_payload[25:28], 16)
-    pm25_concentration = int(mac_payload[29:32], 16)
-    pm4_concentration = int(mac_payload[33:36], 16)
-    pm10_concentration = int(mac_payload[37:40], 16)
-    pm05_nconcentration = int(mac_payload[41:44], 16)
-    pm1_nconcentration = int(mac_payload[45:48], 16)
-    pm25_nconcentration = int(mac_payload[49:52], 16)
-    pm4_nconcentration = int(mac_payload[53:56], 16)
-    pm10_nconcentration = int(mac_payload[57:60], 16)
-    typical_particle = int(mac_payload[61:64], 16)
-    if device_id=="0080E1150510BDE6" or device_id=="0080E1150533F233":
-        url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec"
     else:
-        nox_eval=0
-        url = "https://script.google.com/macros/s/AKfycbzxTm-_PNSkPRocRp4Xh3BHm9R0ZsbSXLQ5rARTAZRQlmeAgTF5hjERSy_sFfydktbi/exec"
+        mac_payload = base64.b64decode(data["uplink_message"]["frm_payload"]).hex()
+
+        gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
+        device_id = data["end_device_ids"]["dev_eui"]
+
+        current_time = datetime.now(timezone.utc)
+        unix_timestamp = int(current_time.timestamp())
+
+        timestamp = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
+
+        temperature_raw = int(mac_payload[-8:-4], 16)
+
+        integer_part_tem = int(str(temperature_raw)[:2])
+        decimal_part_tem = int(str(temperature_raw)[2:])
+
+        temperature = integer_part_tem + (decimal_part_tem / 100)
+
+        relative_humidity_raw = int(mac_payload[-4:], 16)
+
+        integer_part_hum = int(str(relative_humidity_raw)[:2])
+        decimal_part_hum = int(str(relative_humidity_raw)[2:])
+
+        relative_humidity = integer_part_hum + (decimal_part_hum / 100)
+
+        battery_raw = int(mac_payload[5:8], 16)
+
+        integer_part_bat = int(str(battery_raw)[:2])
+        decimal_part_bat = int(str(battery_raw)[2:])
+
+        battery = integer_part_bat + (decimal_part_bat / 256)
+
+        gas_eval = int(mac_payload[-16:-12], 16)
+        nox_eval = int(mac_payload[-20:-16], 16)
 
 
-    data_to_sheet = {
-        "column1": device_id,
-        "column2": unix_timestamp,
-        "column3": temperature,
-        "column4": relative_humidity,
-        "column5": gas_eval,
-        "column6": nox_eval,
-        "column7": co2,
-        "column8": pm1_concentration,
-        "column9": pm25_concentration,
-        "column10": pm4_concentration,
-        "column11": pm10_concentration,
-        "column12": pm05_nconcentration,
-        "column13": pm1_nconcentration,
-        "column14": pm25_nconcentration,
-        "column15": pm4_nconcentration,
-        "column16": pm10_nconcentration,
-        "column17": typical_particle,
-        "column18": timestamp,
-        "column19": battery
-    }
+        temp_co2 = int(mac_payload[13:16], 16)
+        integer_part_co2 = int(str(temp_co2)[:2])
+        decimal_part_co2 = int(str(temp_co2)[2:])
 
-    response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
-    print(response.text)
+        co2 = (integer_part_co2 + (decimal_part_co2 / 100)) * 10
+        if co2 < 400:
+            co2 = round(co2 * 10, 2)
+
+
+        pm1_concentration = int(mac_payload[25:28], 16)
+        pm25_concentration = int(mac_payload[29:32], 16)
+        pm4_concentration = int(mac_payload[33:36], 16)
+        pm10_concentration = int(mac_payload[37:40], 16)
+        pm05_nconcentration = int(mac_payload[41:44], 16)
+        pm1_nconcentration = int(mac_payload[45:48], 16)
+        pm25_nconcentration = int(mac_payload[49:52], 16)
+        pm4_nconcentration = int(mac_payload[53:56], 16)
+        pm10_nconcentration = int(mac_payload[57:60], 16)
+        typical_particle = int(mac_payload[61:64], 16)
+        if device_id=="0080E1150510BDE6" or device_id=="0080E1150533F233":
+            url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec"
+        else:
+            nox_eval=0
+            url = "https://script.google.com/macros/s/AKfycbzxTm-_PNSkPRocRp4Xh3BHm9R0ZsbSXLQ5rARTAZRQlmeAgTF5hjERSy_sFfydktbi/exec"
+
+
+        data_to_sheet = {
+            "column1": device_id,
+            "column2": unix_timestamp,
+            "column3": temperature,
+            "column4": relative_humidity,
+            "column5": gas_eval,
+            "column6": nox_eval,
+            "column7": co2,
+            "column8": pm1_concentration,
+            "column9": pm25_concentration,
+            "column10": pm4_concentration,
+            "column11": pm10_concentration,
+            "column12": pm05_nconcentration,
+            "column13": pm1_nconcentration,
+            "column14": pm25_nconcentration,
+            "column15": pm4_nconcentration,
+            "column16": pm10_nconcentration,
+            "column17": typical_particle,
+            "column18": timestamp,
+            "column19": battery
+        }
+
+        response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
+        print(response.text)
 
     return jsonify({'status': 'success'}), 200
 
