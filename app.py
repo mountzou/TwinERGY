@@ -289,9 +289,9 @@ def handle_webhk():
 
         decimal_energy_exp_act = int(mac_payload[42:50], 16) * 0.1
 
-        spo2_conf = int(mac_payload[90:92], 16)
+        spo2_conf = int(mac_payload[88:90], 16)
 
-        spo2 = int(mac_payload[92:96], 16)
+        spo2 = int(mac_payload[90:94], 16)
 
 
 
