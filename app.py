@@ -255,17 +255,38 @@ def handle_webhk():
         device_id = data['end_device_ids']['dev_eui']
         gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
 
-        decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
-        tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), \
-            decodedPayload[1], decodedPayload[2], \
-            decodedPayload[4], decodedPayload[3]
+        payload = data["uplink_message"]["frm_payload"]
+
+        # Value of MAC Payload in hex format
+        mac_payload = base64.b64decode(payload).hex()
+
+        # Get the integer part and the decimal part of the air temperature from the payload
+        integer_temperature = int(str(int(mac_payload[-8:-4], 16))[:2])
+        decimal_temperature = int(str(int(mac_payload[-8:-4], 16))[2:])
+
+        # Determine the value of air temperature
+        air_temperature = integer_temperature + 0.01 * decimal_temperature
+
+        # Get the integer part and the decimal part of the relative humidity from the payload
+        integer_humidity = int(str(int(mac_payload[-4:], 16))[:2])
+        decimal_humidity = int(str(int(mac_payload[-4:], 16))[2:])
+
+        # Determine the value of relative humidity
+        relative_humidity = integer_humidity + 0.01 * decimal_humidity
+
+        # Value of total energy expenditure in kCal
+        decimal_energy_exp = int(mac_payload[34:42], 16) * 0.1
+
+        # Get the value of VOC index from the payload
+        voc_index = int(mac_payload[-16:-12], 16)
+
 
         url = "https://script.google.com/macros/s/AKfycbxoVBJMcTO1_Oml6rlNciaPWsvaIWCw94UwLANAMwm70bv7FT_eC7pRlV6cQDzJr5W2/exec"
         data_to_sheet = {
             "column1": device_id,
-            "column2": tc_temperature,
-            "column3": tc_humidity,
-            "column4": wb_index,
+            "column2": air_temperature,
+            "column3": relative_humidity,
+            "column4": voc_index,
         }
         #     "column5": gas_eval,
         #     "column6": nox_eval,
