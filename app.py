@@ -287,6 +287,9 @@ def handle_webhk():
         # Value of total energy expenditure in kCal
         decimal_energy_exp = int(mac_payload[34:42], 16) * 0.1
 
+        decimal_energy_exp_act = int(mac_payload[42:50], 16) * 0.1
+
+
         # Get the value of VOC index from the payload
         voc_index = int(mac_payload[-16:-12], 16)
 
@@ -305,13 +308,7 @@ def handle_webhk():
             "column10": total_walk,
             "column11": total_run,
             "column12": decimal_energy_exp,
-            # "column13": pm1_nconcentration,
-        #     "column14": pm25_nconcentration,
-        #     "column15": pm4_nconcentration,
-        #     "column16": pm10_nconcentration,
-        #     "column17": typical_particle,
-        #     "column18": timestamp,
-        #     "column19": battery
+            "column13": decimal_energy_exp_act
         }
 
         response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
