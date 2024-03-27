@@ -274,16 +274,16 @@ def handle_webhk():
         # Determine the value of relative humidity
         relative_humidity = integer_humidity + 0.01 * decimal_humidity
 
-        hr=int(mac_payload[19:21], 16)
-        hr_conf = int(mac_payload[21:22], 16)
-        rr=int(mac_payload[22:24], 16)
-        rr_conf = int(mac_payload[24:25], 16)
+        hr=int(mac_payload[4:8], 16)
+        hr_conf = int(mac_payload[8:10], 16)
+        rr=int(mac_payload[10:14], 16)
+        rr_conf = int(mac_payload[14:16], 16)
 
-        activity_class = int(mac_payload[25:26], 16)
+        activity_class = int(mac_payload[16:18], 16)
 
-        total_walk=int(mac_payload[26:30], 16)
+        total_walk=int(mac_payload[18:26], 16)
 
-        total_run=int(mac_payload[30:34], 16)
+        total_run=int(mac_payload[26:34], 16)
         # Value of total energy expenditure in kCal
         decimal_energy_exp = int(mac_payload[34:42], 16) * 0.1
 
