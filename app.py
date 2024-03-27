@@ -274,6 +274,16 @@ def handle_webhk():
         # Determine the value of relative humidity
         relative_humidity = integer_humidity + 0.01 * decimal_humidity
 
+        hr=int(mac_payload[19:21], 16)
+        hr_conf = int(mac_payload[21:22], 16)
+        rr=int(mac_payload[22:24], 16)
+        rr_conf = int(mac_payload[24:25], 16)
+
+        activity_class = int(mac_payload[25:26], 16)
+
+        total_walk=int(mac_payload[26:30], 16)
+
+        total_run=int(mac_payload[30:34], 16)
         # Value of total energy expenditure in kCal
         decimal_energy_exp = int(mac_payload[34:42], 16) * 0.1
 
@@ -287,23 +297,22 @@ def handle_webhk():
             "column2": air_temperature,
             "column3": relative_humidity,
             "column4": voc_index,
-        }
-        #     "column5": gas_eval,
-        #     "column6": nox_eval,
-        #     "column7": co2,
-        #     "column8": pm1_concentration,
-        #     "column9": pm25_concentration,
-        #     "column10": pm4_concentration,
-        #     "column11": pm10_concentration,
-        #     "column12": pm05_nconcentration,
-        #     "column13": pm1_nconcentration,
+            "column5": hr,
+            "column6": hr_conf,
+            "column7": rr,
+            "column8": rr_conf,
+            "column9": activity_class,
+            "column10": total_walk,
+            "column11": total_run,
+            "column12": decimal_energy_exp,
+            # "column13": pm1_nconcentration,
         #     "column14": pm25_nconcentration,
         #     "column15": pm4_nconcentration,
         #     "column16": pm10_nconcentration,
         #     "column17": typical_particle,
         #     "column18": timestamp,
         #     "column19": battery
-        # }
+        }
 
         response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
 
