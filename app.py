@@ -296,7 +296,7 @@ def handle_webhk():
 
         current_time_ = datetime.now(timezone.utc)
         unix_timestamp_ = int(current_time_.timestamp())
-
+        timestamp_ = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
 
         # Get the value of VOC index from the payload
         voc_index = int(mac_payload[-16:-12], 16)
@@ -319,7 +319,8 @@ def handle_webhk():
             "column13": decimal_energy_exp_act,
             "column14": spo2,
             "column15": spo2_conf,
-            "column16": unix_timestamp_
+            "column16": unix_timestamp_,
+            "column17": timestamp_
         }
 
         response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
