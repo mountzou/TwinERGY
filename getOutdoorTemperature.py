@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
 
+
 def get_outdoorTemperature():
     username = 'universityofpatras_mountzouris_christos'
     password = 'nO3B0cd3Th'

@@ -3,7 +3,6 @@ from flask_mysqldb import MySQL
 from flask_compress import Compress
 from keycloak import KeycloakOpenID
 
-from decodeLoRaPackage import decodeMACPayload
 from getDeviceStatus import *
 from initializeUser import *
 
@@ -19,31 +18,24 @@ from getOutdoorTemperature import *
 
 from apiService import *
 
-# Import functions regarding the user's preferences
 from getPreferences import *
 from updatePreferences import *
 from determineSimosMethod import *
-# Import functions regarding the user's clothing insulation
 from getClothing import *
 
 from ttnWebhook import *
 
-# Import functions regarding the date and time
 from datetime import datetime, timedelta, time, timezone
 
 import base64
+import os
 
 from urllib.parse import urlparse
-import json
 import requests
 import pandas as pd
-import random as rand
-import numpy as np
-from multiprocessing import cpu_count
 
 from pulp import *
 
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -62,9 +54,9 @@ mysql = MySQL(app)
 
 # Configure Keycloak client to authenticate user through TwinERGY Identity Server
 keycloak_openid = KeycloakOpenID(server_url='https://auth.tec.etra-id.com/auth/',
-    client_id='cdt-twinergy',
-    realm_name='TwinERGY',
-    client_secret_key="secret")
+                                 client_id='cdt-twinergy',
+                                 realm_name='TwinERGY',
+                                 client_secret_key="secret")
 app.secret_key = 'secret'
 
 
@@ -100,10 +92,11 @@ def check_for_daily_updates():
 @app.before_request
 def require_login():
     # Define the allowed routes of a non-authenticated user
-    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'webhk', 'get_tariffs','get_electricity_tariffs_dash', 'get_outdoor_temperature']
+    allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'webhk', 'get_tariffs',
+                      'get_electricity_tariffs_dash', 'get_outdoor_temperature']
 
     # Define the relative paths that bypass the authentication mechanism
-    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path =='/get_tariffs' or request.path == '/get_outdoor_temperature' or request.path == 'get_electricity_tariffs_dash':
+    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path == '/get_tariffs' or request.path == '/get_outdoor_temperature' or request.path == 'get_electricity_tariffs_dash':
         return None
 
     # Redirect non-authenticated user to the 'login' rout
@@ -122,10 +115,10 @@ def before_request():
 def login():
     if urlparse(request.base_url).netloc == '127.0.0.1:5000':
         auth_url = keycloak_openid.auth_url(redirect_uri="http://" + urlparse(request.base_url).netloc + "/callback",
-            scope="openid", state="af0ifjsldkj")
+                                            scope="openid", state="af0ifjsldkj")
     else:
         auth_url = keycloak_openid.auth_url(redirect_uri="https://" + urlparse(request.base_url).netloc + "/callback",
-            scope="openid", state="af0ifjsldkj")
+                                            scope="openid", state="af0ifjsldkj")
 
     return redirect(auth_url)
 
@@ -212,7 +205,8 @@ def account():
 def api_tc():
     # Execute SQL query to get the latest environmental parameters of temperature and humidity
     g.cur.execute(
-        '''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MINUTE));''')
+        '''SELECT tc_temperature, tc_humidity, wearable_id, gateway_id, tc_timestamp, wb_index, tc_met FROM 
+        user_thermal_comfort WHERE tc_timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MINUTE));''')
     latest_data = g.cur.fetchall()
 
     def create_data_dict(data=None):
@@ -275,16 +269,16 @@ def handle_webhk():
         # Determine the value of relative humidity
         relative_humidity = integer_humidity + 0.01 * decimal_humidity
 
-        hr=int(mac_payload[4:8], 16)
+        hr = int(mac_payload[4:8], 16)
         hr_conf = int(mac_payload[8:10], 16)
-        rr=int(mac_payload[10:14], 16)
+        rr = int(mac_payload[10:14], 16)
         rr_conf = int(mac_payload[14:16], 16)
 
         activity_class = int(mac_payload[16:18], 16)
 
-        total_walk=int(mac_payload[18:26], 16)
+        total_walk = int(mac_payload[18:26], 16)
 
-        total_run=int(mac_payload[26:34], 16)
+        total_run = int(mac_payload[26:34], 16)
         # Value of total energy expenditure in kCal
         decimal_energy_exp = int(mac_payload[34:42], 16) * 0.1
 
@@ -300,7 +294,6 @@ def handle_webhk():
 
         # Get the value of VOC index from the payload
         voc_index = int(mac_payload[-16:-12], 16)
-
 
         url = "https://script.google.com/macros/s/AKfycbxoVBJMcTO1_Oml6rlNciaPWsvaIWCw94UwLANAMwm70bv7FT_eC7pRlV6cQDzJr5W2/exec"
         data_to_sheet = {
@@ -360,7 +353,6 @@ def handle_webhk():
         gas_eval = int(mac_payload[-16:-12], 16)
         nox_eval = int(mac_payload[-20:-16], 16)
 
-
         temp_co2 = int(mac_payload[13:16], 16)
         integer_part_co2 = int(str(temp_co2)[:2])
         decimal_part_co2 = int(str(temp_co2)[2:])
@@ -368,7 +360,6 @@ def handle_webhk():
         co2 = (integer_part_co2 + (decimal_part_co2 / 100)) * 10
         if co2 < 400:
             co2 = round(co2 * 10, 2)
-
 
         pm1_concentration = int(mac_payload[25:28], 16)
         pm25_concentration = int(mac_payload[29:32], 16)
@@ -380,12 +371,11 @@ def handle_webhk():
         pm4_nconcentration = int(mac_payload[53:56], 16)
         pm10_nconcentration = int(mac_payload[57:60], 16)
         typical_particle = int(mac_payload[61:64], 16)
-        if device_id=="0080E1150510BDE6" or device_id=="0080E1150533F233":
+        if device_id == "0080E1150510BDE6" or device_id == "0080E1150533F233":
             url = "https://script.google.com/macros/s/AKfycbzOPn4VcDAs41g2C0vMr5oOxm38okSnpaSMkAS8xfmjVhQmMBqACcKfOjhnrJxRJvZwUA/exec"
         else:
-            nox_eval=0
+            nox_eval = 0
             url = "https://script.google.com/macros/s/AKfycbzxTm-_PNSkPRocRp4Xh3BHm9R0ZsbSXLQ5rARTAZRQlmeAgTF5hjERSy_sFfydktbi/exec"
-
 
         data_to_sheet = {
             "column1": device_id,
@@ -426,8 +416,8 @@ def handle_ttn_webhook():
 
     decodedPayload = decodeMACPayload(data["uplink_message"]["frm_payload"])
     tc_temperature, tc_humidity, wb_index, tc_metabolic, tc_timestamp = get_air_temperature(decodedPayload[0]), \
-                                                                        decodedPayload[1], decodedPayload[2], \
-                                                                        decodedPayload[4], decodedPayload[3]
+        decodedPayload[1], decodedPayload[2], \
+        decodedPayload[4], decodedPayload[3]
     query = '''SELECT wearable_id, session_start, session_end FROM wearable_device_sessions WHERE wearable_id = %s ORDER BY session_end DESC LIMIT 1'''
     params = (device_id,)
     execute_query(g.cur, mysql, query, params)
@@ -463,7 +453,7 @@ def handle_ttn_webhook():
         tc_pmv = get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, tc_met, tc_clo, 0.1)
 
         insert_into_user_thermal_comfort(g.cur, mysql, tc_temperature, tc_humidity, tc_metabolic, tc_met, tc_clo,
-            tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
+                                         tc_pmv, tc_timestamp, device_id, gateway_id, wb_index)
 
     else:
         print("Το tc_timestamp μικρότερο του session_end")
@@ -549,8 +539,8 @@ def get_data_thermal_comfort():
 
     daily_thermal_comfort_data = [(tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met,
                                    get_pmv_value(tc_temperature, 0.935 * tc_temperature, tc_humidity, average_met,
-                                       clo_insulation,
-                                       0.1), clo_insulation, get_t_wearable(tc_temperature))
+                                                 clo_insulation,
+                                                 0.1), clo_insulation, get_t_wearable(tc_temperature))
                                   for tc_temperature, tc_humidity, tc_timestamp, wb_index, tc_met in
                                   tc_latest_active_session]
 
@@ -666,7 +656,7 @@ def update_preferences_thermal_comfort():
     user_thermal_level_max = request.form.get('user_thermal_level_max')
     # Update the preference regarding the user's thermal comfort
     updateThermalComfortPreference(mysql, g.cur, user_thermal_level_min, user_thermal_level_max,
-        session.get('deviceId', None))
+                                   session.get('deviceId', None))
 
     return jsonify(success=True)
 
@@ -838,13 +828,11 @@ def demand_side_management():
     min_temp, max_temp = getTemperaturePreferences(g.cur, session.get('deviceId', None))
     min_comfort, max_comfort = getThermalComfortPreferences(g.cur, session.get('deviceId', None))
 
-
-
     out_temperatures = get_outdoor_temperature(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
     tariff = get_electricity_tariffs(g.cur, session.get("userinfo", {}).get("pilotId").capitalize())
     # pi_i = {j: round(rand.uniform(0, 0.10), 3) for j in range(1, 13)}
     # pi_i.update({j: round(rand.uniform(0.10, 0.20), 3) for j in range(13, 25)})
-    pi_i=tariff
+    pi_i = tariff
 
     clo_insulation = get_clo_insulation(g.cur, mysql, session.get('deviceId', None))[0]
     metabolic_rate = 1
@@ -864,19 +852,19 @@ def demand_side_management():
     T_start_k, T_end_k = dsm_phase_flexible_loads_const_slots(json.loads(operation_times_json))
     T_start_m, T_end_m = dsm_phase_flexible_loads_diff_slots(json.loads(operation_times_json))
 
-
-    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_comfort, max_comfort, out_temperatures, clo_insulation, pi_i)
+    optimal_schedule = dsm_solve_problem(T_start_j, T_end_j, T_start_m, T_end_m, T_start_k, T_end_k, min_comfort,
+                                         max_comfort, out_temperatures, clo_insulation, pi_i)
     optimal_schedule_json = jsonify(optimal_schedule).data.decode('utf-8')
 
     return render_template('demand-side-management.html',
-        operation_times=operation_times,
-        operation_times_json=operation_times_json,
-        optimal_schedule_json=optimal_schedule_json,
-        prices=pi_i,
-        min_temp=min_temp,
-        max_temp=max_temp,
-        min_comfort=min_comfort,
-        max_comfort=max_comfort)
+                           operation_times=operation_times,
+                           operation_times_json=operation_times_json,
+                           optimal_schedule_json=optimal_schedule_json,
+                           prices=pi_i,
+                           min_temp=min_temp,
+                           max_temp=max_temp,
+                           min_comfort=min_comfort,
+                           max_comfort=max_comfort)
 
 
 @app.route('/account_loads/')
@@ -1018,7 +1006,7 @@ def get_electricity_tariffs_dash():
 
         # Check if tariffs is not None and has data
         if tariffs is not None and len(tariffs) > 0:
-            tariffs_float_values = [round(float(value)/1000,3) for value in list(tariffs[3:])]
+            tariffs_float_values = [round(float(value) / 1000, 3) for value in list(tariffs[3:])]
             hourly_tariffs = {hour: value for hour, value in enumerate(tariffs_float_values, start=1)}
             return hourly_tariffs
         else:
@@ -1030,6 +1018,7 @@ def get_electricity_tariffs_dash():
     # Handle the case where no tariffs are found after exiting the loop
     print("No tariffs found for the given city in the recent period.")
     return None
+
 
 @app.route('/get_tariffs')
 def get_tariffs():
@@ -1076,6 +1065,63 @@ def insert_outdoor_temperature():
         execute_query(g.cur, mysql, sql, values, commit=True)
 
     return "Outdoor temperatures added successfully."
+
+
+@app.route('/insert_outdoor_temp')
+def insert_outdoor_temp():
+    sql = """
+    INSERT INTO outdoor_temperature (user_pilot, forecast_date, hourly_temperature, created_at) 
+    VALUES (%s, %s, %s, %s)
+    """
+
+    hourly_temperature = get_outdoorTemperature()
+
+    created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    forecast_date = datetime.now().strftime('%Y-%m-%d')
+
+    for user_pilot, hourly_temps in hourly_temperature.items():
+        city_name = user_pilot.split(',')[0].lower()
+        hourly_temperature = json.dumps(hourly_temps)
+
+        values = (city_name, forecast_date, hourly_temperature, created_at)
+
+        try:
+            execute_query(g.cur, mysql, sql, values, commit=True)
+            print(f"Data successfully inserted for {user_pilot}.")
+        except Exception as e:
+            print(f"An error occurred while inserting data for {user_pilot}:", e)
+
+    return jsonify("Data successfully inserted for all cities.")
+
+
+@app.route('/get_outdoor_temp')
+def get_outdoor_temp():
+    sql = """
+    SELECT hourly_temperature
+    FROM outdoor_temperature
+    WHERE user_pilot = %s AND forecast_date = %s
+    """
+
+    user_pilot = session.get("userinfo", {}).get("pilotId")
+    forecast_date = datetime.now().strftime('%Y-%m-%d')
+
+    values = (user_pilot, forecast_date)
+
+    try:
+        execute_query(g.cur, mysql, sql, values)
+
+        result = g.cur.fetchone()
+
+        if result:
+            hourly_temperature = result[0]
+            hourly_temperature_dict = json.loads(hourly_temperature)
+            return jsonify({"status": "success", "data": hourly_temperature_dict})
+        else:
+            return jsonify({"status": "error", "message": f"No data found for user_pilot '{user_pilot}' on '{forecast_date}'."}), 404
+    except Exception as e:
+        print("An error occurred while fetching the hourly_temperature data:", e)
+        return jsonify({"status": "error", "message": "An error occurred while fetching the data."}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
