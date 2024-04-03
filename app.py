@@ -14,7 +14,6 @@ from filter_thermal_comfort import *
 from demandSideManagement import *
 
 from getTariffs import *
-from getOutdoorTemperature import *
 
 from apiService import *
 
@@ -28,7 +27,6 @@ from ttnWebhook import *
 from datetime import datetime, timedelta, time, timezone
 
 import base64
-import os
 
 from urllib.parse import urlparse
 import requests
@@ -67,16 +65,12 @@ def get_db_cursor():
 
 # A function to check for updates by the specific wearable device during the last 24 hours
 def check_for_daily_updates():
-    # Get the current datetime
     now = datetime.now(timezone.utc)
 
-    # Create a new datetime at midnight
     midnight = datetime(year=now.year, month=now.month, day=now.day, hour=0, minute=0, second=0, tzinfo=timezone.utc)
 
-    # Convert the datetime to a UNIX timestamp
     timestamp = int(midnight.timestamp())
 
-    # Execute the modified query
     g.cur.execute(
         '''SELECT COUNT(tc_temperature) FROM user_thermal_comfort WHERE tc_timestamp >= %s AND wearable_id = %s''',
         (
@@ -93,10 +87,10 @@ def check_for_daily_updates():
 def require_login():
     # Define the allowed routes of a non-authenticated user
     allowed_routes = ['login', 'callback', 'static', 'api_tc', 'api_preferences', 'ttn-webhook', 'webhk', 'get_tariffs',
-                      'get_electricity_tariffs_dash', 'get_outdoor_temperature']
+                      'get_electricity_tariffs_dash', 'insert_outdoor_temp', 'get_outdoor_temp']
 
     # Define the relative paths that bypass the authentication mechanism
-    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path == '/get_tariffs' or request.path == '/get_outdoor_temperature' or request.path == 'get_electricity_tariffs_dash':
+    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path == '/get_tariffs' or request.path == '/get_outdoor_temp' or request.path == 'insert_outdoor_temp' or request.path == 'get_electricity_tariffs_dash':
         return None
 
     # Redirect non-authenticated user to the 'login' rout
@@ -171,8 +165,6 @@ def index():
 @app.route("/thermal_comfort/", methods=['GET', 'POST'])
 def thermal_comfort():
     return render_template("thermal-comfort.html")
-    # if g.total_daily_data else render_template(
-    # "thermal-comfort-empty.html")
 
 
 # A function that renders the template of the 'Preferences' page under the route '/preferences/.
@@ -1030,8 +1022,6 @@ def get_tariffs():
     tariffs_athens = getTariffENTSOE('Greece')
     tariffs_benetutti = getTariffENTSOE('Italy')
 
-    print()
-
     if tariffs_athens != "error":
         date_recorded = tariffs_athens[0]['Timestamp'].split('T')[0]
         prices = [tariff['Price'] for tariff in sorted(tariffs_athens, key=lambda x: x['Position'])]
@@ -1047,80 +1037,8 @@ def get_tariffs():
     return "Tariffs added successfully."
 
 
-@app.route('/insert_outdoor_temperature')
-def insert_outdoor_temperature():
-    sql = """
-    INSERT INTO user_outdoor_temperature (town_name, date_recorded, hour_0, hour_1, hour_2, hour_3, hour_4, hour_5, hour_6, hour_7, hour_8, hour_9, hour_10, hour_11, hour_12, hour_13, hour_14, hour_15, hour_16, hour_17, hour_18, hour_19, hour_20, hour_21, hour_22, hour_23) 
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
-
-    temp = get_outdoorTemperature()
-
-    date_recorded = datetime.now().strftime("%Y-%m-%d")
-
-    for full_city_name, temps in temp.items():
-        city_name = full_city_name.split(',')[0].strip()
-        hourly_temps = [temps[f"{hour:02d}:00"] for hour in range(24)]
-        values = [city_name, date_recorded] + hourly_temps
-        execute_query(g.cur, mysql, sql, values, commit=True)
-
-    return "Outdoor temperatures added successfully."
-
-
-@app.route('/insert_outdoor_temp')
-def insert_outdoor_temp():
-    sql = """
-    INSERT INTO outdoor_temperature (user_pilot, forecast_date, hourly_temperature, created_at) 
-    VALUES (%s, %s, %s, %s)
-    """
-
-    hourly_temperature = get_outdoorTemperature()
-
-    created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    forecast_date = datetime.now().strftime('%Y-%m-%d')
-
-    for user_pilot, hourly_temps in hourly_temperature.items():
-        city_name = user_pilot.split(',')[0].lower()
-        hourly_temperature = json.dumps(hourly_temps)
-
-        values = (city_name, forecast_date, hourly_temperature, created_at)
-
-        try:
-            execute_query(g.cur, mysql, sql, values, commit=True)
-            print(f"Data successfully inserted for {user_pilot}.")
-        except Exception as e:
-            print(f"An error occurred while inserting data for {user_pilot}:", e)
-
-    return jsonify("Data successfully inserted for all cities.")
-
-
-@app.route('/get_outdoor_temp')
-def get_outdoor_temp():
-    sql = """
-    SELECT hourly_temperature
-    FROM outdoor_temperature
-    WHERE user_pilot = %s AND forecast_date = %s
-    """
-
-    user_pilot = session.get("userinfo", {}).get("pilotId")
-    forecast_date = datetime.now().strftime('%Y-%m-%d')
-
-    values = (user_pilot, forecast_date)
-
-    try:
-        execute_query(g.cur, mysql, sql, values)
-
-        result = g.cur.fetchone()
-
-        if result:
-            hourly_temperature = result[0]
-            hourly_temperature_dict = json.loads(hourly_temperature)
-            return jsonify({"status": "success", "data": hourly_temperature_dict})
-        else:
-            return jsonify({"status": "error", "message": f"No data found for user_pilot '{user_pilot}' on '{forecast_date}'."}), 404
-    except Exception as e:
-        print("An error occurred while fetching the hourly_temperature data:", e)
-        return jsonify({"status": "error", "message": "An error occurred while fetching the data."}), 500
+from routes_outdoor_temp import outdoor_temp_bp
+app.register_blueprint(outdoor_temp_bp)
 
 
 if __name__ == "__main__":
