@@ -90,7 +90,7 @@ def require_login():
                       'get_electricity_tariffs_dash', 'insert_outdoor_temp', 'get_outdoor_temp']
 
     # Define the relative paths that bypass the authentication mechanism
-    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path == '/get_tariffs' or request.path == '/get_outdoor_temp' or request.path == 'insert_outdoor_temp' or request.path == 'get_electricity_tariffs_dash':
+    if request.path == '/api_tc' or request.path == '/ttn-webhook' or request.path == '/webhk' or request.path == '/get_tariffs' or request.path == '/get_outdoor_temp' or request.path == '/insert_outdoor_temp' or request.path == '/get_electricity_tariffs_dash':
         return None
 
     # Redirect non-authenticated user to the 'login' rout
