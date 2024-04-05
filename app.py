@@ -287,6 +287,8 @@ def handle_webhk():
         # Get the value of VOC index from the payload
         voc_index = int(mac_payload[-16:-12], 16)
 
+        voc = int(mac_payload[-12:-8], 16)
+
         url = "https://script.google.com/macros/s/AKfycbxoVBJMcTO1_Oml6rlNciaPWsvaIWCw94UwLANAMwm70bv7FT_eC7pRlV6cQDzJr5W2/exec"
         data_to_sheet = {
             "column1": device_id,
@@ -305,7 +307,8 @@ def handle_webhk():
             "column14": spo2,
             "column15": spo2_conf,
             "column16": unix_timestamp_,
-            "column17": timestamp_
+            "column17": timestamp_,
+            "column18": voc
         }
 
         response = requests.post(url, data=json.dumps(data_to_sheet), headers={"Content-Type": "application/json"})
