@@ -291,9 +291,9 @@ def handle_webhk():
         timestamp_ = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
 
         # Get the value of VOC index from the payload
-        voc_index = int(mac_payload[124:128], 16)
+        voc_index = int(mac_payload[-96:-92], 16)
 
-        voc = int(mac_payload[128:132], 16)
+        voc = int(mac_payload[-92:-88], 16)
 
         url = "https://script.google.com/macros/s/AKfycbxoVBJMcTO1_Oml6rlNciaPWsvaIWCw94UwLANAMwm70bv7FT_eC7pRlV6cQDzJr5W2/exec"
         data_to_sheet = {
@@ -330,18 +330,19 @@ def handle_webhk():
 
         timestamp = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
 
-        integer_temperature = int(str(int(mac_payload[132:136], 16))[:2])
-        decimal_temperature = int(str(int(mac_payload[132:136], 16))[2:])
+        temperature_raw = int(mac_payload[-8:-4], 16)
 
-        # Determine the value of air temperature
-        temperature = integer_temperature + 0.01 * decimal_temperature
+        integer_part_tem = int(str(temperature_raw)[:2])
+        decimal_part_tem = int(str(temperature_raw)[2:])
 
-        # Get the integer part and the decimal part of the relative humidity from the payload
-        integer_humidity = int(str(int(mac_payload[136:140], 16))[:2])
-        decimal_humidity = int(str(int(mac_payload[136:140], 16))[2:])
+        temperature = integer_part_tem + (decimal_part_tem / 100)
 
-        # Determine the value of relative humidity
-        relative_humidity = integer_humidity + 0.01 * decimal_humidity
+        relative_humidity_raw = int(mac_payload[-4:], 16)
+
+        integer_part_hum = int(str(relative_humidity_raw)[:2])
+        decimal_part_hum = int(str(relative_humidity_raw)[2:])
+
+        relative_humidity = integer_part_hum + (decimal_part_hum / 100)
 
         battery_raw = int(mac_payload[5:8], 16)
 
@@ -350,7 +351,7 @@ def handle_webhk():
 
         battery = integer_part_bat + (decimal_part_bat / 256)
 
-        gas_eval = int(mac_payload[124:128], 16)
+        gas_eval = int(mac_payload[-16:-12], 16)
         nox_eval = int(mac_payload[-20:-16], 16)
 
         temp_co2 = int(mac_payload[13:16], 16)
