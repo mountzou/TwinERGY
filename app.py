@@ -237,7 +237,6 @@ def api_preferences():
 @app.route('/webhk', methods=['POST'])
 def handle_webhk():
     data = request.get_json()
-    print(data)
     if data['end_device_ids']['dev_eui'] == '0080E1150510A98F':
         device_id = data['end_device_ids']['dev_eui']
         gateway_id = data['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
@@ -246,7 +245,8 @@ def handle_webhk():
 
         # Value of MAC Payload in hex format
         mac_payload = base64.b64decode(payload).hex()
-
+        print("MAC")
+        print(mac_payload)
         # Get the integer part and the decimal part of the air temperature from the payload
         integer_temperature = int(str(int(mac_payload[-8:-4], 16))[:2])
         decimal_temperature = int(str(int(mac_payload[-8:-4], 16))[2:])
