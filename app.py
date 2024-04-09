@@ -280,7 +280,7 @@ def handle_webhk():
 
         spo2 = int(mac_payload[90:94], 16)
 
-        rr_count = int(mac_payload[56:57])
+        rr_count = int(mac_payload[112:113])
 
         print("RRCOUNT")
         print(rr_count)
