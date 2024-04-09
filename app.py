@@ -247,6 +247,11 @@ def handle_webhk():
         mac_payload = base64.b64decode(payload).hex()
         print("MAC")
         print(mac_payload)
+
+        rr_count = int(mac_payload[112:113])
+
+        print("RRCOUNT")
+        print(rr_count)
         # Get the integer part and the decimal part of the air temperature from the payload
         integer_temperature = int(str(int(mac_payload[-8:-4], 16))[:2])
         decimal_temperature = int(str(int(mac_payload[-8:-4], 16))[2:])
@@ -280,10 +285,7 @@ def handle_webhk():
 
         spo2 = int(mac_payload[90:94], 16)
 
-        rr_count = int(mac_payload[112:113])
 
-        print("RRCOUNT")
-        print(rr_count)
         current_time_ = datetime.now(timezone.utc)
         unix_timestamp_ = int(current_time_.timestamp())
         timestamp_ = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
