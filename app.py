@@ -253,15 +253,15 @@ def handle_webhk():
         print("RRCOUNT")
         print(rr_count)
         # Get the integer part and the decimal part of the air temperature from the payload
-        integer_temperature = int(str(int(mac_payload[-8:-4], 16))[:2])
-        decimal_temperature = int(str(int(mac_payload[-8:-4], 16))[2:])
+        integer_temperature = int(str(int(mac_payload[-88:-84], 16))[:2])
+        decimal_temperature = int(str(int(mac_payload[-88:-84], 16))[2:])
 
         # Determine the value of air temperature
         air_temperature = integer_temperature + 0.01 * decimal_temperature
 
         # Get the integer part and the decimal part of the relative humidity from the payload
-        integer_humidity = int(str(int(mac_payload[-4:], 16))[:2])
-        decimal_humidity = int(str(int(mac_payload[-4:], 16))[2:])
+        integer_humidity = int(str(int(mac_payload[-84:], 16))[:2])
+        decimal_humidity = int(str(int(mac_payload[-84:], 16))[2:])
 
         # Determine the value of relative humidity
         relative_humidity = integer_humidity + 0.01 * decimal_humidity
@@ -291,9 +291,9 @@ def handle_webhk():
         timestamp_ = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
 
         # Get the value of VOC index from the payload
-        voc_index = int(mac_payload[-16:-12], 16)
+        voc_index = int(mac_payload[-96:-92], 16)
 
-        voc = int(mac_payload[-12:-8], 16)
+        voc = int(mac_payload[-92:-88], 16)
 
         url = "https://script.google.com/macros/s/AKfycbxoVBJMcTO1_Oml6rlNciaPWsvaIWCw94UwLANAMwm70bv7FT_eC7pRlV6cQDzJr5W2/exec"
         data_to_sheet = {
