@@ -248,7 +248,7 @@ def handle_webhk():
         print("MAC")
         print(mac_payload)
 
-        rr_count = int(mac_payload[112:113])
+        rr_count = int(mac_payload[113:114])
 
         print("RRCOUNT")
         print(rr_count)
