@@ -260,8 +260,8 @@ def handle_webhk():
         air_temperature = integer_temperature + 0.01 * decimal_temperature
 
         # Get the integer part and the decimal part of the relative humidity from the payload
-        integer_humidity = int(str(int(mac_payload[-84:], 16))[:2])
-        decimal_humidity = int(str(int(mac_payload[-84:], 16))[2:])
+        integer_humidity = int(str(int(mac_payload[-84:-80], 16))[:2])
+        decimal_humidity = int(str(int(mac_payload[-84:-80], 16))[2:])
 
         # Determine the value of relative humidity
         relative_humidity = integer_humidity + 0.01 * decimal_humidity
