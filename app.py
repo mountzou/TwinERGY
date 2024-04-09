@@ -330,14 +330,14 @@ def handle_webhk():
 
         timestamp = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
 
-        temperature_raw = int(mac_payload[-8:-4], 16)
+        temperature_raw = int(mac_payload[132:136], 16)
 
         integer_part_tem = int(str(temperature_raw)[:2])
         decimal_part_tem = int(str(temperature_raw)[2:])
 
         temperature = integer_part_tem + (decimal_part_tem / 100)
 
-        relative_humidity_raw = int(mac_payload[-4:], 16)
+        relative_humidity_raw = int(mac_payload[136:140], 16)
 
         integer_part_hum = int(str(relative_humidity_raw)[:2])
         decimal_part_hum = int(str(relative_humidity_raw)[2:])
@@ -351,7 +351,7 @@ def handle_webhk():
 
         battery = integer_part_bat + (decimal_part_bat / 256)
 
-        gas_eval = int(mac_payload[-16:-12], 16)
+        gas_eval = int(mac_payload[124:128], 16)
         nox_eval = int(mac_payload[-20:-16], 16)
 
         temp_co2 = int(mac_payload[13:16], 16)
