@@ -280,6 +280,10 @@ def handle_webhk():
 
         spo2 = int(mac_payload[90:94], 16)
 
+        rr_count = int(mac_payload[56:57])
+
+        print("RRCOUNT")
+        print(rr_count)
         current_time_ = datetime.now(timezone.utc)
         unix_timestamp_ = int(current_time_.timestamp())
         timestamp_ = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
