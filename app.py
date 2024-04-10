@@ -291,9 +291,9 @@ def handle_webhk():
         timestamp_ = (datetime.now() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M:%S")
 
         # Get the value of VOC index from the payload
-        voc_index = int(mac_payload[-96:-92], 16)
+        voc_index = int(mac_payload[124:128], 16)
 
-        voc = int(mac_payload[-92:-88], 16)
+        voc = int(mac_payload[128:132], 16)
 
         url = "https://script.google.com/macros/s/AKfycbxoVBJMcTO1_Oml6rlNciaPWsvaIWCw94UwLANAMwm70bv7FT_eC7pRlV6cQDzJr5W2/exec"
         data_to_sheet = {
