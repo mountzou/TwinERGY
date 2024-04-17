@@ -359,7 +359,11 @@ def handle_webhk():
 
         temp_co2 = int(mac_payload[13:16], 16)
         integer_part_co2 = int(str(temp_co2)[:2])
-        decimal_part_co2 = int(str(temp_co2)[2:])
+        temp_co2_str = str(temp_co2)
+        if len(temp_co2_str) > 2:
+            decimal_part_co2 = int(temp_co2_str[2:])
+        else:
+            decimal_part_co2 = 0  # or any other default/fallback value
 
         co2 = (integer_part_co2 + (decimal_part_co2 / 100)) * 10
         if co2 < 400:
