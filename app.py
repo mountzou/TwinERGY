@@ -350,7 +350,12 @@ def handle_webhk():
         battery_raw = int(mac_payload[5:8], 16)
 
         integer_part_bat = int(str(battery_raw)[:2])
-        decimal_part_bat = int(str(battery_raw)[2:])
+        battery_raw_str = str(battery_raw)
+        if len(battery_raw_str) > 2:
+            decimal_part_bat = int(battery_raw_str[2:])
+        else:
+            # Handle the case where there is no decimal part
+            decimal_part_bat = 0  # or some other appropriate default or error handling
 
         battery = integer_part_bat + (decimal_part_bat / 256)
 
