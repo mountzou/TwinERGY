@@ -781,7 +781,9 @@ def get_data_thermal_comfort_range():
 
     start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
     end_date = datetime.strptime(end_date, '%Y-%m-%d').date() + timedelta(days=1)
-
+    print("DATES")
+    print(start_date)
+    print(end_date)
     start_timestamp, end_timestamp = int(time.mktime(start_date.timetuple())), int(time.mktime(end_date.timetuple()))
 
     g.cur.execute(
