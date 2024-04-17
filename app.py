@@ -252,7 +252,7 @@ def handle_webhk():
 
         print("RRCOUNT")
         print(rr_count)
-        for i in rr_count:
+        for i in range(rr_count):
             print(int(mac_payload[140+i*4:140+i*4+4],16))
 
         # Get the integer part and the decimal part of the air temperature from the payload
