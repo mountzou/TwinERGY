@@ -779,8 +779,8 @@ def get_data_thermal_comfort_range():
         end_date = datetime.now().strftime('%Y-%m-%d')
         start_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
-    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-    end_date = datetime.strptime(end_date, '%Y-%m-%d').date() + timedelta(days=1)
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
     print("DATES")
     print(start_date)
     print(end_date)
