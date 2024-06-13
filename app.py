@@ -546,7 +546,8 @@ def get_data_thermal_comfort():
 
     # met_data = [tc_met for _, _, _, _, tc_met in tc_latest_active_session[:10]]
     # average_met = sum(met_data) / len(met_data) if sum(met_data) > 0 else 0
-    average_met=[tc_met for _, _, _, _, tc_met in tc_latest_active_session[:1]]
+    met_data = [tc_met for _, _, _, _, tc_met in tc_latest_active_session[:1]]
+    average_met = sum(met_data) / len(met_data) if sum(met_data) > 0 else 0
 
     clo_insulation = get_clo_insulation(mysql, g.cur, (session.get('deviceId', None)))[0]
 
