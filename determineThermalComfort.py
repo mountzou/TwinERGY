@@ -12,6 +12,8 @@ def get_calibrate_air_speed_value(vr, met):
 
 
 def get_pmv_value(tr, tdb, rh, met, clo, vr, wme=0):
+    if met==0:
+        met=1
     pa = rh * 10 * math.exp(16.6536 - 4030.183 / (tdb + 235))
     clo = clo * (0.6 + 0.4 / met)
     vr = (vr + 0.3 * (met - 1))
