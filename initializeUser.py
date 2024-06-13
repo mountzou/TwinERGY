@@ -1,17 +1,17 @@
 import time
 
 
-def initialize_user_clothing_insulation(mysql, cur, device_id, gateway_id):
+def initialize_user_clothing_insulation(mysql, cur, device_id):
     """
     Initialize user clothing insulation preferences for all seasons if not already present in the database.
     """
-    initialize_user_clothing_insulation_winter(mysql, cur, device_id, gateway_id)
-    initialize_user_clothing_insulation_summer(mysql, cur, device_id, gateway_id)
-    initialize_user_clothing_insulation_autumn(mysql, cur, device_id, gateway_id)
-    initialize_user_clothing_insulation_spring(mysql, cur, device_id, gateway_id)
+    initialize_user_clothing_insulation_winter(mysql, cur, device_id)
+    initialize_user_clothing_insulation_summer(mysql, cur, device_id)
+    initialize_user_clothing_insulation_autumn(mysql, cur, device_id)
+    initialize_user_clothing_insulation_spring(mysql, cur, device_id)
 
 
-def initialize_user_clothing_insulation_winter(mysql, cur, device_id, gateway_id):
+def initialize_user_clothing_insulation_winter(mysql, cur, device_id):
     """
     Initialize user clothing insulation preferences for winter if not already present in the database.
     """
@@ -25,14 +25,14 @@ def initialize_user_clothing_insulation_winter(mysql, cur, device_id, gateway_id
     if result is None:
         insert_preferences_query = '''
             INSERT INTO user_clo_winter
-            (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.88, %s)
+            (wearable_id, user_clo, user_timestamp)
+            VALUES (%s, 0.88, %s)
         '''
-        cur.execute(insert_preferences_query, (device_id, gateway_id, int(time.time())))
+        cur.execute(insert_preferences_query, (device_id, int(time.time())))
         mysql.connection.commit()
 
 
-def initialize_user_clothing_insulation_autumn(mysql, cur, device_id, gateway_id):
+def initialize_user_clothing_insulation_autumn(mysql, cur, device_id):
     """
     Initialize user clothing insulation preferences for autumn if not already present in the database.
     """
@@ -47,14 +47,14 @@ def initialize_user_clothing_insulation_autumn(mysql, cur, device_id, gateway_id
     if cur.fetchone() is None:
         insert_autumn_clothing_query = '''
             INSERT INTO user_clo_autumn
-            (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.56, %s)
+            (wearable_id, user_clo, user_timestamp)
+            VALUES (%s, 0.56, %s)
         '''
-        cur.execute(insert_autumn_clothing_query, (device_id, gateway_id, int(time.time())))
+        cur.execute(insert_autumn_clothing_query, (device_id, int(time.time())))
         mysql.connection.commit()
 
 
-def initialize_user_clothing_insulation_spring(mysql, cur, device_id, gateway_id):
+def initialize_user_clothing_insulation_spring(mysql, cur, device_id):
     """
     Initialize user clothing insulation preferences for spring if not already present in the database.
     """
@@ -69,14 +69,14 @@ def initialize_user_clothing_insulation_spring(mysql, cur, device_id, gateway_id
     if cur.fetchone() is None:
         insert_spring_clothing_query = '''
             INSERT INTO user_clo_spring
-            (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.56, %s)
+            (wearable_id, user_clo, user_timestamp)
+            VALUES (%s, 0.56, %s)
         '''
-        cur.execute(insert_spring_clothing_query, (device_id, gateway_id, int(time.time())))
+        cur.execute(insert_spring_clothing_query, (device_id, int(time.time())))
         mysql.connection.commit()
 
 
-def initialize_user_clothing_insulation_summer(mysql, cur, device_id, gateway_id):
+def initialize_user_clothing_insulation_summer(mysql, cur, device_id):
     """
     Initialize user clothing insulation preferences for summer if not already present in the database.
     """
@@ -91,10 +91,10 @@ def initialize_user_clothing_insulation_summer(mysql, cur, device_id, gateway_id
     if cur.fetchone() is None:
         insert_summer_clothing_query = '''
             INSERT INTO user_clo_summer
-            (wearable_id, gateway_id, user_clo, user_timestamp)
-            VALUES (%s, %s, 0.43, %s)
+            (wearable_id, user_clo, user_timestamp)
+            VALUES (%s, 0.43, %s)
         '''
-        cur.execute(insert_summer_clothing_query, (device_id, gateway_id, int(time.time())))
+        cur.execute(insert_summer_clothing_query, (device_id, int(time.time())))
         mysql.connection.commit()
 
 

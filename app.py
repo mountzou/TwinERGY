@@ -131,7 +131,7 @@ def callback():
     session['deviceId'] = keycloak_openid.userinfo(access_token['access_token'])['deviceId']
     session['gatewayId'] = keycloak_openid.userinfo(access_token['access_token'])['gatewayId']
 
-    initialize_user_clothing_insulation(mysql, g.cur, session['deviceId'], session['gatewayId'])
+    initialize_user_clothing_insulation(mysql, g.cur, session['deviceId'])
     initialize_user_temperature_preferences(mysql, g.cur, session['deviceId'])
     initialize_user_thermal_comfort_preferences(mysql, g.cur, session['deviceId'])
     initialize_user_load_preferences(mysql, g.cur, session['deviceId'])
