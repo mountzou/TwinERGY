@@ -1,6 +1,3 @@
-// Variables to store chart instances
-let graphTemperature, graphHumidity, graphMetRate, graphTargetPMV, graphVOC;
-
 // A function that converts the timestamp to human readable form
 function unixToHumanReadable(unixTimestamp) {
     let date = new Date(unixTimestamp * 1000);
@@ -223,9 +220,6 @@ function updateDashboard() {
         var dataThermalComfort = createLineChartData("Thermal Comfort", numericalData, time);
         const thermalComfortTooltipCallback = (tooltipItems) => fangerScaleCategories[tooltipItems.yLabel - 1];
 
-        if (graphTargetPMV){
-            graphTargetPMV.destroy();
-        }
         // Create the chart
         var graphTargetPMV = createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback);
 
@@ -289,3 +283,4 @@ function updateDashboard() {
 updateDashboard();
 
 setInterval(updateDashboard, 8000);
+
