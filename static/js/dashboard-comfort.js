@@ -1,5 +1,5 @@
 // Variables to store chart instances
-let graphTemperature, graphHumidity, graphMetRate, graphPMV, graphVOC;
+let graphTemperature, graphHumidity, graphMetRate, graphTargetPMV, graphVOC;
 
 // A function that converts the timestamp to human readable form
 function unixToHumanReadable(unixTimestamp) {
@@ -24,8 +24,8 @@ function getWellBeingDescription(value) {
 
 // A function that convert the PMV index to percentage for the donut chart of dashboard
 function convertPMVToPercentage(value) {
-    var percentage = (1 - Math.abs(value) / 3) * 100;
-    return percentage.toFixed(2);
+  var percentage = (1 - Math.abs(value) / 3) * 100;
+  return percentage.toFixed(2);
 }
 
 // A function that matches the PMV index to a literal description
@@ -47,6 +47,7 @@ function get_pmv_status(pmv) {
     return found ? found.status : '-';
 }
 
+
 // An abstract function to create line charts in the dashboard page
 function createLineChartData(label, data, time) {
     return {
@@ -55,7 +56,7 @@ function createLineChartData(label, data, time) {
             label: label,
             type: "line",
             borderColor: "rgb(255, 186, 77)",
-            backgroundColor: "rgba(255, 186, 77, .1)",
+            backgroundColor: "rgb(255, 186, 77, .1)",
             borderWidth: 3,
             data: data,
             fill: true
@@ -65,13 +66,13 @@ function createLineChartData(label, data, time) {
 
 // An abstract function to set the configuration parameters for the line charts in the dashboard page
 function createLineChartConfig(graphTarget, data, yAxisUnit, tooltipLabelCallback) {
-    return {
+    return new Chart(graphTarget, {
         type: 'line',
         data: data,
         options: {
             animation: false,
             scales: {
-                y: {
+                yAxes: [{
                     ticks: {
                         padding: 12,
                         fontFamily: "Josefin Sans",
@@ -84,41 +85,39 @@ function createLineChartConfig(graphTarget, data, yAxisUnit, tooltipLabelCallbac
                             return value + " " + yAxisUnit;
                         },
                     }
-                },
-                x: {
-                    grid: {
+                }],
+                xAxes: [{
+                    gridLines: {
                         display: false,
                         drawOnChartArea: true
                     },
                     ticks: {
                         display: false,
                     }
-                },
+                }],
             },
-            plugins: {
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: tooltipLabelCallback
-                    }
+            legend: {
+                onClick: function(e) {
+                    e.stopPropagation();
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: tooltipLabelCallback
                 }
             }
         }
-    };
+    });
 }
 
 function createLineChartConfigPMV(graphTarget, data, categories, tooltipLabelCallback) {
-    return {
+    return new Chart(graphTarget, {
         type: 'line',
         data: data,
         options: {
             animation: false,
             scales: {
-                y: {
+                yAxes: [{
                     ticks: {
                         padding: 12,
                         fontFamily: "Josefin Sans",
@@ -131,32 +130,31 @@ function createLineChartConfigPMV(graphTarget, data, categories, tooltipLabelCal
                             return categories[value - 1];
                         },
                     }
-                },
-                x: {
-                    grid: {
+                }],
+                xAxes: [{
+                    gridLines: {
                         display: false,
                         drawOnChartArea: true
                     },
                     ticks: {
                         display: false,
                     }
-                },
+                }],
             },
-            plugins: {
-                legend: {
-                    onClick: function(e) {
-                        e.stopPropagation();
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: tooltipLabelCallback
-                    }
+            legend: {
+                onClick: function(e) {
+                    e.stopPropagation();
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: tooltipLabelCallback
                 }
             }
         }
-    };
+    });
 }
+
 
 function updateDashboard() {
     $.getJSON('/get_data_thermal_comfort/', function (data) {
@@ -194,14 +192,14 @@ function updateDashboard() {
 //        document.getElementById("daily-mean-vocs").innerHTML = 20+' voc.';
 
         Array.from(document.getElementsByClassName("l-updated")).forEach(element => {
-            element.innerHTML = 'Latest update at ' + latestTime;
+            element.innerHTML = 'Latest update at ' + latestTime;;
         });
 
-        var graphTargetTemperature = $("#session-temperature")[0];
-        var graphTargetHumidity = $("#session-humidity")[0];
-        var graphTargetMetabolic = $("#session-metabolic")[0];
-        var graphTargetPMV = $("#session-thermal-comfort")[0];
-        var graphTargetVOC = $("#session-VOC")[0];
+        var graphTargetTemperature = $("#session-temperature");
+        var graphTargetHumidity = $("#session-humidity");
+        var graphTargetMetabolic = $("#session-metabolic");
+        var graphTargetPMV = $("#session-thermal-comfort");
+        var graphTargetVOC = $("#session-VOC");
 
         const fangerScaleMapping = {
             'Cold': 1,
@@ -221,49 +219,35 @@ function updateDashboard() {
         const fangerScaleCategories = Object.keys(fangerScaleMapping);
         const numericalData = pmv_desc.map(item => fangerScaleMapping[item]);
 
-        // Destroy previous chart instance if exists
-        if (graphPMV) {
-            graphPMV.destroy();
-        }
-
         // Create the chart data
         var dataThermalComfort = createLineChartData("Thermal Comfort", numericalData, time);
-        const thermalComfortTooltipCallback = (tooltipItems) => fangerScaleCategories[tooltipItems.raw - 1];
+        const thermalComfortTooltipCallback = (tooltipItems) => fangerScaleCategories[tooltipItems.yLabel - 1];
 
+        if (graphTargetPMV){
+            graphTargetPMV.destroy();
+        }
         // Create the chart
-        graphPMV = new Chart(graphTargetPMV, createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback));
+        var graphTargetPMV = createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback);
 
         // Implement the line chart in dashboard for the air temperature
-        if (graphTemperature) {
-            graphTemperature.destroy();
-        }
         var dataTemperature = createLineChartData("Air Temperature", temperature, time);
-        const temperatureTooltipCallback = (tooltipItems) => tooltipItems.raw.toFixed(2) + " °C";
-        graphTemperature = new Chart(graphTargetTemperature, createLineChartConfig(graphTargetTemperature, dataTemperature, "°C", temperatureTooltipCallback));
+        const temperatureTooltipCallback = (tooltipItems) => tooltipItems.yLabel.toFixed(2) + " °C";
+        var graphTemperature = createLineChartConfig(graphTargetTemperature, dataTemperature, "°C", temperatureTooltipCallback);
 
         // Implement the line chart in dashboard for the relative humidity
-        if (graphHumidity) {
-            graphHumidity.destroy();
-        }
         var dataHumidity = createLineChartData("Relative Humidity", humidity, time);
-        const humidityTooltipCallback = (tooltipItems) => tooltipItems.raw + " %";
-        graphHumidity = new Chart(graphTargetHumidity, createLineChartConfig(graphTargetHumidity, dataHumidity, "%", humidityTooltipCallback));
+        const humidityTooltipCallback = (tooltipItems) => tooltipItems.yLabel + " %";
+        var graphHumidity = createLineChartConfig(graphTargetHumidity, dataHumidity, "%", humidityTooltipCallback);
 
         // Implement the line chart in dashboard for the metabolic rate
-        if (graphMetRate) {
-            graphMetRate.destroy();
-        }
         var dataMet = createLineChartData("Metabolic Rate", met, time);
-        const metRateTooltipCallback = (tooltipItems) => tooltipItems.raw + " met";
-        graphMetRate = new Chart(graphTargetMetabolic, createLineChartConfig(graphTargetMetabolic, dataMet, "met", metRateTooltipCallback));
+        const metRateTooltipCallback = (tooltipItems) => tooltipItems.yLabel + " met";
+        var graphMetRate = createLineChartConfig(graphTargetMetabolic, dataMet, "met", metRateTooltipCallback);
 
         // Implement the line chart in dashboard for the VOC index
-        if (graphVOC) {
-            graphVOC.destroy();
-        }
         var dataVOC = createLineChartData("VOC Index", voc_index, time);
-        const vocTooltipCallback = (tooltipItems, data) => data.datasets[tooltipItems.datasetIndex].label + ': ' + tooltipItems.raw;
-        graphVOC = new Chart(graphTargetVOC, createLineChartConfig(graphTargetVOC, dataVOC, "voc.", vocTooltipCallback));
+        const vocTooltipCallback = (tooltipItems, data) => data.datasets[tooltipItems.datasetIndex].label + ': ' + tooltipItems.yLabel;
+        var graphVOC = createLineChartConfig(graphTargetVOC, dataVOC, "voc.", vocTooltipCallback);
 
         // ---------------------
         // END OF SECTION: IMPLEMENTATION OF THE DASHBOARD LINE CHARTS
