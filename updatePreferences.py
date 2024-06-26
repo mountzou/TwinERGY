@@ -15,9 +15,9 @@ def updateThermalComfortPreference(mysql, cur, minTC, maxTC, wearable_id):
 
     # Insert preferences related to the thermal comfort level into the database
     cur.execute('''
-         INSERT INTO user_thermal_preferences (wearable_id, user_thermal_level_min, user_thermal_level_max, user_thermal_description_min, user_thermal_description_max, user_thermal_timestamp)
-         VALUES (%s, %s, %s, %s, %s, %s)
-     ''', (wearable_id, minTC, maxTC, 'OK', 'OK', current_timestamp))
+         INSERT INTO user_thermal_preferences (wearable_id, user_thermal_level_min, user_thermal_level_max, user_thermal_timestamp)
+         VALUES (%s, %s, %s, %s)
+     ''', (wearable_id, minTC, maxTC, current_timestamp))
 
     mysql.connection.commit()
 
