@@ -38,6 +38,9 @@ function getConsumerPreferences() {
           onChange: function(data) {
             var fromValue = data.from - 3;
             var toValue = data.to - 3;
+            console.log(fromValue);
+            console.log(toValue);
+
               $.ajax({
                 url: '/update_preferences_thermal_comfort',
                 type: 'POST',
