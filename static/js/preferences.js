@@ -51,8 +51,11 @@ function getConsumerPreferences() {
                 success: function(response) {
                   console.log("Preferences updated successfully");
                 },
-                error: function(response) {
-                  console.log("Error updating preferences");
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("Error updating preferences");
+                    console.log("Status: " + textStatus);
+                    console.log("Error Thrown: " + errorThrown);
+                    console.log("Response Text: " + jqXHR.responseText);
                 }
               });
           },
