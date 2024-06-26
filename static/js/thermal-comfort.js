@@ -145,6 +145,7 @@ function updateThermalComfort(start_date, end_date) {
         let timee = data.map(x => x[2]);
         let met = data.map(x => x[4]);
         let pmv = data.map(x => x[5]);
+        console.log(pmv);
         let pmvStatus= pmv.map(get_pmv_status);
 
         let latestTemperature = temperature[temperature.length - 1];

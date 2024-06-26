@@ -177,6 +177,7 @@ function updateDashboard() {
         let latestPMV = pmv.at(-1);
         let latestClo = clo.at(-1);
         let latestTWearable = t_wearable.at(-1);
+        console.log(pmv);
 
         // Update the latest temperature and humidity
         document.getElementById("latest-temperature").innerHTML = '≈ ' + latestTemperature + ' °C';
