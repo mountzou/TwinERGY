@@ -116,30 +116,46 @@ function getConsumerPreferences() {
         });
 
 
-        function initializeTimeRangeSlider(appliance, fromValue, toValue) {
-            $(`#preference_range_${appliance}`).ionRangeSlider({
+         function initializeTimeRangeSlider(appliance, fromValue, toValue) {
+            var slider = $(`#preference_range_${appliance}`).ionRangeSlider({
                 grid: true,
                 type: 'double',
                 from: fromValue,
                 to: toValue,
                 values: hoursList,
                 onChange: function(data) {
+                    var minTime = data.from;
+                    var maxTime = data.to;
+
+                    // Calculate time difference
+                    var timeDiff = maxTime - minTime;
+                    if (timeDiff < 4) {
+                        alert("The time window must be at least 4 hours.");
+                        slider.update({
+                            from: fromValue,
+                            to: toValue
+                        });
+                        return;
+                    }
+
                     $.ajax({
                         url: `/update/${appliance}/time_range`,
                         type: 'POST',
                         data: {
-                            [`from${capitalizeFirstLetter(appliance)}`]: data.from,
-                            [`to${capitalizeFirstLetter(appliance)}`]: data.to,
+                            [`from${capitalizeFirstLetter(appliance)}`]: minTime,
+                            [`to${capitalizeFirstLetter(appliance)}`]: maxTime,
                         },
                         success: function(response) {
                             console.log(`${appliance} time range updated successfully`);
+                            fromValue = minTime;
+                            toValue = maxTime;
                         },
                         error: function(response) {
                             console.log(`Error updating ${appliance} time range`);
                         }
                     });
                 }
-            });
+            }).data("ionRangeSlider");
         }
 
     function capitalizeFirstLetter(string) {
