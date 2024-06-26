@@ -152,6 +152,7 @@ function createLineChartConfigPMV(graphTarget, data, categories, tooltipLabelCal
     });
 }
 
+var graphTemperature, graphHumidity, graphMetRate, graphVOC, graphPMV;
 
 function updateDashboard() {
     $.getJSON('/get_data_thermal_comfort/', function (data) {
