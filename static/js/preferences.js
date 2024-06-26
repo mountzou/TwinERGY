@@ -128,11 +128,6 @@ function getConsumerPreferences() {
                     var maxTime = data.to;
                    if (minTime === 0) {
                         minTime = 1;
-                        maxTime = Math.max(maxTime, minTime + 4);
-                        if (maxTime > 23) {
-                            maxTime = 23;
-                            minTime = Math.max(0, maxTime - 4);
-                        }
                     }
                     // Calculate time difference
                     var timeDiff = maxTime - minTime;
