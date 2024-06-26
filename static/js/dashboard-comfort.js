@@ -1,3 +1,6 @@
+// Variables to store chart instances
+let graphTemperature, graphHumidity, graphMetRate, graphTargetPMV, graphVOC;
+
 // A function that converts the timestamp to human readable form
 function unixToHumanReadable(unixTimestamp) {
     let date = new Date(unixTimestamp * 1000);
@@ -21,8 +24,8 @@ function getWellBeingDescription(value) {
 
 // A function that convert the PMV index to percentage for the donut chart of dashboard
 function convertPMVToPercentage(value) {
-  var percentage = (1 - Math.abs(value) / 3) * 100;
-  return percentage.toFixed(2);
+    var percentage = (1 - Math.abs(value) / 3) * 100;
+    return percentage.toFixed(2);
 }
 
 // A function that matches the PMV index to a literal description
@@ -43,7 +46,6 @@ function get_pmv_status(pmv) {
 
     return found ? found.status : '-';
 }
-
 
 // An abstract function to create line charts in the dashboard page
 function createLineChartData(label, data, time) {
@@ -152,7 +154,6 @@ function createLineChartConfigPMV(graphTarget, data, categories, tooltipLabelCal
     });
 }
 
-
 function updateDashboard() {
     $.getJSON('/get_data_thermal_comfort/', function (data) {
         let [temperature, humidity, time, voc_index, met, pmv, clo, t_wearable, pmv_desc] = data.daily_thermal_comfort_data.reduce((acc, x) => {
@@ -216,32 +217,49 @@ function updateDashboard() {
         const fangerScaleCategories = Object.keys(fangerScaleMapping);
         const numericalData = pmv_desc.map(item => fangerScaleMapping[item]);
 
+        // Destroy previous chart instance if exists
+        if (graphTargetPMV) {
+            graphTargetPMV.destroy();
+        }
+
         // Create the chart data
         var dataThermalComfort = createLineChartData("Thermal Comfort", numericalData, time);
         const thermalComfortTooltipCallback = (tooltipItems) => fangerScaleCategories[tooltipItems.yLabel - 1];
 
         // Create the chart
-        var graphTargetPMV = createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback);
+        graphTargetPMV = createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback);
 
         // Implement the line chart in dashboard for the air temperature
+        if (graphTemperature) {
+            graphTemperature.destroy();
+        }
         var dataTemperature = createLineChartData("Air Temperature", temperature, time);
         const temperatureTooltipCallback = (tooltipItems) => tooltipItems.yLabel.toFixed(2) + " °C";
-        var graphTemperature = createLineChartConfig(graphTargetTemperature, dataTemperature, "°C", temperatureTooltipCallback);
+        graphTemperature = createLineChartConfig(graphTargetTemperature, dataTemperature, "°C", temperatureTooltipCallback);
 
         // Implement the line chart in dashboard for the relative humidity
+        if (graphHumidity) {
+            graphHumidity.destroy();
+        }
         var dataHumidity = createLineChartData("Relative Humidity", humidity, time);
         const humidityTooltipCallback = (tooltipItems) => tooltipItems.yLabel + " %";
-        var graphHumidity = createLineChartConfig(graphTargetHumidity, dataHumidity, "%", humidityTooltipCallback);
+        graphHumidity = createLineChartConfig(graphTargetHumidity, dataHumidity, "%", humidityTooltipCallback);
 
         // Implement the line chart in dashboard for the metabolic rate
+        if (graphMetRate) {
+            graphMetRate.destroy();
+        }
         var dataMet = createLineChartData("Metabolic Rate", met, time);
         const metRateTooltipCallback = (tooltipItems) => tooltipItems.yLabel + " met";
-        var graphMetRate = createLineChartConfig(graphTargetMetabolic, dataMet, "met", metRateTooltipCallback);
+        graphMetRate = createLineChartConfig(graphTargetMetabolic, dataMet, "met", metRateTooltipCallback);
 
         // Implement the line chart in dashboard for the VOC index
+        if (graphVOC) {
+            graphVOC.destroy();
+        }
         var dataVOC = createLineChartData("VOC Index", voc_index, time);
         const vocTooltipCallback = (tooltipItems, data) => data.datasets[tooltipItems.datasetIndex].label + ': ' + tooltipItems.yLabel;
-        var graphVOC = createLineChartConfig(graphTargetVOC, dataVOC, "voc.", vocTooltipCallback);
+        graphVOC = createLineChartConfig(graphTargetVOC, dataVOC, "voc.", vocTooltipCallback);
 
         // ---------------------
         // END OF SECTION: IMPLEMENTATION OF THE DASHBOARD LINE CHARTS
