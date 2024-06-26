@@ -35,7 +35,7 @@ function getConsumerPreferences() {
           from: thermal_comfort_min+3,
           to: thermal_comfort_max+3,
           values: ["Cold", "Cool", "Slightly Cool", "Neutral", "Slightly Warm", "Warm", "Hot"],
-          onChange: function(data) {
+          onFinish: function(data) {
             var fromValue = data.from - 3;
             var toValue = data.to - 3;
             console.log(fromValue);
