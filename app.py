@@ -543,8 +543,6 @@ def get_data_thermal_comfort():
     df = pd.DataFrame(thermal_comfort_data, columns=['tc_temperature', 'tc_humidity', 'tc_timestamp', 'wb_index', 'tc_met'])
     tc_latest_active_session = filter_thermal_comfort_dashboard(df)
 
-    # met_data = [tc_met for _, _, _, _, tc_met in tc_latest_active_session[:10]]
-    # average_met = sum(met_data) / len(met_data) if sum(met_data) > 0 else 0
     met_data = [tc_met for _, _, _, _, tc_met in tc_latest_active_session]
     average_met = sum(met_data) / len(met_data) if sum(met_data) > 0 else 0
 
