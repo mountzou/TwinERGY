@@ -129,7 +129,7 @@ function getConsumerPreferences() {
                 from: fromValue,
                 to: toValue,
                 values: hoursList,
-                onChange: function(data) {
+                onFinish: function(data) {
                     var minTime = data.from;
                     var maxTime = data.to;
                    if (minTime === 0) {
