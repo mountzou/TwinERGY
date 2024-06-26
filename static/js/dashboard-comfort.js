@@ -1,5 +1,5 @@
 // Variables to store chart instances
-let graphTemperature, graphHumidity, graphMetRate, graphTargetPMV, graphVOC;
+let graphTemperature, graphHumidity, graphMetRate, graphPMV, graphVOC;
 
 // A function that converts the timestamp to human readable form
 function unixToHumanReadable(unixTimestamp) {
@@ -222,8 +222,8 @@ function updateDashboard() {
         const numericalData = pmv_desc.map(item => fangerScaleMapping[item]);
 
         // Destroy previous chart instance if exists
-        if (graphTargetPMV) {
-            graphTargetPMV.destroy();
+        if (graphPMV) {
+            graphPMV.destroy();
         }
 
         // Create the chart data
@@ -231,7 +231,7 @@ function updateDashboard() {
         const thermalComfortTooltipCallback = (tooltipItems) => fangerScaleCategories[tooltipItems.raw - 1];
 
         // Create the chart
-        graphTargetPMV = createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback);
+        graphPMV = createLineChartConfigPMV(graphTargetPMV, dataThermalComfort, fangerScaleCategories, thermalComfortTooltipCallback);
 
         // Implement the line chart in dashboard for the air temperature
         if (graphTemperature) {
